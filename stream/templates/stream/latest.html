@@ -142,9 +142,15 @@
                                                     </h3>
                                                     <div class="space-y-2">
                                                         <div class="flex justify-between items-center">
+                                                            {% if item.encoded_id and item.encoded_id != '' %}
+                                                            <a href="{% url 'stream:episode_detail' encoded_id=item.encoded_id %}" class="badge badge-primary hover:bg-gold-200 dark:hover:bg-korteks-gray/50 transition-colors">
+                                                                Episode: {{ item.episode }}
+                                                            </a>
+                                                            {% else %}
                                                             <span class="badge badge-primary">
                                                                 Episode: {{ item.episode }}
                                                             </span>
+                                                            {% endif %}
                                                             <span class="text-xs text-gray-500 dark:text-gray-400">
                                                                 {{ item.rilis }}
                                                             </span>
@@ -227,9 +233,15 @@
                                             </h3>
                                             <div class="space-y-2">
                                                 <div class="flex justify-between items-center">
+                                                    {% if item.encoded_id and item.encoded_id != '' %}
+                                                    <a href="{% url 'stream:episode_detail' encoded_id=item.encoded_id %}" class="badge badge-primary hover:bg-gold-200 dark:hover:bg-korteks-gray/50 transition-colors">
+                                                        Episode: {{ item.episode }}
+                                                    </a>
+                                                    {% else %}
                                                     <span class="badge badge-primary">
                                                         Episode: {{ item.episode }}
                                                     </span>
+                                                    {% endif %}
                                                     <span class="text-xs text-gray-500 dark:text-gray-400">
                                                         {{ item.rilis }}
                                                     </span>

@@ -36,9 +36,17 @@
                                 </h6>
                                 <div class="space-y-2">
                                     <div class="flex justify-between items-center">
+                                        {% if item.url %}
+                                        {% with episode_data=item.url|make_dict:"episode_url" %}
+                                        <a href="{% url 'stream:episode_detail' encoded_id=episode_data|encode_episode_id:view.kwargs.category|default:category %}" class="badge badge-primary hover:bg-gold-200 dark:hover:bg-korteks-gray/50 transition-colors">
+                                            Episode: {{ item.episode }}
+                                        </a>
+                                        {% endwith %}
+                                        {% else %}
                                         <span class="badge badge-primary">
                                             Episode: {{ item.episode }}
                                         </span>
+                                        {% endif %}
                                         <span class="text-xs text-gray-500 dark:text-gray-400">
                                             {{ item.rilis }}
                                         </span>

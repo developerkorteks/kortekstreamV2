@@ -1,14 +1,53 @@
 from django.shortcuts import render, redirect
 from django.core.cache import cache
 from django.conf import settings
+from django.urls import reverse
+from django.http import HttpResponse
+from django.views.decorators.http import require_GET
 import requests
 import logging
 import urllib.parse
+import base64
+import json
+import re
+import os
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 BASE_URL = 'http://apigatway.humanmade.my.id:8080'
+
+def encode_episode_id(episode_data, category='anime'):
+    """
+    Encode episode data into a base64 string for cleaner URLs
+    """
+    data = {
+        'id': episode_data.get('id', ''),
+        'slug': episode_data.get('slug', ''),
+        'episode_slug': episode_data.get('episode_slug', ''),
+        'episode_url': episode_data.get('episode_url', ''),
+        'category': category
+    }
+    # Remove empty values
+    data = {k: v for k, v in data.items() if v}
+    
+    # Convert to JSON and encode to base64
+    json_str = json.dumps(data)
+    encoded = base64.urlsafe_b64encode(json_str.encode()).decode()
+    return encoded
+
+def decode_episode_id(encoded_id):
+    """
+    Decode a base64 string back to episode data
+    """
+    try:
+        # Decode base64 to JSON
+        json_str = base64.urlsafe_b64decode(encoded_id.encode()).decode()
+        data = json.loads(json_str)
+        return data
+    except Exception as e:
+        logger.error(f"Error decoding episode ID: {str(e)}")
+        return {}
 
 def get_categories():
     """Helper function to get available categories from API"""
@@ -241,6 +280,45 @@ def latest(request):
         except Exception as e:
             data = {"error": str(e)}
     
+    # Process the data to add encoded episode IDs
+    if not data.get("error"):
+        if category == 'all' and 'data_by_category' in data:
+            # Process data for all categories
+            for cat_name, cat_data in data['data_by_category'].items():
+                if 'data' in cat_data:
+                    for item in cat_data['data']:
+                        # Create encoded ID for each episode
+                        try:
+                            if 'url' in item:
+                                episode_data = {
+                                    'episode_slug': item.get('url', ''),
+                                    'episode_url': item.get('url', '')
+                                }
+                                item['encoded_id'] = encode_episode_id(episode_data, cat_name)
+                            else:
+                                # Ensure there's at least an empty string to avoid template errors
+                                item['encoded_id'] = ''
+                        except Exception as e:
+                            logger.error(f"Error encoding episode ID in latest view: {str(e)}")
+                            item['encoded_id'] = ''
+        elif 'data' in data:
+            # Process data for a specific category
+            for item in data['data']:
+                # Create encoded ID for each episode
+                try:
+                    if 'url' in item:
+                        episode_data = {
+                            'episode_slug': item.get('url', ''),
+                            'episode_url': item.get('url', '')
+                        }
+                        item['encoded_id'] = encode_episode_id(episode_data, category)
+                    else:
+                        # Ensure there's at least an empty string to avoid template errors
+                        item['encoded_id'] = ''
+                except Exception as e:
+                    logger.error(f"Error encoding episode ID in latest view: {str(e)}")
+                    item['encoded_id'] = ''
+    
     context = {
         "datas": data,
         "category": category,
@@ -407,4 +485,200 @@ def search(request):
     }
     
     return render(request, 'stream/search_results.html', context)
+
+def episode_detail(request, encoded_id=None):
+    """
+    View function for getting episode details
+    Supports both encoded ID in URL path and legacy query parameters
+    """
+    # Get available categories
+    categories = get_categories()
+    
+    # Initialize parameters
+    episode_id = None
+    episode_url = None
+    episode_slug = None
+    category = 'anime'  # Default to 'anime' if not provided
+    
+    # Check if we have an encoded ID in the URL path
+    if encoded_id:
+        # Decode the ID to get the parameters
+        decoded_data = decode_episode_id(encoded_id)
+        episode_id = decoded_data.get('id')
+        episode_url = decoded_data.get('episode_url')
+        episode_slug = decoded_data.get('episode_slug', decoded_data.get('slug'))
+        category = decoded_data.get('category', 'anime')
+    else:
+        # Legacy mode: Get parameters from request query string
+        episode_id = request.GET.get('id')
+        episode_url = request.GET.get('episode_url')
+        episode_slug = request.GET.get('episode_slug')
+        category = request.GET.get('category', 'anime')
+    
+    # Use the first non-empty parameter as the identifier
+    identifier = episode_slug or episode_url or episode_id
+    
+    if not identifier:
+        return render(request, 'stream/episode_detail.html', {
+            "error": "No episode identifier provided",
+            "category": category,
+            "categories": categories,
+            "active_page": "episode_detail"
+        })
+    
+    # Create cache key based on identifier and category
+    cache_key = f"episode_detail_{identifier}_{category}"
+    data = cache.get(cache_key)
+    
+    # For debugging purposes, we'll add more detailed error information
+    error_details = None
+    
+    if not data:
+        try:
+            # Prepare parameters for API request
+            params = {}
+            if episode_id:
+                params['id'] = episode_id
+            if episode_url:
+                params['episode_url'] = episode_url
+            if episode_slug:
+                params['episode_slug'] = episode_slug
+            if category:
+                params['category'] = category
+                
+            # Make API request
+            api_url = f"{BASE_URL}/api/v1/episode-detail"
+            logger.info(f"Fetching episode detail from: {api_url} with params={params}")
+            
+            res = requests.get(api_url, params=params, timeout=10)
+            res.raise_for_status()
+            data = res.json()
+            
+            # Log the response for debugging
+            logger.info(f"API Response: {data.get('message', 'No message')}")
+            
+            # Cache the result for 5 minutes
+            cache.set(cache_key, data, timeout=300)
+            
+        except requests.exceptions.RequestException as e:
+            # More specific error handling for network issues
+            error_details = f"API Connection Error: {str(e)}"
+            logger.error(f"API Connection Error: {str(e)}")
+            data = {
+                "error": str(e),
+                "message": "API Connection Error",
+                "error_details": error_details,
+                "success": False
+            }
+        except ValueError as e:
+            # Handle JSON parsing errors
+            error_details = f"Invalid JSON Response: {str(e)}"
+            logger.error(f"Invalid JSON Response: {str(e)}")
+            data = {
+                "error": str(e),
+                "message": "Invalid API Response Format",
+                "error_details": error_details,
+                "success": False
+            }
+        except Exception as e:
+            # Catch-all for other errors
+            error_details = f"Unexpected Error: {str(e)}"
+            logger.error(f"Unexpected Error: {str(e)}")
+            data = {
+                "error": str(e),
+                "message": "Unexpected Error",
+                "error_details": error_details,
+                "success": False
+            }
+    
+    # Handle _metadata field - Django templates don't allow attributes starting with underscore
+    if '_metadata' in data:
+        data['metadata'] = data.pop('_metadata')
+    
+    # Process data to add encoded IDs regardless of whether we have an encoded_id already
+    if data and not data.get('error'):
+        # Create a clean encoded ID for this episode if we don't have one
+        if not encoded_id:
+            episode_data = {
+                'episode_slug': episode_slug,
+                'episode_url': episode_url,
+                'id': episode_id
+            }
+            encoded_id = encode_episode_id(episode_data, category)
+        
+        # Process other episodes to add encoded IDs
+        if 'data' in data and 'other_episodes' in data['data']:
+            for episode in data['data']['other_episodes']:
+                if 'url' in episode:
+                    try:
+                        other_episode_data = {
+                            'episode_slug': episode['url'],
+                            'episode_url': episode['url']
+                        }
+                        episode['encoded_id'] = encode_episode_id(other_episode_data, category)
+                    except Exception as e:
+                        logger.error(f"Error encoding episode ID for {episode.get('title', 'unknown')}: {str(e)}")
+                        # Ensure there's at least an empty string to avoid template errors
+                        episode['encoded_id'] = ''
+        
+        # Add encoded IDs for navigation links
+        if 'data' in data and 'navigation' in data['data']:
+            nav = data['data']['navigation']
+            
+            # Previous episode
+            if nav.get('previous_episode_url'):
+                try:
+                    prev_data = {
+                        'episode_url': nav['previous_episode_url'],
+                        'episode_slug': nav['previous_episode_url']
+                    }
+                    nav['previous_episode_encoded_id'] = encode_episode_id(prev_data, category)
+                except Exception as e:
+                    logger.error(f"Error encoding previous episode ID: {str(e)}")
+                    nav['previous_episode_encoded_id'] = ''
+            
+            # Next episode
+            if nav.get('next_episode_url'):
+                try:
+                    next_data = {
+                        'episode_url': nav['next_episode_url'],
+                        'episode_slug': nav['next_episode_url']
+                    }
+                    nav['next_episode_encoded_id'] = encode_episode_id(next_data, category)
+                except Exception as e:
+                    logger.error(f"Error encoding next episode ID: {str(e)}")
+                    nav['next_episode_encoded_id'] = ''
+    
+    # Add debug information
+    if settings.DEBUG:
+        logger.info(f"Episode data structure: {json.dumps(data, indent=2, default=str)}")
+        
+    context = {
+        "episode_data": data,
+        "category": category,
+        "episode_identifier": identifier,
+        "encoded_id": encoded_id,
+        "categories": categories,
+        "error_details": error_details,
+        "debug": settings.DEBUG,  # Pass DEBUG setting to template
+        "active_page": "episode_detail"  # For navigation active state
+    }
+    
+    return render(request, 'stream/episode_detail.html', context)
+
+@require_GET
+def favicon_view(request):
+    """
+    Serve the favicon.ico file to prevent 404 errors and API calls for favicon.ico
+    """
+    # Path to your favicon file in the static directory
+    favicon_path = os.path.join(settings.STATIC_ROOT, 'favicon.ico')
+    
+    # If the file exists, serve it
+    if os.path.exists(favicon_path):
+        with open(favicon_path, 'rb') as f:
+            return HttpResponse(f.read(), content_type='image/x-icon')
+    
+    # If not, return an empty response with the correct content type
+    return HttpResponse('', content_type='image/x-icon')
 

@@ -29,6 +29,71 @@ JSON
   "sources": ["samehadaku", "gomunime"]
 }
 
+
+GET /api/v1/anime-terbaru
+
+Parameter
+Parameter dikirim sebagai query string dalam URL.
+
+Nama	Tipe	Lokasi	Deskripsi
+page	integer	query	Opsional. Nomor halaman untuk paginasi. Contoh: 1, 2.
+category	string	query	Opsional. Filter untuk kategori konten. Nilai yang diterima: anime, korean-drama, all. Menggunakan all akan mengubah struktur respons.
+
+Ekspor ke Spreadsheet
+Contoh Penggunaan (Semua Kategori)
+Berikut adalah contoh cara memanggil API untuk mendapatkan rilis terbaru dari semua kategori yang tersedia.
+
+URL Lengkap:
+
+http://apigatway.humanmade.my.id:8080/api/v1/anime-terbaru?page=1&category=all
+Contoh cURL:
+
+Bash
+
+curl -X 'GET' \
+  'http://apigatway.humanmade.my.id:8080/api/v1/anime-terbaru?page=1&category=all' \
+  -H 'accept: application/json'
+Struktur Respons JSON (category=all)
+Jika permintaan berhasil, API akan mengembalikan objek JSON dengan data yang terstruktur di dalam data_by_category.
+
+Contoh Respons:
+
+JSON
+
+{
+  "categories": [
+    "anime"
+  ],
+  "confidence_score": 1,
+  "data_by_category": {
+    "anime": {
+      "confidence_score": 1,
+      "data": [
+        {
+          "anime_slug": "isekai-mokushiroku-mynoghra",
+          "cover": "https://v1.samehadaku.how/wp-content/uploads/2025/08/image-2-1.jpg",
+          "episode": "6",
+          "judul": "Isekai Mokushiroku Mynoghra",
+          "rilis": "23 hours yang lalu",
+          "uploader": "Azuki",
+          "url": "https://v1.samehadaku.how/anime/isekai-mokushiroku-mynoghra/"
+        }
+      ],
+      "message": "Data berhasil diambil dari multiple sources",
+      "sources": [
+        "samehadaku",
+        "gomunime",
+        "winbutv"
+      ]
+    }
+  },
+  "message": "Data berhasil diambil dari 1 categories",
+  "sources": [
+    "aggregated"
+  ]
+}
+
+
 GET /api/v1/home
 
 Parameter
@@ -249,6 +314,64 @@ JSON
   ]
 }
 
+GET /api/v1/jadwal-rilis
+
+Parameter
+Parameter dikirim sebagai query string dalam URL.
+
+Nama	Tipe	Lokasi	Deskripsi
+category	string	query	Opsional. Filter untuk kategori konten. Nilai yang diterima: anime, korean-drama, all. Menggunakan all akan mengubah struktur respons.
+
+Ekspor ke Spreadsheet
+Contoh Penggunaan (Semua Kategori)
+Berikut adalah contoh cara memanggil API untuk mendapatkan jadwal rilis dari semua kategori yang tersedia.
+
+URL Lengkap:
+
+http://apigatway.humanmade.my.id:8080/api/v1/jadwal-rilis?category=all
+Contoh cURL:
+
+Bash
+
+curl -X 'GET' \
+  'http://apigatway.humanmade.my.id:8080/api/v1/jadwal-rilis?category=all' \
+  -H 'accept: application/json'
+Struktur Respons JSON (category=all)
+Jika permintaan berhasil, API akan mengembalikan objek JSON dengan data yang terstruktur di dalam data_by_category.
+
+Contoh Respons:
+
+JSON
+
+{
+  "categories": [
+    "anime"
+  ],
+  "confidence_score": 1,
+  "data_by_category": {
+    "anime": {
+      "confidence_score": 1,
+      "data": {
+        "Monday": [
+          {
+            "anime_slug": "sentai-red-isekai-de-boukensha-ni-naru",
+            "cover_url": "https://i0.wp.com/gomunime.co/wp-content/uploads/2025/03/146918.jpg",
+            "genres": ["Unknown"],
+            "release_time": "at 09:11",
+            "score": "N/A",
+            "title": "Sentai Red Isekai de Boukensha ni Naru",
+            "type": "TV",
+            "url": "https://gomunime.co/anime/sentai-red-isekai-de-boukensha-ni-naru/"
+          }
+        ]
+      },
+      "message": "Data berhasil diambil dari multiple sources",
+      "sources": ["gomunime", "samehadaku", "winbutv"]
+    }
+  },
+  "message": "Data berhasil diambil dari 1 categories",
+  "sources": ["aggregated"]
+}
 
 GET /api/v1/jadwal-rilis/{day}
 
@@ -303,7 +426,65 @@ JSON
   ]
 }
 
+GET /api/v1/jadwal-rilis/{day}
 
+Parameter
+Endpoint ini menerima parameter di dalam path URL dan juga sebagai query string.
+
+Nama	Tipe	Lokasi	Deskripsi
+day	string	path	Wajib. Hari dalam seminggu. Nilai yang diterima: senin, selasa, rabu, kamis, jumat, sabtu, minggu.
+category	string	query	Opsional. Filter untuk kategori konten. Nilai yang diterima: anime, korean-drama, all. Menggunakan all akan mengubah struktur respons.
+
+Ekspor ke Spreadsheet
+Contoh Penggunaan (Semua Kategori)
+Berikut adalah contoh cara memanggil API untuk mendapatkan jadwal rilis pada hari Senin dari semua kategori.
+
+URL Lengkap:
+
+http://apigatway.humanmade.my.id:8080/api/v1/jadwal-rilis/senin?category=all
+(Catatan: monday pada contoh curl Anda setara dengan senin)
+
+Contoh cURL:
+
+Bash
+
+curl -X 'GET' \
+  'http://apigatway.humanmade.my.id:8080/api/v1/jadwal-rilis/senin?category=all' \
+  -H 'accept: application/json'
+Struktur Respons JSON (category=all)
+Jika permintaan berhasil, API akan mengembalikan objek JSON dengan data yang terstruktur di dalam data_by_category.
+
+Contoh Respons:
+
+JSON
+
+{
+  "categories": [
+    "anime"
+  ],
+  "confidence_score": 1,
+  "data_by_category": {
+    "anime": {
+      "confidence_score": 1,
+      "data": [
+        {
+          "anime_slug": "sentai-red-isekai-de-boukensha-ni-naru",
+          "cover_url": "https://i0.wp.com/gomunime.co/wp-content/uploads/2025/03/146918.jpg",
+          "genres": ["Unknown"],
+          "release_time": "at 09:11",
+          "score": "N/A",
+          "title": "Sentai Red Isekai de Boukensha ni Naru",
+          "type": "TV",
+          "url": "https://gomunime.co/anime/sentai-red-isekai-de-boukensha-ni-naru/"
+        }
+      ],
+      "message": "Data berhasil diambil dari multiple sources",
+      "sources": ["gomunime", "samehadaku", "winbutv"]
+    }
+  },
+  "message": "Data berhasil diambil dari 1 categories",
+  "sources": ["aggregated"]
+}
 
 GET /api/v1/movie
 

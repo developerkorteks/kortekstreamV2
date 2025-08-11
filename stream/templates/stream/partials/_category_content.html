@@ -14,7 +14,7 @@
                         <p class="text-xs text-blue-600 font-mono">Slug: {{ item.anime_slug }}</p>
                     </div>
                     
-                    <a href="{{ item.url }}" class="block">
+                    <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="block">
                         <div class="bg-white rounded-xl shadow-md card-hover overflow-hidden h-full">
                             <div class="relative">
                                 <img src="{{ item.cover }}" 
@@ -59,7 +59,7 @@
                         <p class="text-xs text-yellow-600 font-mono">Slug: {{ item.anime_slug }}</p>
                     </div>
                     
-                    <a href="{{ item.url }}" class="block">
+                    <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="block">
                         <div class="bg-white rounded-xl shadow-md card-hover overflow-hidden h-full">
                             <div class="relative">
                                 <img src="{{ item.cover }}" 
@@ -121,7 +121,7 @@
                         <p class="text-xs text-purple-600 font-mono">Slug: {{ item.anime_slug }}</p>
                     </div>
                     
-                    <a href="{{ item.url }}" class="block">
+                    <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="block">
                         <div class="bg-white rounded-xl shadow-md card-hover overflow-hidden h-full">
                             <div class="relative">
                                 <img src="{{ item.cover }}" 
@@ -196,7 +196,7 @@
                                                  alt="{{ anime.judul }}" />
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <a href="{{ anime.url }}" class="block hover:text-blue-600 transition-colors">
+                                            <a href="{% url 'stream:anime_detail' %}?anime_slug={{ anime.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="block hover:text-blue-600 transition-colors">
                                                 <h6 class="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">
                                                     {{ anime.title }}
                                                 </h6>

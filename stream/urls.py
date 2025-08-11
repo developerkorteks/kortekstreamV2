@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import index
+from .views import home
 app_name = 'stream'
 urlpatterns = [
-        path('', index, name='index' )
+        path('<str:category>/', home, name='index' )
         ]

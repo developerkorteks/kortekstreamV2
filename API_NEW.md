@@ -2,7 +2,7 @@ GET /api/v1/anime-terbaru
 
 Parameter Query
 page : Nomor halaman (contoh: 1, 2).
-category (opsional): Filter konten (pilihan: anime, korean-drama, all).
+category : Filter konten (pilihan: anime, korean-drama, all).
 Contoh URL
 http://apigatway.humanmade.my.id:8080/api/v1/anime-terbaru?page=1&category=anime
 Struktur Respons
@@ -108,6 +108,93 @@ JSON
   "sources": ["samehadaku", "winbutv"]
 }
 
+GET /api/v1/home
+
+Parameter
+Parameter dikirim sebagai query string dalam URL.
+
+Nama	Tipe	Lokasi	Deskripsi
+category	string	query	Opsional. Filter untuk kategori konten. Nilai yang diterima: anime, korean-drama, all. Menggunakan all akan mengubah struktur respons.
+
+Ekspor ke Spreadsheet
+Contoh Penggunaan (Semua Kategori)
+Berikut adalah contoh cara memanggil API untuk mendapatkan konten halaman utama dari semua kategori yang tersedia.
+
+URL Lengkap:
+
+http://apigatway.humanmade.my.id:8080/api/v1/home?category=all
+Contoh cURL:
+
+Bash
+
+curl -X 'GET' \
+  'http://apigatway.humanmade.my.id:8080/api/v1/home?category=all' \
+  -H 'accept: application/json'
+Struktur Respons JSON (category=all)
+Jika permintaan berhasil, API akan mengembalikan objek JSON dengan data yang terstruktur di dalam data_by_category.
+
+Contoh Respons:
+
+JSON
+
+{
+  "categories": [
+    "anime"
+  ],
+  "confidence_score": 1,
+  "data_by_category": {
+    "anime": {
+      "jadwal_rilis": [
+        {
+          "Monday": [
+            {
+              "anime_slug": "busamen-gachi-fighter",
+              "cover_url": "https://v1.samehadaku.how/...",
+              "genres": ["Action", "Adventure"],
+              "release_time": "00:00",
+              "score": "6.68",
+              "title": "Busamen Gachi Fighter",
+              "type": "TV",
+              "url": "https://v1.samehadaku.how/..."
+            }
+          ]
+        }
+      ],
+      "movies": [
+        {
+          "anime_slug": "village-of-the-damned-1960",
+          "cover": "https://winbu.tv/wp-content/uploads/2025/08/57064.jpg",
+          "genres": ["Action", "Drama", "Thriller"],
+          "judul": "Village of the Damned (1960)",
+          "tanggal": "8 jam",
+          "url": "https://winbu.tv/film/village-of-the-damned-1960/"
+        }
+      ],
+      "new_eps": [
+        {
+          "anime_slug": "one-piece",
+          "cover": "https://winbu.tv/wp-content/uploads/2020/04/E5RxYkWX0AAwdGH.png.jpg",
+          "episode": "Episode 1139",
+          "judul": "One Piece",
+          "rilis": "8 jam",
+          "url": "https://winbu.tv/anime/one-piece/"
+        }
+      ],
+      "top10": [
+        {
+          "anime_slug": "one-piece",
+          "cover": "https://winbu.tv/wp-content/uploads/2020/04/E5RxYkWX0AAwdGH.png.jpg",
+          "genres": ["Action", "Adventure", "Drama"],
+          "judul": "One Piece",
+          "rating": "8.71",
+          "url": "https://winbu.tv/anime/one-piece/"
+        }
+      ]
+    }
+  },
+  "message": "Data berhasil diambil dari 1 categories",
+  "sources": ["aggregated"]
+}
 
 GET /api/v1/jadwal-rilis
 

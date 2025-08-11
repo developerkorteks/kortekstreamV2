@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
-{% block title %}Release Schedule - {{ category|title }}{% endblock %}
+{% block title %}Release Schedule | {{ category|title }}{% endblock %}
 
 {% block extra_css %}
     <style>
@@ -8,29 +9,47 @@
             height: 250px;
             object-fit: cover;
         }
-        .card-hover {
-            transition: all 0.3s ease;
+        .badge {
+            @apply px-2 py-1 rounded-full text-xs font-semibold;
         }
-        .card-hover:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        .light .badge-primary {
+            @apply bg-gold-100 text-gold-800;
         }
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .dark .badge-primary {
+            @apply bg-korteks-darkgray text-korteks-red;
         }
-        .glass-effect {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.1);
+        .section-divider {
+            @apply h-px;
         }
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        .light .section-divider {
+            @apply bg-gradient-to-r from-gold-400 to-transparent;
+        }
+        .dark .section-divider {
+            @apply bg-gradient-to-r from-korteks-red to-transparent;
+        }
+        .day-tab {
+            @apply px-4 py-2.5 text-sm font-medium cursor-pointer;
+            @apply text-gray-600 dark:text-gray-300;
+            @apply bg-white dark:bg-korteks-gray;
+            @apply hover:bg-gold-50 dark:hover:bg-korteks-darkgray;
+            @apply rounded-lg border border-gray-200 dark:border-korteks-darkgray;
+            @apply text-center whitespace-nowrap;
+            @apply min-w-[90px];
+            @apply shadow-sm;
+            transition: all 0.2s ease;
         }
         .day-tab.active {
-            color: #4f46e5;
-            border-bottom: 2px solid #4f46e5;
+            @apply text-white dark:text-white;
+            @apply bg-gold-500 dark:bg-korteks-red;
+            @apply border-gold-500 dark:border-korteks-red;
+            @apply shadow-md;
+            @apply transform scale-105;
+        }
+        .day-tab:hover:not(.active) {
+            @apply text-gold-600 dark:text-korteks-red;
+            @apply border-gold-300 dark:border-korteks-red;
+            @apply shadow-md;
+            @apply transform scale-102;
         }
         .day-content, .day-content-anime, .day-content-korean-drama, .day-content-all {
             display: none;
@@ -42,23 +61,24 @@
 {% endblock extra_css %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+<div class="min-h-screen bg-white dark:bg-korteks-black">
     <!-- Navigation -->
-    <nav class="gradient-bg shadow-lg">
+    <nav class="gradient-bg shadow-lg border-b border-gold-200 dark:border-korteks-gray">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
-                    <a href="/" class="text-white text-2xl font-bold hover:text-blue-200 transition-colors">
-                        🎬 MyStream
+                    <a href="/" class="text-gold-700 dark:text-white text-2xl font-bold hover:text-gold-500 dark:hover:text-korteks-red transition-colors flex items-center">
+                        <span class="text-gold-500 dark:text-korteks-red mr-2">🎬</span> 
+                        <span>KortekStream</span>
                     </a>
                     <div class="ml-10 flex items-center space-x-4">
-                        <a href="/" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <a href="/" class="text-gold-700/80 dark:text-white/80 hover:text-gold-500 dark:hover:text-korteks-red px-3 py-2 rounded-md text-sm font-medium">
                             Home
                         </a>
-                        <a href="{% url 'stream:latest' %}" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <a href="{% url 'stream:latest' %}" class="text-gold-700/80 dark:text-white/80 hover:text-gold-500 dark:hover:text-korteks-red px-3 py-2 rounded-md text-sm font-medium">
                             Latest
                         </a>
-                        <a href="{% url 'stream:schedule' %}" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium bg-indigo-700 bg-opacity-50">
+                        <a href="{% url 'stream:schedule' %}" class="text-gold-700 dark:text-white px-3 py-2 rounded-md text-sm font-medium bg-gold-100 dark:bg-korteks-darkgray">
                             Schedule
                         </a>
                     </div>
@@ -69,325 +89,323 @@
     
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Release Schedule</h1>
-            <p class="text-gray-600">Check when your favorite shows will be released</p>
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2 border-l-4 border-gold-500 dark:border-korteks-red pl-4">Release Schedule</h1>
+            <p class="text-gray-600 dark:text-gray-300 ml-6">Find out when your favorite shows are released</p>
         </div>
         
         <!-- Category Filter Tabs -->
         <div class="mb-8">
-            <div class="flex flex-wrap gap-2 border-b border-gray-200">
+            <div class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-korteks-gray">
                 {% for cat in categories %}
                     <a href="{% url 'stream:schedule' %}?category={{ cat }}" 
-                       class="px-4 py-2 text-sm font-medium {% if category == cat %}text-blue-600 border-b-2 border-blue-500{% else %}text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
+                       class="px-4 py-2 text-sm font-medium {% if category == cat %}text-gold-600 dark:text-korteks-red border-b-2 border-gold-500 dark:border-korteks-red{% else %}text-gray-500 dark:text-gray-400 hover:text-gold-600 dark:hover:text-korteks-red hover:border-gold-300 dark:hover:border-korteks-gray{% endif %}">
                         {{ cat|title }}
                     </a>
                 {% endfor %}
             </div>
         </div>
         
+        <!-- API Response Metadata -->
+        <div class="mb-6 p-4 bg-gold-50 dark:bg-korteks-darkgray rounded-lg border border-gold-100 dark:border-korteks-gray">
+            <div class="flex items-center mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold-500 dark:text-korteks-red mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+                <h3 class="font-semibold text-gray-800 dark:text-white">API Response Metadata</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                    <span class="font-medium text-gold-700 dark:text-korteks-red">Confidence Score:</span>
+                    <span class="ml-2">{{ datas.confidence_score }}</span>
+                </div>
+                <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                    <span class="font-medium text-gold-700 dark:text-korteks-red">Sources:</span>
+                    <div class="mt-1 flex flex-wrap gap-1">
+                        {% for source in datas.sources %}
+                            <span class="badge badge-primary">{{ source }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                    <span class="font-medium text-gold-700 dark:text-korteks-red">Message:</span>
+                    <span class="ml-2">{{ datas.message }}</span>
+                </div>
+            </div>
+        </div>
+        
         <!-- Error Handling -->
         {% if datas.error %}
-            <div class="bg-red-50 border-l-4 border-red-400 p-6 rounded-lg shadow-md">
+            <div class="bg-white dark:bg-korteks-darkgray border-l-4 border-gold-500 dark:border-korteks-red p-6 rounded-lg shadow-md">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <svg class="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="h-6 w-6 text-gold-500 dark:text-korteks-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
                     <div class="ml-3">
-                        <h3 class="text-lg font-medium text-red-800">Failed to Load Data</h3>
-                        <p class="mt-2 text-sm text-red-700">
-                            There was a problem retrieving data from the server. Please try again later.
+                        <h3 class="text-lg font-medium text-gray-800 dark:text-white">Something went wrong</h3>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                            We're experiencing some issues. Please try again later.
                         </p>
-                        <div class="mt-4 p-3 bg-red-100 rounded-md">
-                            <p class="text-sm text-red-600">
-                                <strong>Details:</strong> {{ datas.error }}
-                            </p>
-                        </div>
                     </div>
                 </div>
             </div>
         {% else %}
-            <!-- Handle category=all with data_by_category structure -->
+            <!-- Day Tabs -->
+            <div class="mb-6">
+                <div class="bg-gray-100 dark:bg-korteks-black rounded-xl p-3 border border-gray-200 dark:border-korteks-gray shadow-inner">
+                    <div class="flex flex-wrap gap-2 justify-center sm:justify-start" id="day-tabs">
+                        <button class="day-tab active" data-day="Monday">Monday</button>
+                        <button class="day-tab" data-day="Tuesday">Tuesday</button>
+                        <button class="day-tab" data-day="Wednesday">Wednesday</button>
+                        <button class="day-tab" data-day="Thursday">Thursday</button>
+                        <button class="day-tab" data-day="Friday">Friday</button>
+                        <button class="day-tab" data-day="Saturday">Saturday</button>
+                        <button class="day-tab" data-day="Sunday">Sunday</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Schedule Content -->
             {% if category == 'all' and datas.data_by_category %}
                 {% for cat_name, cat_data in datas.data_by_category.items %}
-                    <div class="mb-12">
+                    <div class="mb-8">
                         <div class="flex items-center mb-6">
-                            <h2 class="text-2xl font-bold text-gray-800 capitalize">{{ cat_name }}</h2>
-                            <div class="ml-4 flex-1 h-px bg-gradient-to-r from-blue-400 to-transparent"></div>
-                            <a href="{% url 'stream:schedule' %}?category={{ cat_name }}" class="ml-4 text-sm text-blue-600 hover:underline">
-                                View All
-                            </a>
+                            <h2 class="text-2xl font-bold text-gray-800 dark:text-white capitalize">{{ cat_name }}</h2>
+                            <div class="ml-4 flex-1 section-divider"></div>
                         </div>
                         
-                        {% if cat_data.data %}
-                            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                                <div class="border-b border-gray-200">
-                                    <nav class="flex -mb-px overflow-x-auto">
-                                        {% if selected_day %}
-                                            <!-- Show a "View All" option when a specific day is selected -->
-                                            <a href="{% url 'stream:schedule' %}?category=all" 
-                                               class="day-tab-{{ cat_name }} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                                                View All
-                                            </a>
-                                        {% endif %}
-                                        
-                                        {% for day in cat_data.data.keys %}
-                                            <a href="{% url 'stream:schedule' %}?category=all&day={{ day }}" 
-                                               class="day-tab-{{ cat_name }} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm {% if selected_day == day or forloop.first and not selected_day %}active border-indigo-500 text-indigo-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
-                                                {{ day }}
-                                            </a>
-                                        {% endfor %}
-                                    </nav>
-                                </div>
-                                
-                                <div class="p-6">
-                                    {% for day, animes in cat_data.data.items %}
-                                        <div id="day-{{ cat_name }}-{{ day }}" class="day-content-{{ cat_name }} {% if selected_day == day %}active{% elif forloop.first and not selected_day %}active{% endif %}">
-                                            <div class="space-y-4">
-                                                {% for anime in animes %}
-                                                    <div class="bg-gray-50 rounded-lg p-3">
-                                                        <div class="flex items-start">
-                                                            <div class="flex-shrink-0 mr-3">
-                                                                <img src="{{ anime.cover_url }}" 
+                        {% for day in days %}
+                            <div class="day-content-{{ cat_name }} {% if forloop.first %}active{% endif %}" id="{{ day }}-{{ cat_name }}">
+                                {% if cat_data.data and cat_data.data|get_item:day|length > 0 %}
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                        {% for anime in cat_data.data|get_item:day %}
+                                            <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden border border-transparent hover:border-gold-200 dark:hover:border-korteks-red transition-colors">
+                                                <div class="p-4">
+                                                    <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                                        <!-- Anime Slug Display -->
+                                                        <div class="mb-2 p-2 bg-gold-50 dark:bg-korteks-gray rounded-md border border-gold-100 dark:border-korteks-darkgray">
+                                                            <p class="text-xs text-gold-700 dark:text-korteks-red font-mono">Slug: {{ anime.anime_slug }}</p>
+                                                        </div>
+                                                        
+                                                        <div class="flex items-start space-x-3">
+                                                            <div class="flex-shrink-0">
+                                                                <img src="{{ anime.cover_url }}"
                                                                      class="w-16 h-20 object-cover rounded-lg shadow-sm"
-                                                                     alt="{{ anime.title }}" />
+                                                                     alt="{{ anime.title }}" 
+                                                                     onerror="this.src='https://via.placeholder.com/64x80?text=No+Image';this.onerror='';" />
                                                             </div>
                                                             <div class="flex-1 min-w-0">
-                                                                <a href="{% url 'stream:anime_detail' %}?anime_slug={{ anime.anime_slug }}&category={{ cat_name }}" class="block hover:text-blue-600 transition-colors">
-                                                                    <h6 class="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">
+                                                                <a href="{% url 'stream:anime_detail' %}?anime_slug={{ anime.anime_slug }}&category={{ cat_name }}" class="block hover:text-gold-600 dark:hover:text-korteks-red transition-colors">
+                                                                    <h6 class="font-semibold text-gray-800 dark:text-white text-sm mb-1 line-clamp-2">
                                                                         {{ anime.title }}
                                                                     </h6>
                                                                 </a>
                                                                 
                                                                 <!-- Release Time -->
                                                                 <div class="flex items-center mb-2">
-                                                                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                                                        🕒 {{ anime.release_time }}
+                                                                    <span class="bg-gold-100 text-gold-800 dark:bg-korteks-gray dark:text-white text-xs px-2 py-1 rounded-full">
+                                                                        🕐 {{ anime.release_time }}
                                                                     </span>
+                                                                </div>
+                                                                
+                                                                <!-- Genres Display -->
+                                                                {% if anime.genres %}
+                                                                    <div class="mb-2">
+                                                                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Genres:</p>
+                                                                        <div class="flex flex-wrap gap-1">
+                                                                            {% for genre in anime.genres %}
+                                                                                <span class="bg-gold-50 text-gold-700 dark:bg-korteks-gray dark:text-white text-xs px-2 py-1 rounded">
+                                                                                    {{ genre }}
+                                                                                </span>
+                                                                            {% endfor %}
+                                                                        </div>
+                                                                    </div>
+                                                                {% endif %}
+                                                                
+                                                                <!-- Additional Info -->
+                                                                <div class="flex items-center space-x-4 text-xs text-gray-600 dark:text-gray-400">
+                                                                    {% if anime.score and anime.score != "N/A" %}
+                                                                        <span class="flex items-center">
+                                                                            <span class="text-gold-500 dark:text-gold-400 mr-1">⭐</span>
+                                                                            {{ anime.score }}
+                                                                        </span>
+                                                                    {% endif %}
                                                                     {% if anime.type %}
-                                                                        <span class="ml-2 bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
+                                                                        <span class="bg-gold-50 text-gold-700 dark:bg-korteks-gray dark:text-white px-2 py-1 rounded">
                                                                             {{ anime.type }}
                                                                         </span>
                                                                     {% endif %}
                                                                 </div>
-                                                                
-                                                                <!-- Genres -->
-                                                                {% if anime.genres %}
-                                                                    <div class="flex flex-wrap gap-1">
-                                                                        {% for genre in anime.genres %}
-                                                                            <span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-0.5 rounded-full">
-                                                                                {{ genre }}
-                                                                            </span>
-                                                                        {% endfor %}
-                                                                    </div>
-                                                                {% endif %}
                                                             </div>
-                                                            {% if anime.score and anime.score != "0" and anime.score != "N/A" %}
-                                                                <div class="ml-2 flex-shrink-0">
-                                                                    <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full flex items-center">
-                                                                        <span class="text-yellow-500 mr-1">⭐</span>
-                                                                        {{ anime.score }}
-                                                                    </span>
-                                                                </div>
-                                                            {% endif %}
                                                         </div>
                                                     </div>
-                                                {% endfor %}
+                                                </div>
                                             </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="bg-gold-50 dark:bg-korteks-darkgray p-6 rounded-lg text-center border border-gold-100 dark:border-korteks-gray">
+                                        <p class="text-gray-600 dark:text-gray-300">No schedule found for {{ day|title }} in {{ cat_name }}.</p>
+                                    </div>
+                                {% endif %}
                             </div>
-                        {% else %}
-                            <div class="bg-gray-50 p-6 rounded-lg text-center">
-                                <p class="text-gray-600">No schedule information found for {{ cat_name }}.</p>
-                            </div>
-                        {% endif %}
+                        {% endfor %}
                     </div>
                 {% endfor %}
             {% else %}
-                <!-- Regular category display -->
-                {% if datas.data %}
-                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                        <div class="border-b border-gray-200">
-                            <nav class="flex -mb-px overflow-x-auto">
-                                {% if selected_day %}
-                                    <!-- Show a "View All" option when a specific day is selected -->
-                                    <a href="{% url 'stream:schedule' %}?category={{ category }}" 
-                                       class="day-tab whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                                        View All
-                                    </a>
-                                {% endif %}
-                                
-                                {% for day in datas.data.keys %}
-                                    <a href="{% url 'stream:schedule' %}?category={{ category }}&day={{ day }}" 
-                                       class="day-tab whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm {% if selected_day == day or forloop.first and not selected_day %}active border-indigo-500 text-indigo-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}">
-                                        {{ day }}
-                                    </a>
-                                {% endfor %}
-                            </nav>
-                        </div>
-                        
-                        <div class="p-6">
-                            {% for day, animes in datas.data.items %}
-                                <div id="day-{{ day }}" class="day-content {% if selected_day == day %}active{% elif forloop.first and not selected_day %}active{% endif %}">
-                                    <div class="space-y-4">
-                                        {% for anime in animes %}
-                                            <div class="bg-gray-50 rounded-lg p-3">
-                                                <div class="flex items-start">
-                                                    <div class="flex-shrink-0 mr-3">
-                                                        <img src="{{ anime.cover_url }}" 
+                {% for day in days %}
+                    <div class="day-content {% if forloop.first %}active{% endif %}" id="{{ day }}">
+                        {% if datas.data and datas.data|get_item:day|length > 0 %}
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                {% for anime in datas.data|get_item:day %}
+                                    <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden border border-transparent hover:border-gold-200 dark:hover:border-korteks-red transition-colors">
+                                        <div class="p-4">
+                                            <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                                <!-- Anime Slug Display -->
+                                                <div class="mb-2 p-2 bg-gold-50 dark:bg-korteks-gray rounded-md border border-gold-100 dark:border-korteks-darkgray">
+                                                    <p class="text-xs text-gold-700 dark:text-korteks-red font-mono">Slug: {{ anime.anime_slug }}</p>
+                                                </div>
+                                                
+                                                <div class="flex items-start space-x-3">
+                                                    <div class="flex-shrink-0">
+                                                        <img src="{{ anime.cover_url }}"
                                                              class="w-16 h-20 object-cover rounded-lg shadow-sm"
-                                                             alt="{{ anime.title }}" />
+                                                             alt="{{ anime.title }}" 
+                                                             onerror="this.src='https://via.placeholder.com/64x80?text=No+Image';this.onerror='';" />
                                                     </div>
                                                     <div class="flex-1 min-w-0">
-                                                        <a href="{% url 'stream:anime_detail' %}?anime_slug={{ anime.anime_slug }}&category={{ category }}" class="block hover:text-blue-600 transition-colors">
-                                                            <h6 class="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">
+                                                        <a href="{% url 'stream:anime_detail' %}?anime_slug={{ anime.anime_slug }}&category={{ category }}" class="block hover:text-gold-600 dark:hover:text-korteks-red transition-colors">
+                                                            <h6 class="font-semibold text-gray-800 dark:text-white text-sm mb-1 line-clamp-2">
                                                                 {{ anime.title }}
                                                             </h6>
                                                         </a>
                                                         
                                                         <!-- Release Time -->
                                                         <div class="flex items-center mb-2">
-                                                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                                                🕒 {{ anime.release_time }}
+                                                            <span class="bg-gold-100 text-gold-800 dark:bg-korteks-gray dark:text-white text-xs px-2 py-1 rounded-full">
+                                                                🕐 {{ anime.release_time }}
                                                             </span>
+                                                        </div>
+                                                        
+                                                        <!-- Genres Display -->
+                                                        {% if anime.genres %}
+                                                            <div class="mb-2">
+                                                                <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Genres:</p>
+                                                                <div class="flex flex-wrap gap-1">
+                                                                    {% for genre in anime.genres %}
+                                                                        <span class="bg-gold-50 text-gold-700 dark:bg-korteks-gray dark:text-white text-xs px-2 py-1 rounded">
+                                                                            {{ genre }}
+                                                                        </span>
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </div>
+                                                        {% endif %}
+                                                        
+                                                        <!-- Additional Info -->
+                                                        <div class="flex items-center space-x-4 text-xs text-gray-600 dark:text-gray-400">
+                                                            {% if anime.score and anime.score != "N/A" %}
+                                                                <span class="flex items-center">
+                                                                    <span class="text-gold-500 dark:text-gold-400 mr-1">⭐</span>
+                                                                    {{ anime.score }}
+                                                                </span>
+                                                            {% endif %}
                                                             {% if anime.type %}
-                                                                <span class="ml-2 bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
+                                                                <span class="bg-gold-50 text-gold-700 dark:bg-korteks-gray dark:text-white px-2 py-1 rounded">
                                                                     {{ anime.type }}
                                                                 </span>
                                                             {% endif %}
                                                         </div>
-                                                        
-                                                        <!-- Genres -->
-                                                        {% if anime.genres %}
-                                                            <div class="flex flex-wrap gap-1">
-                                                                {% for genre in anime.genres %}
-                                                                    <span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-0.5 rounded-full">
-                                                                        {{ genre }}
-                                                                    </span>
-                                                                {% endfor %}
-                                                            </div>
-                                                        {% endif %}
                                                     </div>
-                                                    {% if anime.score and anime.score != "0" and anime.score != "N/A" %}
-                                                        <div class="ml-2 flex-shrink-0">
-                                                            <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full flex items-center">
-                                                                <span class="text-yellow-500 mr-1">⭐</span>
-                                                                {{ anime.score }}
-                                                            </span>
-                                                        </div>
-                                                    {% endif %}
                                                 </div>
                                             </div>
-                                        {% endfor %}
+                                        </div>
                                     </div>
-                                </div>
-                            {% endfor %}
-                        </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="bg-gold-50 dark:bg-korteks-darkgray p-6 rounded-lg text-center border border-gold-100 dark:border-korteks-gray">
+                                <p class="text-gray-600 dark:text-gray-300">No schedule found for {{ day|title }}.</p>
+                            </div>
+                        {% endif %}
                     </div>
-                {% else %}
-                    <div class="bg-gray-50 p-10 rounded-lg text-center">
-                        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <h3 class="text-lg font-medium text-gray-700 mb-2">No Schedule Found</h3>
-                        <p class="text-gray-500">There is no release schedule available for {{ category|title }} at this time.</p>
-                    </div>
-                {% endif %}
+                {% endfor %}
             {% endif %}
         {% endif %}
     </div>
     
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Get the selected day from URL if available
-            const urlParams = new URLSearchParams(window.location.search);
-            const selectedDay = urlParams.get('day');
-            
-            if (selectedDay) {
-                // If we have a selected day, show that day's content
-                if (urlParams.get('category') === 'all') {
-                    // For 'all' category, we need to show the selected day for each category
-                    const categoryContainers = document.querySelectorAll('[id^="day-"]');
-                    const categories = new Set();
-                    
-                    categoryContainers.forEach(container => {
-                        const parts = container.id.split('-');
-                        if (parts.length >= 2) {
-                            categories.add(parts[1]);
-                        }
-                    });
-                    
-                    categories.forEach(category => {
-                        if (category !== 'all' && document.getElementById(`day-${category}-${selectedDay}`)) {
-                            showDayCategory(category, selectedDay);
-                        }
-                    });
-                } else {
-                    // For specific category, just show the selected day
-                    showDay(selectedDay);
-                }
-            } else {
-                // No selected day, show the first day tab for each category
-                const dayTabs = document.querySelectorAll('.day-tab');
-                if (dayTabs.length > 0) {
-                    const firstDay = dayTabs[0].textContent.trim();
-                    showDay(firstDay);
-                }
-                
-                // Initialize the first day tab for each category in the 'all' view
-                const categoryContainers = document.querySelectorAll('[id^="day-"]');
-                const categories = new Set();
-                const categoryDays = {};
-                
-                categoryContainers.forEach(container => {
-                    const parts = container.id.split('-');
-                    if (parts.length >= 3) {
-                        const category = parts[1];
-                        const day = parts[2];
-                        categories.add(category);
-                        
-                        if (!categoryDays[category]) {
-                            categoryDays[category] = day;
-                        }
-                    }
-                });
-                
-                categories.forEach(category => {
-                    if (category !== 'all' && categoryDays[category]) {
-                        showDayCategory(category, categoryDays[category]);
-                    }
-                });
-            }
-        });
-        
-        function showDay(day) {
-            // Hide all day content
-            document.querySelectorAll('.day-content').forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            // Show selected day content
-            const dayContent = document.getElementById('day-' + day);
-            if (dayContent) {
-                dayContent.classList.add('active');
-            }
-        }
-        
-        function showDayCategory(category, day) {
-            // Hide all day content for this category
-            document.querySelectorAll('.day-content-' + category).forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            // Show selected day content
-            const dayContent = document.getElementById('day-' + category + '-' + day);
-            if (dayContent) {
-                dayContent.classList.add('active');
-            }
-        }
-    </script>
+    <!-- Footer -->
+    <footer class="gradient-bg mt-16 border-t border-gold-200 dark:border-korteks-gray">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <div class="flex justify-center items-center mb-4">
+                    <span class="text-gold-500 dark:text-korteks-red text-3xl mr-2">🎬</span>
+                    <h2 class="text-2xl font-bold text-gold-700 dark:text-white">KortekStream</h2>
+                </div>
+                <p class="text-gray-700 dark:text-gray-300">&copy; 2025 KortekStream - Your Ultimate Streaming Destination</p>
+                <div class="mt-4 flex justify-center space-x-6">
+                    <span class="text-gray-500 dark:text-gray-400 text-sm">Made with <span class="text-gold-500 dark:text-korteks-red">❤️</span> for anime lovers</span>
+                </div>
+            </div>
+        </div>
+    </footer>
 </div>
-{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Day tabs functionality
+        const dayTabs = document.querySelectorAll('.day-tab');
+        const dayContents = document.querySelectorAll('.day-content');
+        const dayContentsAnime = document.querySelectorAll('.day-content-anime');
+        const dayContentsKoreanDrama = document.querySelectorAll('.day-content-korean-drama');
+        const dayContentsAll = document.querySelectorAll('.day-content-all');
+        
+        dayTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                dayTabs.forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                const day = tab.getAttribute('data-day');
+                
+                // Handle regular category view
+                dayContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === day) {
+                        content.classList.add('active');
+                    }
+                });
+                
+                // Handle category=all view with data_by_category
+                // For anime
+                dayContentsAnime.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === day + '-anime') {
+                        content.classList.add('active');
+                    }
+                });
+                
+                // For korean-drama
+                dayContentsKoreanDrama.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === day + '-korean-drama') {
+                        content.classList.add('active');
+                    }
+                });
+                
+                // For all
+                dayContentsAll.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === day + '-all') {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock extra_js %}
+{% endblock content %}

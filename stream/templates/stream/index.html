@@ -2,9 +2,9 @@
 {% load static %}
 {% block title %}
     {% if category %}
-        Home - {{ category|title }}
+        {{ category|title }} | KortekStream
     {% else %}
-        Home - Korteks
+        Home | KortekStream
     {% endif %}
 {% endblock title %}
 {% block extra_css %}
@@ -13,37 +13,46 @@
             height: 250px;
             object-fit: cover;
         }
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        .card-hover:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        }
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
         .glass-effect {
             backdrop-filter: blur(10px);
             background: rgba(255, 255, 255, 0.1);
         }
+        .section-divider {
+            @apply h-px;
+        }
+        .light .section-divider {
+            @apply bg-gradient-to-r from-gold-400 to-transparent;
+        }
+        .dark .section-divider {
+            @apply bg-gradient-to-r from-korteks-red to-transparent;
+        }
+        .badge {
+            @apply px-2 py-1 rounded-full text-xs font-semibold;
+        }
+        .light .badge-primary {
+            @apply bg-gold-100 text-gold-800;
+        }
+        .dark .badge-primary {
+            @apply bg-korteks-darkgray text-korteks-red;
+        }
     </style>
 {% endblock extra_css %}
 {% block content %}
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div class="min-h-screen bg-white dark:bg-korteks-black">
         <!-- Navigation -->
-        <nav class="gradient-bg shadow-lg">
+        <nav class="gradient-bg shadow-lg border-b border-gold-200 dark:border-korteks-gray">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
                     <div class="flex items-center">
-                        <a href="/" class="text-white text-2xl font-bold hover:text-blue-200 transition-colors">
-                            🎬 MyStream
+                        <a href="/" class="text-gold-700 dark:text-white text-2xl font-bold hover:text-gold-500 dark:hover:text-korteks-red transition-colors flex items-center">
+                            <span class="text-gold-500 dark:text-korteks-red mr-2">🎬</span> 
+                            <span>KortekStream</span>
                         </a>
                     </div>
                     <div class="hidden md:block">
                         <div class="ml-10 flex items-baseline space-x-4">
-                            <span class="text-white/80 text-sm">
-                                Category: <span class="font-semibold text-white">{{ category|title }}</span>
+                            <span class="text-gold-700/80 dark:text-white/80 text-sm">
+                                Category: <span class="font-semibold text-gold-600 dark:text-korteks-red">{{ category|title }}</span>
                             </span>
                         </div>
                     </div>
@@ -54,62 +63,122 @@
         <!-- Main Content -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="mb-8">
-                <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-2 border-l-4 border-gold-500 dark:border-korteks-red pl-4">
                     Welcome to {{ category|title }} Section
                 </h1>
-                <p class="text-gray-600">Discover amazing content in our collection</p>
+                <p class="text-gray-600 dark:text-gray-300 ml-6">Discover amazing content in our collection</p>
             </div>
-            {# --- Blok untuk Menangani Error dari API --- #}
+            
+            {# --- Error Handling Block --- #}
             {% if datas.error or datas.message == "Something went wrong" %}
-                <div class="bg-red-50 border-l-4 border-red-400 p-6 rounded-lg shadow-md">
+                <div class="bg-white dark:bg-korteks-darkgray border-l-4 border-gold-500 dark:border-korteks-red p-6 rounded-lg shadow-md">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="h-6 w-6 text-gold-500 dark:text-korteks-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
                         <div class="ml-3">
-                            <h3 class="text-lg font-medium text-red-800">Gagal Memuat Data</h3>
-                            <p class="mt-2 text-sm text-red-700">
-                                Terjadi masalah saat mengambil data dari server. Silakan coba lagi nanti.
+                            <h3 class="text-lg font-medium text-gray-800 dark:text-white">Something went wrong</h3>
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                We're experiencing some issues. Please try again later.
                             </p>
-                            {% if datas.error %}
-                                <div class="mt-4 p-3 bg-red-100 rounded-md">
-                                    <p class="text-sm text-red-600">
-                                        <strong>Detail:</strong> {{ datas.error }}
-                                    </p>
-                                </div>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
-            {# --- Blok jika Data Berhasil Dimuat --- #}
+            {# --- Data Display Block --- #}
             {% else %}
-                {# --- Logika untuk category=all --- #}
+                {# --- Logic for category=all --- #}
                 {% if category == 'all' and datas.data_by_category %}
+                    <div class="mb-4 p-4 bg-gold-50 dark:bg-korteks-darkgray rounded-lg border border-gold-100 dark:border-korteks-gray">
+                        <div class="flex items-center mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold-500 dark:text-korteks-red mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                            <h3 class="font-semibold text-gray-800 dark:text-white">API Response Metadata</h3>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Categories:</span>
+                                <div class="mt-1 flex flex-wrap gap-1">
+                                    {% for cat in datas.categories %}
+                                        <span class="badge badge-primary">{{ cat }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Confidence Score:</span>
+                                <span class="ml-2">{{ datas.confidence_score }}</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Sources:</span>
+                                <div class="mt-1 flex flex-wrap gap-1">
+                                    {% for source in datas.sources %}
+                                        <span class="badge badge-primary">{{ source }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray md:col-span-3">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Message:</span>
+                                <span class="ml-2">{{ datas.message }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
                     {% for cat_name, cat_data in datas.data_by_category.items %}
                         <div class="mb-12">
                             <div class="flex items-center mb-6">
-                                <h2 class="text-3xl font-bold text-gray-800 capitalize">{{ cat_name }}</h2>
-                                <div class="ml-4 flex-1 h-px bg-gradient-to-r from-blue-400 to-transparent"></div>
+                                <h2 class="text-3xl font-bold text-gray-800 dark:text-white capitalize">{{ cat_name }}</h2>
+                                <div class="ml-4 flex-1 section-divider"></div>
                             </div>
                             {% include 'stream/partials/_category_content.html' with content=cat_data %}
                         </div>
                     {% endfor %}
-                    {# --- Logika untuk category spesifik (anime, dll) --- #}
+                {# --- Logic for specific category (anime, etc.) --- #}
                 {% else %}
+                    <div class="mb-4 p-4 bg-gold-50 dark:bg-korteks-darkgray rounded-lg border border-gold-100 dark:border-korteks-gray">
+                        <div class="flex items-center mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold-500 dark:text-korteks-red mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                            <h3 class="font-semibold text-gray-800 dark:text-white">API Response Metadata</h3>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Confidence Score:</span>
+                                <span class="ml-2">{{ datas.confidence_score }}</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Sources:</span>
+                                <div class="mt-1 flex flex-wrap gap-1">
+                                    {% for source in datas.sources %}
+                                        <span class="badge badge-primary">{{ source }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Message:</span>
+                                <span class="ml-2">{{ datas.message }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
                     {% include 'stream/partials/_category_content.html' with content=datas %}
                 {% endif %}
             {% endif %}
         </div>
 
         <!-- Footer -->
-        <footer class="gradient-bg mt-16">
+        <footer class="gradient-bg mt-16 border-t border-gold-200 dark:border-korteks-gray">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div class="text-center">
-                    <p class="text-white/80">&copy; 2025 MyStream - Your Ultimate Streaming Destination</p>
+                    <div class="flex justify-center items-center mb-4">
+                        <span class="text-gold-500 dark:text-korteks-red text-3xl mr-2">🎬</span>
+                        <h2 class="text-2xl font-bold text-gold-700 dark:text-white">KortekStream</h2>
+                    </div>
+                    <p class="text-gray-700 dark:text-gray-300">&copy; 2025 KortekStream - Your Ultimate Streaming Destination</p>
                     <div class="mt-4 flex justify-center space-x-6">
-                        <span class="text-white/60 text-sm">Made with ❤️ for anime lovers</span>
+                        <span class="text-gray-500 dark:text-gray-400 text-sm">Made with <span class="text-gold-500 dark:text-korteks-red">❤️</span> for anime lovers</span>
                     </div>
                 </div>
             </div>

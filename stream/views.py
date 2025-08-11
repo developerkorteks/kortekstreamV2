@@ -142,6 +142,10 @@ def anime_detail(request):
             'data': data['data']
         }
     
+    # Handle _metadata field - Django templates don't allow attributes starting with underscore
+    if '_metadata' in normalized_data:
+        normalized_data['metadata'] = normalized_data.pop('_metadata')
+    
     context = {
         "detail": normalized_data,
         "category": category,
@@ -196,12 +200,14 @@ def schedule(request):
     # Get available categories
     categories = get_categories()
     
+    # Define days of the week (Indonesian names as used in API)
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    
     # Create cache key based on whether we're fetching a specific day or all days
     cache_key = f"schedule_data_{category}_{day if day else 'all_days'}"
     data = cache.get(cache_key)
     
     if not data:
-        # First, always get the full schedule data as a fallback
         try:
             # Use the general schedule endpoint
             res = requests.get(
@@ -210,39 +216,30 @@ def schedule(request):
                 timeout=10
             )
             res.raise_for_status()
-            full_data = res.json()
+            data = res.json()
             
-            # Cache the full data
-            cache.set(f"schedule_data_{category}_all_days", full_data, timeout=300)
+            # Cache the data
+            cache.set(cache_key, data, timeout=300)
             
-            # If a specific day was requested, try to get that data
-            if day:
-                # If we already have the full data, we can just filter it in memory
-                # rather than making another API call that might fail
-                if day in full_data.get('data', {}):
-                    # For a specific category, we can create a filtered version of the data
-                    filtered_data = {
-                        'confidence_score': full_data.get('confidence_score', 1),
-                        'message': full_data.get('message', 'Data filtered from full schedule'),
-                        'sources': full_data.get('sources', []),
-                        'data': {day: full_data['data'][day]} if 'data' in full_data else {}
-                    }
-                    data = filtered_data
-                    cache.set(cache_key, data, timeout=300)
-                else:
-                    # Day not found in full data, use the full data
-                    data = full_data
-            else:
-                # No specific day requested, use the full data
-                data = full_data
         except Exception as e:
             data = {"error": f"Failed to retrieve schedule data: {str(e)}"}
+    
+    # Handle _metadata field - Django templates don't allow attributes starting with underscore
+    if '_metadata' in data:
+        data['metadata'] = data.pop('_metadata')
+    
+    # Handle nested data_by_category if it exists
+    if 'data_by_category' in data:
+        for cat_name, cat_data in data['data_by_category'].items():
+            if '_metadata' in cat_data:
+                cat_data['metadata'] = cat_data.pop('_metadata')
     
     context = {
         "datas": data,
         "category": category,
         "categories": categories,
-        "selected_day": day
+        "selected_day": day,
+        "days": days
     }
     
     return render(request, 'stream/schedule.html', context)

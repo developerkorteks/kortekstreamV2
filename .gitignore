@@ -1,0 +1,81 @@
+# ############################################################################
+# ## Template .gitignore standar untuk proyek Django
+# ## https://github.com/github/gitignore/blob/main/Python.gitignore
+# ## Ditambah dengan file-file spesifik Django.
+# ############################################################################
+
+# File-file environment (Sangat Penting!)
+# Mengandung secret keys, kredensial database, dll.
+.env
+.env.*
+!.env.example
+
+# Direktori virtual environment Python
+# Jangan pernah memasukkan library pihak ketiga ke dalam Git.
+# Gunakan requirements.txt sebagai gantinya.
+venv/
+env/
+.venv/
+*/.venv/
+*/venv/
+*/env/
+
+# File cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# File-file runtime
+*.log
+*.pot
+*.pyc
+
+# File database lokal (SQLite)
+# Database produksi seharusnya tidak menggunakan SQLite.
+*.sqlite3
+db.sqlite3
+db.sqlite3-journal
+
+# File-file media yang di-upload oleh pengguna
+# Biasanya, ini disimpan di layanan penyimpanan cloud seperti AWS S3 di produksi.
+# Jika Anda tetap ingin menyimpannya di Git, hapus baris ini.
+/media/
+
+# File statis yang dikumpulkan oleh collectstatic
+# File-file ini digenerasi ulang setiap kali deployment.
+/static/
+/staticfiles/
+/static_root/
+
+# File spesifik dari IDE (Editor Kode)
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# File-file dari library testing dan coverage
+.coverage
+.coverage.*
+htmlcov/
+pytest_cache/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+
+# File-file build dan distribusi Python
+/build/
+/dist/
+*.egg-info/
+*.egg
+
+# File notebook (Jupyter/IPython)
+.ipynb_checkpoints
+
+# File dari Celery (jika digunakan)
+celerybeat-schedule
+celerybeat.pid
+
+# File-file dari SASS/SCSS
+.sass-cache/
+.node-

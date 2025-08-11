@@ -1,0 +1,159 @@
+<!-- Main Navigation -->
+<nav class="gradient-bg shadow-lg border-b border-gold-200 dark:border-korteks-gray">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center">
+                <a href="/" class="text-gold-700 dark:text-white text-2xl font-bold hover:text-gold-500 dark:hover:text-korteks-red transition-colors flex items-center">
+                    <span class="text-gold-500 dark:text-korteks-red mr-2">🎬</span> 
+                    <span>KortekStream</span>
+                </a>
+                <div class="ml-10 hidden md:flex items-center space-x-4">
+                    <a href="/" class="text-gold-700/80 dark:text-white/80 hover:text-gold-500 dark:hover:text-korteks-red px-3 py-2 rounded-md text-sm font-medium {% if active_page == 'home' %}bg-gold-100 dark:bg-korteks-darkgray text-gold-700 dark:text-white{% endif %}">
+                        Home
+                    </a>
+                    <a href="{% url 'stream:latest' %}" class="text-gold-700/80 dark:text-white/80 hover:text-gold-500 dark:hover:text-korteks-red px-3 py-2 rounded-md text-sm font-medium {% if active_page == 'latest' %}bg-gold-100 dark:bg-korteks-darkgray text-gold-700 dark:text-white{% endif %}">
+                        Latest
+                    </a>
+                    <a href="{% url 'stream:schedule' %}" class="text-gold-700/80 dark:text-white/80 hover:text-gold-500 dark:hover:text-korteks-red px-3 py-2 rounded-md text-sm font-medium {% if active_page == 'schedule' %}bg-gold-100 dark:bg-korteks-darkgray text-gold-700 dark:text-white{% endif %}">
+                        Schedule
+                    </a>
+                </div>
+            </div>
+            <div class="hidden md:flex items-center space-x-4">
+                <!-- Search Form -->
+                <form action="{% url 'stream:search' %}" method="GET" class="relative">
+                    <input 
+                        type="text" 
+                        name="q" 
+                        placeholder="Search..." 
+                        class="w-64 px-4 py-2 rounded-full border focus:outline-none focus:ring-2 transition-all
+                               border-gold-200 focus:border-gold-400 focus:ring-gold-200 bg-white text-gray-800
+                               dark:border-korteks-gray dark:focus:border-korteks-red dark:focus:ring-korteks-darkgray dark:bg-korteks-darkgray dark:text-white"
+                    >
+                    <input type="hidden" name="category" value="{{ category|default:'anime' }}">
+                    <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gold-500 dark:text-korteks-red">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </button>
+                </form>
+                
+                <!-- Category Selector (if categories are available) -->
+                {% if categories %}
+                <div class="relative">
+                    <select id="categorySelector" class="appearance-none px-4 py-2 pr-8 rounded-lg border border-gold-200 dark:border-korteks-gray bg-white dark:bg-korteks-darkgray text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-gold-200 dark:focus:ring-korteks-darkgray cursor-pointer">
+                        {% for cat in categories %}
+                            <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>{{ cat|title }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gold-500 dark:text-korteks-red">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Mobile menu button -->
+            <div class="md:hidden flex items-center">
+                <button id="mobile-menu-button" class="text-gold-700 dark:text-white hover:text-gold-500 dark:hover:text-korteks-red focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mobile menu, toggle classes based on menu state -->
+    <div id="mobile-menu" class="hidden md:hidden">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="/" class="block px-3 py-2 rounded-md text-base font-medium text-gold-700 dark:text-white hover:bg-gold-100 dark:hover:bg-korteks-darkgray">
+                Home
+            </a>
+            <a href="{% url 'stream:latest' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gold-700 dark:text-white hover:bg-gold-100 dark:hover:bg-korteks-darkgray">
+                Latest
+            </a>
+            <a href="{% url 'stream:schedule' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gold-700 dark:text-white hover:bg-gold-100 dark:hover:bg-korteks-darkgray">
+                Schedule
+            </a>
+            
+            <!-- Mobile Search Form -->
+            <form action="{% url 'stream:search' %}" method="GET" class="px-3 py-2">
+                <div class="flex space-x-2">
+                    <input 
+                        type="text" 
+                        name="q" 
+                        placeholder="Search..." 
+                        class="flex-1 px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all
+                               border-gold-200 focus:border-gold-400 focus:ring-gold-200 bg-white text-gray-800
+                               dark:border-korteks-gray dark:focus:border-korteks-red dark:focus:ring-korteks-darkgray dark:bg-korteks-darkgray dark:text-white"
+                    >
+                    <input type="hidden" name="category" value="{{ category|default:'anime' }}">
+                    <button type="submit" class="px-4 py-2 bg-gold-500 dark:bg-korteks-red text-white rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Mobile Category Selector -->
+            {% if categories %}
+            <div class="px-3 py-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                <select id="mobileCategorySelector" class="w-full px-4 py-2 rounded-lg border border-gold-200 dark:border-korteks-gray bg-white dark:bg-korteks-darkgray text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-gold-200 dark:focus:ring-korteks-darkgray">
+                    {% for cat in categories %}
+                        <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>{{ cat|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<script>
+    // Mobile menu toggle
+    document.getElementById('mobile-menu-button').addEventListener('click', function() {
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenu.classList.toggle('hidden');
+    });
+    
+    // Category selector functionality
+    const categorySelector = document.getElementById('categorySelector');
+    if (categorySelector) {
+        categorySelector.addEventListener('change', function() {
+            const category = this.value;
+            const currentUrl = new URL(window.location.href);
+            
+            // If we're on a category page, redirect to the new category
+            if (window.location.pathname.match(/^\/[^\/]+\/?$/)) {
+                window.location.href = '/' + category + '/';
+            } else {
+                // Otherwise, update the category parameter in the current URL
+                currentUrl.searchParams.set('category', category);
+                window.location.href = currentUrl.toString();
+            }
+        });
+    }
+    
+    // Mobile category selector functionality
+    const mobileCategorySelector = document.getElementById('mobileCategorySelector');
+    if (mobileCategorySelector) {
+        mobileCategorySelector.addEventListener('change', function() {
+            const category = this.value;
+            const currentUrl = new URL(window.location.href);
+            
+            // If we're on a category page, redirect to the new category
+            if (window.location.pathname.match(/^\/[^\/]+\/?$/)) {
+                window.location.href = '/' + category + '/';
+            } else {
+                // Otherwise, update the category parameter in the current URL
+                currentUrl.searchParams.set('category', category);
+                window.location.href = currentUrl.toString();
+            }
+        });
+    }
+</script>

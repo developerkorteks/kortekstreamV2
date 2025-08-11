@@ -1,6 +1,12 @@
 from django.shortcuts import render, redirect
 from django.core.cache import cache
+from django.conf import settings
 import requests
+import logging
+import urllib.parse
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 BASE_URL = 'http://apigatway.humanmade.my.id:8080'
 
@@ -48,7 +54,8 @@ def root(request):
         "categories": categories,
         "datas": content_data,
         "category": default_category,
-        "is_root": True  # Flag to indicate this is the root page
+        "is_root": True,  # Flag to indicate this is the root page
+        "active_page": "home"  # For navigation active state
     }
     
     return render(request, 'stream/root.html', context)
@@ -59,25 +66,76 @@ def home(request, category):
     
     cache_key = f"home_data_{category}"
     data = cache.get(cache_key)  # cek apakah sudah ada di cache
+    
+    # For debugging purposes, we'll add more detailed error information
+    error_details = None
+    
     if not data:
         try:
-            res = requests.get(BASE_URL + '/api/v1/home', params={'category': category}, timeout=5)
+            # Print the URL we're trying to access for debugging
+            api_url = f"{BASE_URL}/api/v1/home"
+            logger.info(f"Fetching data from: {api_url} with category={category}")
+            
+            # Increase timeout to 10 seconds to allow for slower responses
+            res = requests.get(api_url, params={'category': category}, timeout=10)
+            
+            # Check status code
             res.raise_for_status()
+            
+            # Parse the JSON response
             data = res.json()
-        except Exception as e:
-            data = {"error": str(e)}
-        # Validasi confidence_score
-        if data.get("confidence_score", 0) <= 0.5:
+            
+            # Log the response for debugging
+            logger.info(f"API Response: {data.get('message', 'No message')}, Confidence: {data.get('confidence_score', 'N/A')}")
+            
+            # Validasi confidence_score
+            if data.get("confidence_score", 0) <= 0.5:
+                error_details = f"Low confidence score: {data.get('confidence_score', 0)}"
+                logger.warning(f"Low confidence score: {data.get('confidence_score', 0)}")
+                data = {
+                    "message": "Something went wrong",
+                    "confidence_score": data.get("confidence_score", 0),
+                    "error_details": error_details
+                }
+            else:
+                # Only cache successful responses with good confidence score
+                cache.set(cache_key, data, timeout=60)
+                
+        except requests.exceptions.RequestException as e:
+            # More specific error handling for network issues
+            error_details = f"API Connection Error: {str(e)}"
+            logger.error(f"API Connection Error: {str(e)}")
             data = {
-                "message": "Something went wrong",
-                "confidence_score": data.get("confidence_score", 0)
+                "error": str(e),
+                "message": "API Connection Error",
+                "error_details": error_details
             }
-        # Simpan ke cache (misal 60 detik)
-        cache.set(cache_key, data, timeout=60)
+        except ValueError as e:
+            # Handle JSON parsing errors
+            error_details = f"Invalid JSON Response: {str(e)}"
+            logger.error(f"Invalid JSON Response: {str(e)}")
+            data = {
+                "error": str(e),
+                "message": "Invalid API Response Format",
+                "error_details": error_details
+            }
+        except Exception as e:
+            # Catch-all for other errors
+            error_details = f"Unexpected Error: {str(e)}"
+            logger.error(f"Unexpected Error: {str(e)}")
+            data = {
+                "error": str(e),
+                "message": "Unexpected Error",
+                "error_details": error_details
+            }
+    
     context = {
         "datas": data,
         "category": category,
-        "categories": categories
+        "categories": categories,
+        "error_details": error_details,
+        "debug": settings.DEBUG,  # Pass DEBUG setting to template
+        "active_page": "category"  # For navigation active state
     }
     return render(request, 'stream/index.html', context)
 
@@ -150,7 +208,8 @@ def anime_detail(request):
         "detail": normalized_data,
         "category": category,
         "anime_slug": identifier,
-        "categories": categories
+        "categories": categories,
+        "active_page": "detail"  # For navigation active state
     }
     
     return render(request, 'stream/detail.html', context)
@@ -186,7 +245,8 @@ def latest(request):
         "datas": data,
         "category": category,
         "page": int(page),
-        "categories": categories
+        "categories": categories,
+        "active_page": "latest"  # For navigation active state
     }
     
     return render(request, 'stream/latest.html', context)
@@ -239,8 +299,112 @@ def schedule(request):
         "category": category,
         "categories": categories,
         "selected_day": day,
-        "days": days
+        "days": days,
+        "active_page": "schedule"  # For navigation active state
     }
     
     return render(request, 'stream/schedule.html', context)
+
+def search(request):
+    """
+    View function for searching content across categories
+    """
+    # Get search parameters from request
+    query = request.GET.get('q', '')
+    page = request.GET.get('page', 1)
+    category = request.GET.get('category', 'anime')
+    
+    # Get available categories
+    categories = get_categories()
+    
+    # Create a cache key based on search parameters
+    # URL encode the query to handle special characters
+    encoded_query = urllib.parse.quote(query)
+    cache_key = f"search_data_{encoded_query}_{category}_{page}"
+    data = cache.get(cache_key)
+    
+    # For debugging purposes, we'll add more detailed error information
+    error_details = None
+    
+    # Only make API request if there's a search query
+    if query and not data:
+        try:
+            # Prepare API request
+            api_url = f"{BASE_URL}/api/v1/search"
+            logger.info(f"Searching from: {api_url} with q={query}, category={category}, page={page}")
+            
+            # Make the API request
+            res = requests.get(
+                api_url, 
+                params={
+                    'q': query,
+                    'category': category,
+                    'page': page
+                }, 
+                timeout=10
+            )
+            
+            # Check status code
+            res.raise_for_status()
+            
+            # Parse the JSON response
+            data = res.json()
+            
+            # Log the response for debugging
+            logger.info(f"API Response: {data.get('message', 'No message')}, Confidence: {data.get('confidence_score', 'N/A')}")
+            
+            # Validate confidence_score
+            if data.get("confidence_score", 0) <= 0.5:
+                error_details = f"Low confidence score: {data.get('confidence_score', 0)}"
+                logger.warning(f"Low confidence score: {data.get('confidence_score', 0)}")
+                data = {
+                    "message": "Something went wrong",
+                    "confidence_score": data.get("confidence_score", 0),
+                    "error_details": error_details
+                }
+            else:
+                # Only cache successful responses with good confidence score
+                cache.set(cache_key, data, timeout=60)
+                
+        except requests.exceptions.RequestException as e:
+            # More specific error handling for network issues
+            error_details = f"API Connection Error: {str(e)}"
+            logger.error(f"API Connection Error: {str(e)}")
+            data = {
+                "error": str(e),
+                "message": "API Connection Error",
+                "error_details": error_details
+            }
+        except ValueError as e:
+            # Handle JSON parsing errors
+            error_details = f"Invalid JSON Response: {str(e)}"
+            logger.error(f"Invalid JSON Response: {str(e)}")
+            data = {
+                "error": str(e),
+                "message": "Invalid API Response Format",
+                "error_details": error_details
+            }
+        except Exception as e:
+            # Catch-all for other errors
+            error_details = f"Unexpected Error: {str(e)}"
+            logger.error(f"Unexpected Error: {str(e)}")
+            data = {
+                "error": str(e),
+                "message": "Unexpected Error",
+                "error_details": error_details
+            }
+    
+    # Prepare context for the template
+    context = {
+        "datas": data,
+        "category": category,
+        "categories": categories,
+        "page": int(page) if page else 1,
+        "query": query,
+        "error_details": error_details,
+        "debug": settings.DEBUG,  # Pass DEBUG setting to template
+        "active_page": "search"   # For navigation active state
+    }
+    
+    return render(request, 'stream/search_results.html', context)
 

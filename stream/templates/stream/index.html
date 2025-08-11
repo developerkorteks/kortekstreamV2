@@ -39,26 +39,8 @@
 {% endblock extra_css %}
 {% block content %}
     <div class="min-h-screen bg-white dark:bg-korteks-black">
-        <!-- Navigation -->
-        <nav class="gradient-bg shadow-lg border-b border-gold-200 dark:border-korteks-gray">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center">
-                        <a href="/" class="text-gold-700 dark:text-white text-2xl font-bold hover:text-gold-500 dark:hover:text-korteks-red transition-colors flex items-center">
-                            <span class="text-gold-500 dark:text-korteks-red mr-2">🎬</span> 
-                            <span>KortekStream</span>
-                        </a>
-                    </div>
-                    <div class="hidden md:block">
-                        <div class="ml-10 flex items-baseline space-x-4">
-                            <span class="text-gold-700/80 dark:text-white/80 text-sm">
-                                Category: <span class="font-semibold text-gold-600 dark:text-korteks-red">{{ category|title }}</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </nav>
+        <!-- Include Navigation -->
+        {% include 'components/navigation.html' %}
 
         <!-- Main Content -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -70,7 +52,7 @@
             </div>
             
             {# --- Error Handling Block --- #}
-            {% if datas.error or datas.message == "Something went wrong" %}
+            {% if datas.error or datas.message == "Something went wrong" or datas.message == "API Connection Error" or datas.message == "Invalid API Response Format" or datas.message == "Unexpected Error" %}
                 <div class="bg-white dark:bg-korteks-darkgray border-l-4 border-gold-500 dark:border-korteks-red p-6 rounded-lg shadow-md">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -80,9 +62,56 @@
                         </div>
                         <div class="ml-3">
                             <h3 class="text-lg font-medium text-gray-800 dark:text-white">Something went wrong</h3>
-                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                We're experiencing some issues. Please try again later.
-                            </p>
+                            
+                            {% if datas.message == "API Connection Error" %}
+                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                    We couldn't connect to our content server. This might be due to network issues or server maintenance.
+                                </p>
+                            {% elif datas.message == "Invalid API Response Format" %}
+                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                    We received an unexpected response from our content server. Our team has been notified.
+                                </p>
+                            {% elif datas.message == "Unexpected Error" %}
+                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                    An unexpected error occurred while loading content. Our team has been notified.
+                                </p>
+                            {% else %}
+                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                    We're experiencing some issues loading the {{ category }} content. Please try again later.
+                                </p>
+                            {% endif %}
+                            
+                            {% if error_details or datas.error_details %}
+                                <!-- Only show this in development mode, hidden in production -->
+                                {% if debug %}
+                                <div class="mt-4 p-3 bg-gold-50 dark:bg-korteks-gray rounded-md border border-gold-100 dark:border-korteks-darkgray">
+                                    <p class="text-xs font-mono text-gold-700 dark:text-korteks-red">
+                                        Error Details: {{ error_details|default:datas.error_details }}
+                                    </p>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if datas.confidence_score is not None %}
+                                <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                    Confidence Score: {{ datas.confidence_score }}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="mt-4">
+                                <a href="/" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gold-600 dark:bg-korteks-red hover:bg-gold-700 dark:hover:bg-korteks-darkred focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 dark:focus:ring-korteks-red">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                    Return to Home
+                                </a>
+                                <button onclick="window.location.reload()" class="ml-3 inline-flex items-center px-4 py-2 border border-gold-300 dark:border-korteks-gray text-sm font-medium rounded-md text-gold-700 dark:text-white bg-white dark:bg-korteks-darkgray hover:bg-gold-50 dark:hover:bg-korteks-gray focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 dark:focus:ring-korteks-red">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Try Again
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -168,20 +197,7 @@
             {% endif %}
         </div>
 
-        <!-- Footer -->
-        <footer class="gradient-bg mt-16 border-t border-gold-200 dark:border-korteks-gray">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div class="text-center">
-                    <div class="flex justify-center items-center mb-4">
-                        <span class="text-gold-500 dark:text-korteks-red text-3xl mr-2">🎬</span>
-                        <h2 class="text-2xl font-bold text-gold-700 dark:text-white">KortekStream</h2>
-                    </div>
-                    <p class="text-gray-700 dark:text-gray-300">&copy; 2025 KortekStream - Your Ultimate Streaming Destination</p>
-                    <div class="mt-4 flex justify-center space-x-6">
-                        <span class="text-gray-500 dark:text-gray-400 text-sm">Made with <span class="text-gold-500 dark:text-korteks-red">❤️</span> for anime lovers</span>
-                    </div>
-                </div>
-            </div>
-        </footer>
+        <!-- Include Footer -->
+        {% include 'components/footer.html' %}
     </div>
 {% endblock content %}

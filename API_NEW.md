@@ -541,10 +541,6 @@ JSON
   ]
 }
 
-Tentu, berikut adalah dokumentasi lengkap untuk endpoint /api/v1/search dengan semua field dijelaskan secara rinci.
-
-Dokumentasi API: Pencarian
-Endpoint ini digunakan untuk mencari anime, film, atau serial berdasarkan kata kunci. Hasil pencarian dikumpulkan dari berbagai sumber data dan mendukung paginasi.
 
 GET /api/v1/search
 
@@ -604,6 +600,66 @@ JSON
   ]
 }
 
+GET /api/v1/search
+
+Parameter
+Parameter dikirim sebagai query string dalam URL.
+
+Nama	Tipe	Lokasi	Deskripsi
+q	string	query	Wajib. Kata kunci pencarian.
+page	integer	query	Opsional. Nomor halaman untuk paginasi. Contoh: 1, 2.
+category	string	query	Opsional. Filter untuk kategori konten. Menggunakan all akan mengubah struktur respons.
+
+Ekspor ke Spreadsheet
+Contoh Penggunaan (Semua Kategori)
+Berikut adalah contoh cara memanggil API untuk mencari dengan kata kunci "a" di semua kategori.
+
+URL Lengkap:
+
+http://apigatway.humanmade.my.id:8080/api/v1/search?q=a&page=1&category=all
+Contoh cURL:
+
+Bash
+
+curl -X 'GET' \
+  'http://apigatway.humanmade.my.id:8080/api/v1/search?q=a&page=1&category=all' \
+  -H 'accept: application/json'
+Struktur Respons JSON (category=all)
+Jika permintaan berhasil, API akan mengembalikan objek JSON dengan data yang terstruktur di dalam data_by_category.
+
+Contoh Respons:
+
+JSON
+
+{
+  "categories": [
+    "anime"
+  ],
+  "confidence_score": 1,
+  "data_by_category": {
+    "anime": {
+      "confidence_score": 1,
+      "data": [
+        {
+          "anime_slug": "sakamoto-days-cour-2",
+          "cover": "https://v1.samehadaku.how/wp-content/uploads/2025/07/bx184237-OJAksU2fsIPx.jpg",
+          "genre": ["Action", "Adult Cast", "Comedy"],
+          "judul": "Sakamoto Days Cour 2",
+          "penonton": "4850024 Views",
+          "sinopsis": "Lanjutan dari Sakamoto Days",
+          "skor": "7.9",
+          "status": "Ongoing",
+          "tipe": "TV",
+          "url": "https://v1.samehadaku.how/anime/sakamoto-days-cour-2/"
+        }
+      ],
+      "message": "Data berhasil diambil dari multiple sources",
+      "sources": ["samehadaku", "gomunime", "winbutv"]
+    }
+  },
+  "message": "Data berhasil diambil dari 1 categories",
+  "sources": ["aggregated"]
+}
 
 GET /api/categories/names
 
@@ -718,6 +774,82 @@ JSON
   "success": true
 }
 
+GET /api/v1/episode-detail
+
+Parameter
+Parameter dikirim sebagai query string dalam URL.
+
+Nama	Tipe	Lokasi	Deskripsi
+id	string	query	Wajib (alternatif). ID unik untuk episode yang dicari.
+episode_url	string	query	Wajib (alternatif). URL lengkap dari halaman episode.
+episode_slug	string	query	Wajib (alternatif). Slug URL dari episode.
+category	string	query	Opsional. Filter untuk kategori konten. Nilai untuk parameter ini akan dimuat secara dinamis dari database.
+
+Ekspor ke Spreadsheet
+Catatan: Salah satu dari parameter id, episode_url, atau episode_slug wajib disertakan untuk mengidentifikasi episode yang dicari.
+
+Contoh Penggunaan
+Berikut adalah contoh cara memanggil API untuk mendapatkan detail dari sebuah episode.
+
+URL Lengkap:
+
+http://apigatway.humanmade.my.id:8080/api/v1/episode-detail?episode_slug=yuusha-party-o-tsuihou-sareta-shiro-madoushi-episode-6
+Contoh cURL:
+
+Bash
+
+curl -X 'GET' \
+  'http://apigatway.humanmade.my.id:8080/api/v1/episode-detail?episode_slug=yuusha-party-o-tsuihou-sareta-shiro-madoushi-episode-6&category=anime' \
+  -H 'accept: application/json'
+Struktur Respons JSON
+Jika permintaan berhasil, API akan mengembalikan objek JSON dengan struktur detail berikut.
+
+Contoh Respons:
+
+JSON
+
+{
+  "data": {
+    "anime_info": {
+      "genres": ["Adventure", "Fantasy"],
+      "synopsis": "Suatu hari, Lloyd, seorang penyihir putih, diusir dari kelompok pahlawan...",
+      "thumbnail_url": "https://v1.samehadaku.how/wp-content/uploads/2025/07/149889.jpg",
+      "title": "Yuusha Party o Tsuihou Sareta Shiro Madoushi"
+    },
+    "download_links": {
+      "MP4": {
+        "720p": [
+          {
+            "provider": "Gofile",
+            "url": "https://gofile.io/d/MTGhBm"
+          }
+        ]
+      }
+    },
+    "navigation": {
+      "all_episodes_url": "https://v1.samehadaku.how/anime/yuusha-party-o-tsuihou-sareta-shiro-madoushi/",
+      "next_episode_url": null,
+      "previous_episode_url": "https://v1.samehadaku.how/yuusha-party-o-tsuihou-sareta-shiro-madoushi-episode-5/"
+    },
+    "other_episodes": [
+      {
+        "release_date": "2 August 2025",
+        "thumbnail_url": "https://v1.samehadaku.how/wp-content/uploads/2025/08/Yuusha-Party-o-Tsuihou-Sareta-Shiro-Madoushi-05.jpg",
+        "title": "Yuusha Party o Tsuihou Sareta Shiro Madoushi Episode 5",
+        "url": "https://v1.samehadaku.how/yuusha-party-o-tsuihou-sareta-shiro-madoushi-episode-5/"
+      }
+    ],
+    "streaming_servers": [
+      {
+        "server_name": "Nakama 720p",
+        "streaming_url": "https://pixeldrain.com/api/file/6wpxbf5A"
+      }
+    ],
+    "title": "Yuusha Party o Tsuihou Sareta Shiro Madoushi Episode 6 Sub Indo"
+  },
+  "_metadata": { "... (informasi teknis) ..." },
+  "success": true
+}
 
 GET /api/v1/episode-detail
 
@@ -728,24 +860,26 @@ Nama	Tipe	Lokasi	Deskripsi
 id	string	query	Wajib (alternatif). ID unik untuk episode yang dicari.
 episode_url	string	query	Wajib (alternatif). URL lengkap dari halaman episode.
 episode_slug	string	query	Wajib (alternatif). Slug URL dari episode.
-category	string	query	. Filter untuk kategori konten. Nilai untuk parameter ini akan dimuat secara dinamis dari database.
-Catatan: Salah satu dari parameter id, episode_url, atau episode_slug wajib disertakan untuk mengidentifikasi episode yang dicari.
+category	string	query	Opsional. Filter untuk kategori konten. Menggunakan all akan mengubah struktur respons.
 
-Contoh Penggunaan
-Berikut adalah contoh cara memanggil API untuk mendapatkan detail dari sebuah episode menggunakan episode_slug.
+Ekspor ke Spreadsheet
+Catatan: Salah satu dari parameter id, episode_url, atau episode_slug wajib disertakan.
+
+Contoh Penggunaan (Semua Kategori)
+Berikut adalah contoh cara memanggil API untuk mendapatkan detail sebuah episode dari semua kategori.
 
 URL Lengkap:
 
-http://apigatway.humanmade.my.id:8080/api/v1/episode-detail?episode_slug=hunting-daze-2024&category=anime
+http://apigatway.humanmade.my.id:8080/api/v1/episode-detail?episode_slug=yuusha-party-o-tsuihou-sareta-shiro-madoushi-episode-6&category=all
 Contoh cURL:
 
 Bash
 
 curl -X 'GET' \
-  'http://apigatway.humanmade.my.id:8080/api/v1/episode-detail?episode_slug=hunting-daze-2024&category=anime' \
+  'http://apigatway.humanmade.my.id:8080/api/v1/episode-detail?episode_slug=yuusha-party-o-tsuihou-sareta-shiro-madoushi-episode-6&category=all' \
   -H 'accept: application/json'
-Struktur Respons JSON
-Jika permintaan berhasil (kode status 200), API akan mengembalikan objek JSON dengan struktur detail berikut.
+Struktur Respons JSON (category=all)
+Jika permintaan berhasil, API akan mengembalikan objek JSON dengan data yang terstruktur di dalam data.data_by_category.
 
 Contoh Respons:
 
@@ -753,42 +887,32 @@ JSON
 
 {
   "data": {
-    "anime_info": {
-      "genres": ["Mystery", "Canada"],
-      "synopsis": "Hunting Daze (2024) Nina, seorang wanita muda yang penuh gejolak bergabung...",
-      "thumbnail_url": "https://winbu.tv/wp-content/uploads/2025/08/56898.jpg",
-      "title": "Hunting Daze (2024)"
-    },
-    "confidence_score": 0.95,
-    "download_links": {
-      "MP4": {
-        "720p": "https://contoh.download/file_720p.mp4"
+    "categories": ["anime"],
+    "confidence_score": 1,
+    "data_by_category": {
+      "anime": {
+        "anime_info": {
+          "title": "Yuusha Party o Tsuihou Sareta Shiro Madoushi",
+          "thumbnail_url": "https://v1.samehadaku.how/wp-content/uploads/2025/07/149889.jpg",
+          "genres": ["Adventure", "Fantasy"],
+          "synopsis": "Suatu hari, Lloyd, seorang penyihir putih, diusir dari kelompok pahlawan..."
+        },
+        "download_links": {
+          "MKV": {
+            "1080p": [{"provider": "Gofile", "url": "https://gofile.io/d/O64P4e"}]
+          }
+        },
+        "navigation": {
+          "next_episode_url": null,
+          "previous_episode_url": "https://v1.samehadaku.how/yuusha-party-o-tsuihou-sareta-shiro-madoushi-episode-5/"
+        },
+        "streaming_servers": [{"server_name": "Nakama 1080p", "streaming_url": "https://pixeldrain.com/api/file/CBfiLMAr"}],
+        "title": "Yuusha Party o Tsuihou Sareta Shiro Madoushi Episode 6 Sub Indo"
       }
     },
-    "navigation": {},
-    "other_episodes": [
-      {
-        "release_date": "January 2025",
-        "thumbnail_url": "https://winbu.tv/wp-content/uploads/2025/08/56898.jpg",
-        "title": "Episode 1",
-        "url": "https://winbu.tv/film/hunting-daze-2024/"
-      }
-    ],
-    "release_info": "Released on January 2025",
-    "streaming_servers": [
-      {
-        "server_name": "HYDRAX Server",
-        "streaming_url": "https://abysscdn.com/?v=aaxeNcVpMe"
-      }
-    ],
-    "title": "Genres"
+    "message": "Data berhasil diambil dari 1 categories",
+    "sources": ["samehadaku"]
   },
-  "_metadata": {
-    "source": "winbutv",
-    "response_time": "5.225429625s",
-    "cache_status": "MISS",
-    "timestamp": "2025-08-11T00:54:47Z"
-  },
+  "_metadata": { "... (informasi teknis) ..." },
   "success": true
 }
-

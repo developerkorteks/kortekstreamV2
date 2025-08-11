@@ -59,26 +59,8 @@
 
 {% block content %}
     <div class="min-h-screen bg-white dark:bg-korteks-black">
-        <!-- Navigation -->
-        <nav class="gradient-bg shadow-lg border-b border-gold-200 dark:border-korteks-gray">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center">
-                        <a href="/" class="text-gold-700 dark:text-white text-2xl font-bold hover:text-gold-500 dark:hover:text-korteks-red transition-colors flex items-center">
-                            <span class="text-gold-500 dark:text-korteks-red mr-2">🎬</span> 
-                            <span>KortekStream</span>
-                        </a>
-                    </div>
-                    <div class="hidden md:block">
-                        <div class="ml-10 flex items-baseline space-x-4">
-                            <a href="/{{ category }}/" class="text-gold-700/80 dark:text-white/80 hover:text-gold-500 dark:hover:text-korteks-red text-sm transition-colors">
-                                ← Back to {{ category|title }}
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </nav>
+        <!-- Include Navigation -->
+        {% include 'components/navigation.html' %}
 
         <!-- Main Content -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -439,20 +421,7 @@
             {% endif %}
         </div>
 
-        <!-- Footer -->
-        <footer class="gradient-bg mt-16 border-t border-gold-200 dark:border-korteks-gray">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div class="text-center">
-                    <div class="flex justify-center items-center mb-4">
-                        <span class="text-gold-500 dark:text-korteks-red text-3xl mr-2">🎬</span>
-                        <h2 class="text-2xl font-bold text-gold-700 dark:text-white">KortekStream</h2>
-                    </div>
-                    <p class="text-gray-700 dark:text-gray-300">&copy; 2025 KortekStream - Your Ultimate Streaming Destination</p>
-                    <div class="mt-4 flex justify-center space-x-6">
-                        <span class="text-gray-500 dark:text-gray-400 text-sm">Made with <span class="text-gold-500 dark:text-korteks-red">❤️</span> for anime lovers</span>
-                    </div>
-                </div>
-            </div>
-        </footer>
+        <!-- Include Footer -->
+        {% include 'components/footer.html' %}
     </div>
 {% endblock content %}

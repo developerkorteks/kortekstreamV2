@@ -1,0 +1,532 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    {% if query %}
+        Search: {{ query }} | KortekStream
+    {% else %}
+        Search | KortekStream
+    {% endif %}
+{% endblock title %}
+{% block extra_css %}
+    <style>
+        .card-img-top {
+            height: 250px;
+            object-fit: cover;
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .section-divider {
+            @apply h-px;
+        }
+        .light .section-divider {
+            @apply bg-gradient-to-r from-gold-400 to-transparent;
+        }
+        .dark .section-divider {
+            @apply bg-gradient-to-r from-korteks-red to-transparent;
+        }
+        .badge {
+            @apply px-2 py-1 rounded-full text-xs font-semibold;
+        }
+        .light .badge-primary {
+            @apply bg-gold-100 text-gold-800;
+        }
+        .dark .badge-primary {
+            @apply bg-korteks-darkgray text-korteks-red;
+        }
+        .search-input {
+            @apply w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all;
+        }
+        .light .search-input {
+            @apply border-gold-200 focus:border-gold-400 focus:ring-gold-200 bg-white text-gray-800;
+        }
+        .dark .search-input {
+            @apply border-korteks-gray focus:border-korteks-red focus:ring-korteks-darkgray bg-korteks-darkgray text-white;
+        }
+        .search-btn {
+            @apply px-6 py-3 rounded-lg font-medium transition-all;
+        }
+        .light .search-btn {
+            @apply bg-gold-500 hover:bg-gold-600 text-white;
+        }
+        .dark .search-btn {
+            @apply bg-korteks-red hover:bg-korteks-darkred text-white;
+        }
+        .pagination-btn {
+            @apply px-4 py-2 rounded-md transition-all;
+        }
+        .light .pagination-btn {
+            @apply border border-gold-200 hover:bg-gold-50 text-gold-700;
+        }
+        .dark .pagination-btn {
+            @apply border border-korteks-gray hover:bg-korteks-gray text-white;
+        }
+        .light .pagination-btn.active {
+            @apply bg-gold-500 border-gold-500 text-white;
+        }
+        .dark .pagination-btn.active {
+            @apply bg-korteks-red border-korteks-red text-white;
+        }
+        .light .pagination-btn.disabled {
+            @apply bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed;
+        }
+        .dark .pagination-btn.disabled {
+            @apply bg-korteks-darkgray border-korteks-gray text-gray-600 cursor-not-allowed;
+        }
+    </style>
+{% endblock extra_css %}
+{% block content %}
+    <div class="min-h-screen bg-white dark:bg-korteks-black">
+        <!-- Navigation -->
+        <nav class="gradient-bg shadow-lg border-b border-gold-200 dark:border-korteks-gray">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center">
+                        <a href="/" class="text-gold-700 dark:text-white text-2xl font-bold hover:text-gold-500 dark:hover:text-korteks-red transition-colors flex items-center">
+                            <span class="text-gold-500 dark:text-korteks-red mr-2">🎬</span> 
+                            <span>KortekStream</span>
+                        </a>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <span class="text-gold-700/80 dark:text-white/80 text-sm">
+                                Category: 
+                                <select id="categorySelector" class="font-semibold text-gold-600 dark:text-korteks-red bg-transparent border-none focus:outline-none cursor-pointer">
+                                    {% for cat in categories %}
+                                        <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>{{ cat|title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="mb-8">
+                <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-2 border-l-4 border-gold-500 dark:border-korteks-red pl-4">
+                    {% if query %}
+                        Search Results: "{{ query }}"
+                    {% else %}
+                        Search {{ category|title }} Content
+                    {% endif %}
+                </h1>
+                <p class="text-gray-600 dark:text-gray-300 ml-6">
+                    {% if query %}
+                        Showing results for your search query
+                    {% else %}
+                        Find your favorite content in our collection
+                    {% endif %}
+                </p>
+            </div>
+            
+            <!-- Search Form -->
+            <div class="mb-8 bg-white dark:bg-korteks-darkgray rounded-xl shadow-md p-6">
+                <form action="{% url 'stream:search' %}" method="GET" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="md:col-span-3">
+                            <label for="q" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search Query</label>
+                            <input 
+                                type="text" 
+                                name="q" 
+                                id="q" 
+                                value="{{ query }}" 
+                                placeholder="Enter anime title, genre, or keyword..." 
+                                class="search-input"
+                                required
+                            >
+                        </div>
+                        <div>
+                            <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                            <select name="category" id="category" class="search-input">
+                                {% for cat in categories %}
+                                    <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>{{ cat|title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="search-btn flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            {# --- Error Handling Block --- #}
+            {% if datas.error or datas.message == "Something went wrong" or datas.message == "API Connection Error" or datas.message == "Invalid API Response Format" or datas.message == "Unexpected Error" %}
+                <div class="bg-white dark:bg-korteks-darkgray border-l-4 border-gold-500 dark:border-korteks-red p-6 rounded-lg shadow-md">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gold-500 dark:text-korteks-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-lg font-medium text-gray-800 dark:text-white">Something went wrong</h3>
+                            
+                            {% if datas.message == "API Connection Error" %}
+                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                    We couldn't connect to our content server. This might be due to network issues or server maintenance.
+                                </p>
+                            {% elif datas.message == "Invalid API Response Format" %}
+                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                    We received an unexpected response from our content server. Our team has been notified.
+                                </p>
+                            {% elif datas.message == "Unexpected Error" %}
+                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                    An unexpected error occurred while searching. Our team has been notified.
+                                </p>
+                            {% else %}
+                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                    We're experiencing some issues with the search functionality. Please try again later.
+                                </p>
+                            {% endif %}
+                            
+                            {% if error_details or datas.error_details %}
+                                <!-- Only show this in development mode, hidden in production -->
+                                {% if debug %}
+                                <div class="mt-4 p-3 bg-gold-50 dark:bg-korteks-gray rounded-md border border-gold-100 dark:border-korteks-darkgray">
+                                    <p class="text-xs font-mono text-gold-700 dark:text-korteks-red">
+                                        Error Details: {{ error_details|default:datas.error_details }}
+                                    </p>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if datas.confidence_score is not None %}
+                                <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                    Confidence Score: {{ datas.confidence_score }}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="mt-4">
+                                <a href="/" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gold-600 dark:bg-korteks-red hover:bg-gold-700 dark:hover:bg-korteks-darkred focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 dark:focus:ring-korteks-red">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                    Return to Home
+                                </a>
+                                <button onclick="window.location.reload()" class="ml-3 inline-flex items-center px-4 py-2 border border-gold-300 dark:border-korteks-gray text-sm font-medium rounded-md text-gold-700 dark:text-white bg-white dark:bg-korteks-darkgray hover:bg-gold-50 dark:hover:bg-korteks-gray focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 dark:focus:ring-korteks-red">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Try Again
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% elif query and not is_search_form %}
+                {# --- Search Results for category=all --- #}
+                {% if category == 'all' and datas.data_by_category %}
+                    <div class="mb-4 p-4 bg-gold-50 dark:bg-korteks-darkgray rounded-lg border border-gold-100 dark:border-korteks-gray">
+                        <div class="flex items-center mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold-500 dark:text-korteks-red mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                            <h3 class="font-semibold text-gray-800 dark:text-white">Search Results Metadata</h3>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Categories:</span>
+                                <div class="mt-1 flex flex-wrap gap-1">
+                                    {% for cat in datas.categories %}
+                                        <span class="badge badge-primary">{{ cat }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Confidence Score:</span>
+                                <span class="ml-2">{{ datas.confidence_score }}</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Sources:</span>
+                                <div class="mt-1 flex flex-wrap gap-1">
+                                    {% for source in datas.sources %}
+                                        <span class="badge badge-primary">{{ source }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray md:col-span-3">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Message:</span>
+                                <span class="ml-2">{{ datas.message }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% for cat_name, cat_data in datas.data_by_category.items %}
+                        <div class="mb-12">
+                            <div class="flex items-center mb-6">
+                                <h2 class="text-3xl font-bold text-gray-800 dark:text-white capitalize">{{ cat_name }}</h2>
+                                <div class="ml-4 flex-1 section-divider"></div>
+                            </div>
+                            
+                            {% if cat_data.data %}
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                                    {% for item in cat_data.data %}
+                                        <div class="group">
+                                            <!-- Anime Slug Display -->
+                                            <div class="mb-2 p-2 bg-gold-50 dark:bg-korteks-gray rounded-md border border-gold-100 dark:border-korteks-darkgray">
+                                                <p class="text-xs text-gold-700 dark:text-korteks-red font-mono">Slug: {{ item.anime_slug }}</p>
+                                            </div>
+                                            
+                                            <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ cat_name }}" class="block">
+                                                <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-md card-hover overflow-hidden h-full">
+                                                    <div class="relative">
+                                                        <img src="{{ item.cover }}" 
+                                                             class="card-img-top w-full rounded-t-xl" 
+                                                             alt="{{ item.judul }}" 
+                                                             onerror="this.src='https://via.placeholder.com/300x450?text=No+Image';this.onerror='';" />
+                                                        {% if item.tipe %}
+                                                            <div class="absolute top-2 right-2 bg-gold-500 dark:bg-korteks-red text-white px-2 py-1 rounded-full text-xs font-semibold">
+                                                                {{ item.tipe }}
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="p-4">
+                                                        <h6 class="font-semibold text-gray-800 dark:text-white text-sm mb-3 line-clamp-2 h-10" title="{{ item.judul }}">
+                                                            {{ item.judul }}
+                                                        </h6>
+                                                        
+                                                        <!-- Rating Display -->
+                                                        {% if item.skor %}
+                                                            <div class="flex items-center mb-3">
+                                                                <span class="text-gold-500 dark:text-gold-400 text-sm">⭐</span>
+                                                                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">{{ item.skor }}</span>
+                                                            </div>
+                                                        {% endif %}
+                                                        
+                                                        <!-- Status Display -->
+                                                        {% if item.status %}
+                                                            <div class="mb-2">
+                                                                <span class="badge badge-primary">
+                                                                    {{ item.status }}
+                                                                </span>
+                                                            </div>
+                                                        {% endif %}
+                                                        
+                                                        <!-- Genres Display -->
+                                                        {% if item.genre %}
+                                                            <div class="mb-3">
+                                                                <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Genres:</p>
+                                                                <div class="flex flex-wrap gap-1">
+                                                                    {% for genre in item.genre %}
+                                                                        <span class="bg-gold-100 text-gold-800 dark:bg-korteks-gray dark:text-white text-xs px-2 py-1 rounded-full">
+                                                                            {{ genre }}
+                                                                        </span>
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </div>
+                                                        {% endif %}
+                                                        
+                                                        <!-- Views Display -->
+                                                        {% if item.penonton %}
+                                                            <div class="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                                </svg>
+                                                                {{ item.penonton }}
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="bg-white dark:bg-korteks-darkgray p-6 rounded-lg shadow-md text-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gold-400 dark:text-korteks-red mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2">No results found</h3>
+                                    <p class="text-gray-600 dark:text-gray-300">
+                                        We couldn't find any matches for "{{ query }}" in {{ cat_name }} category.
+                                    </p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                
+                {# --- Search Results for specific category (anime, etc.) --- #}
+                {% else %}
+                    <div class="mb-4 p-4 bg-gold-50 dark:bg-korteks-darkgray rounded-lg border border-gold-100 dark:border-korteks-gray">
+                        <div class="flex items-center mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold-500 dark:text-korteks-red mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                            <h3 class="font-semibold text-gray-800 dark:text-white">Search Results Metadata</h3>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Confidence Score:</span>
+                                <span class="ml-2">{{ datas.confidence_score }}</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Sources:</span>
+                                <div class="mt-1 flex flex-wrap gap-1">
+                                    {% for source in datas.sources %}
+                                        <span class="badge badge-primary">{{ source }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
+                                <span class="font-medium text-gold-700 dark:text-korteks-red">Message:</span>
+                                <span class="ml-2">{{ datas.message }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if datas.data %}
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                            {% for item in datas.data %}
+                                <div class="group">
+                                    <!-- Anime Slug Display -->
+                                    <div class="mb-2 p-2 bg-gold-50 dark:bg-korteks-gray rounded-md border border-gold-100 dark:border-korteks-darkgray">
+                                        <p class="text-xs text-gold-700 dark:text-korteks-red font-mono">Slug: {{ item.anime_slug }}</p>
+                                    </div>
+                                    
+                                    <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ category }}" class="block">
+                                        <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-md card-hover overflow-hidden h-full">
+                                            <div class="relative">
+                                                <img src="{{ item.cover }}" 
+                                                     class="card-img-top w-full rounded-t-xl" 
+                                                     alt="{{ item.judul }}" 
+                                                     onerror="this.src='https://via.placeholder.com/300x450?text=No+Image';this.onerror='';" />
+                                                {% if item.tipe %}
+                                                    <div class="absolute top-2 right-2 bg-gold-500 dark:bg-korteks-red text-white px-2 py-1 rounded-full text-xs font-semibold">
+                                                        {{ item.tipe }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="p-4">
+                                                <h6 class="font-semibold text-gray-800 dark:text-white text-sm mb-3 line-clamp-2 h-10" title="{{ item.judul }}">
+                                                    {{ item.judul }}
+                                                </h6>
+                                                
+                                                <!-- Rating Display -->
+                                                {% if item.skor %}
+                                                    <div class="flex items-center mb-3">
+                                                        <span class="text-gold-500 dark:text-gold-400 text-sm">⭐</span>
+                                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">{{ item.skor }}</span>
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                <!-- Status Display -->
+                                                {% if item.status %}
+                                                    <div class="mb-2">
+                                                        <span class="badge badge-primary">
+                                                            {{ item.status }}
+                                                        </span>
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                <!-- Genres Display -->
+                                                {% if item.genre %}
+                                                    <div class="mb-3">
+                                                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Genres:</p>
+                                                        <div class="flex flex-wrap gap-1">
+                                                            {% for genre in item.genre %}
+                                                                <span class="bg-gold-100 text-gold-800 dark:bg-korteks-gray dark:text-white text-xs px-2 py-1 rounded-full">
+                                                                    {{ genre }}
+                                                                </span>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                <!-- Views Display -->
+                                                {% if item.penonton %}
+                                                    <div class="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                        {{ item.penonton }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div class="mt-8 flex justify-center">
+                            <div class="flex space-x-2">
+                                {% if page > 1 %}
+                                    <a href="{% url 'stream:search' %}?q={{ query }}&category={{ category }}&page={{ page|add:'-1' }}" class="pagination-btn">
+                                        Previous
+                                    </a>
+                                {% else %}
+                                    <span class="pagination-btn disabled">Previous</span>
+                                {% endif %}
+                                
+                                <span class="pagination-btn active">{{ page }}</span>
+                                
+                                <a href="{% url 'stream:search' %}?q={{ query }}&category={{ category }}&page={{ page|add:'1' }}" class="pagination-btn">
+                                    Next
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="bg-white dark:bg-korteks-darkgray p-6 rounded-lg shadow-md text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gold-400 dark:text-korteks-red mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2">No results found</h3>
+                            <p class="text-gray-600 dark:text-gray-300">
+                                We couldn't find any matches for "{{ query }}" in {{ category }} category.
+                            </p>
+                            <div class="mt-4">
+                                <a href="{% url 'stream:search' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gold-600 dark:bg-korteks-red hover:bg-gold-700 dark:hover:bg-korteks-darkred focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 dark:focus:ring-korteks-red">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    Try a different search
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <footer class="gradient-bg mt-16 border-t border-gold-200 dark:border-korteks-gray">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="text-center">
+                    <div class="flex justify-center items-center mb-4">
+                        <span class="text-gold-500 dark:text-korteks-red text-3xl mr-2">🎬</span>
+                        <h2 class="text-2xl font-bold text-gold-700 dark:text-white">KortekStream</h2>
+                    </div>
+                    <p class="text-gray-700 dark:text-gray-300">&copy; 2025 KortekStream - Your Ultimate Streaming Destination</p>
+                    <div class="mt-4 flex justify-center space-x-6">
+                        <span class="text-gray-500 dark:text-gray-400 text-sm">Made with <span class="text-gold-500 dark:text-korteks-red">❤️</span> for anime lovers</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    // Update URL when category selector changes
+    document.getElementById('categorySelector').addEventListener('change', function() {
+        const category = this.value;
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('category', category);
+        window.location.href = currentUrl.toString();
+    });
+</script>
+{% endblock extra_js %}

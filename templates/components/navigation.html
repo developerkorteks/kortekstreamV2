@@ -167,45 +167,139 @@
 </nav>
 
 <script>
-    // Mobile menu toggle
-    document.getElementById('mobile-menu-button').addEventListener('click', function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enhanced Mobile Menu Toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
-        mobileMenu.classList.toggle('hidden');
+        const hamburgerLines = mobileMenuButton.querySelectorAll('span');
+        let isMenuOpen = false;
+
+        mobileMenuButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            isMenuOpen = !isMenuOpen;
+
+            if (isMenuOpen) {
+                // Open menu with animation
+                mobileMenu.classList.remove('hidden');
+                setTimeout(() => {
+                    mobileMenu.style.transform = 'translateY(0)';
+                    mobileMenu.style.opacity = '1';
+                }, 10);
+
+                // Animate hamburger to X
+                hamburgerLines[0].style.transform = 'rotate(45deg) translateY(6px)';
+                hamburgerLines[1].style.opacity = '0';
+                hamburgerLines[2].style.transform = 'rotate(-45deg) translateY(-6px)';
+
+                // Prevent body scroll
+                document.body.style.overflow = 'hidden';
+            } else {
+                // Close menu with animation
+                mobileMenu.style.transform = 'translateY(1rem)';
+                mobileMenu.style.opacity = '0';
+                setTimeout(() => {
+                    mobileMenu.classList.add('hidden');
+                }, 300);
+
+                // Reset hamburger
+                hamburgerLines[0].style.transform = '';
+                hamburgerLines[1].style.opacity = '';
+                hamburgerLines[2].style.transform = '';
+
+                // Restore body scroll
+                document.body.style.overflow = '';
+            }
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (isMenuOpen && !mobileMenuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
+                mobileMenuButton.click();
+            }
+        });
+
+        // Enhanced Category Selector Functionality
+        const setupCategorySelector = (selector) => {
+            if (selector) {
+                selector.addEventListener('change', function() {
+                    const category = this.value;
+                    const currentUrl = new URL(window.location.href);
+
+                    // Add loading state
+                    this.style.pointerEvents = 'none';
+                    this.style.opacity = '0.7';
+
+                    // Navigate with animation
+                    if (window.location.pathname.match(/^\/[^\/]+\/?$/)) {
+                        window.location.href = '/' + category + '/';
+                    } else {
+                        currentUrl.searchParams.set('category', category);
+                        window.location.href = currentUrl.toString();
+                    }
+                });
+            }
+        };
+
+        setupCategorySelector(document.getElementById('categorySelector'));
+        setupCategorySelector(document.getElementById('mobileCategorySelector'));
+
+        // Enhanced Search Animation
+        const searchInputs = document.querySelectorAll('input[name="q"]');
+        searchInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('search-focused');
+            });
+
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('search-focused');
+            });
+
+            // Search suggestions placeholder animation
+            const placeholders = [
+                'Search anime...',
+                'Find your favorite series...',
+                'Discover new episodes...',
+                'Search movies...'
+            ];
+
+            let placeholderIndex = 0;
+
+            const rotatePlaceholder = () => {
+                if (!this.value && !document.activeElement === this) {
+                    this.placeholder = placeholders[placeholderIndex];
+                    placeholderIndex = (placeholderIndex + 1) % placeholders.length;
+                }
+            };
+
+            setInterval(rotatePlaceholder, 3000);
+        });
+
+        // Navbar scroll effect
+        let lastScrollY = window.scrollY;
+
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('nav');
+            const currentScrollY = window.scrollY;
+
+            if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                // Scrolling down
+                navbar.style.transform = 'translateY(-100%)';
+            } else {
+                // Scrolling up
+                navbar.style.transform = 'translateY(0)';
+            }
+
+            lastScrollY = currentScrollY;
+        });
+
+        // Add scroll shadow effect
+        const navbar = document.querySelector('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 10) {
+                navbar.classList.add('shadow-2xl');
+            } else {
+                navbar.classList.remove('shadow-2xl');
+            }
+        });
     });
-    
-    // Category selector functionality
-    const categorySelector = document.getElementById('categorySelector');
-    if (categorySelector) {
-        categorySelector.addEventListener('change', function() {
-            const category = this.value;
-            const currentUrl = new URL(window.location.href);
-            
-            // If we're on a category page, redirect to the new category
-            if (window.location.pathname.match(/^\/[^\/]+\/?$/)) {
-                window.location.href = '/' + category + '/';
-            } else {
-                // Otherwise, update the category parameter in the current URL
-                currentUrl.searchParams.set('category', category);
-                window.location.href = currentUrl.toString();
-            }
-        });
-    }
-    
-    // Mobile category selector functionality
-    const mobileCategorySelector = document.getElementById('mobileCategorySelector');
-    if (mobileCategorySelector) {
-        mobileCategorySelector.addEventListener('change', function() {
-            const category = this.value;
-            const currentUrl = new URL(window.location.href);
-            
-            // If we're on a category page, redirect to the new category
-            if (window.location.pathname.match(/^\/[^\/]+\/?$/)) {
-                window.location.href = '/' + category + '/';
-            } else {
-                // Otherwise, update the category parameter in the current URL
-                currentUrl.searchParams.set('category', category);
-                window.location.href = currentUrl.toString();
-            }
-        });
-    }
 </script>

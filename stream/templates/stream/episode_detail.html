@@ -94,6 +94,61 @@
                 overflow: visible;
             }
         }
+        
+        /* Mobile Video Player Full Width */
+        @media (max-width: 768px) {
+            .player-container {
+                margin-left: -1rem;
+                margin-right: -1rem;
+                width: calc(100% + 2rem);
+            }
+            
+            /* Make video player container full width on mobile */
+            .mobile-full-width {
+                margin-left: -1rem;
+                margin-right: -1rem;
+                width: calc(100% + 2rem);
+                border-radius: 0;
+            }
+            
+            /* Adjust padding for mobile */
+            .mobile-full-width .player-container {
+                margin: 0;
+                width: 100%;
+            }
+            
+            /* Portrait mode optimization */
+            @media (orientation: portrait) {
+                .player-container {
+                    padding-top: 75%; /* Increase height for better viewing in portrait */
+                }
+            }
+            
+            /* Landscape mode optimization */
+            @media (orientation: landscape) and (max-height: 500px) {
+                .player-container {
+                    padding-top: 90vh; /* Use most of viewport height in landscape */
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    z-index: 9999;
+                    background: black;
+                }
+                
+                .player-fullscreen-mobile {
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    z-index: 9999 !important;
+                    background: black !important;
+                }
+            }
+        }
     </style>
 {% endblock extra_css %}
 
@@ -473,7 +528,7 @@
                     </div>
                     {% elif episode_data.data.streaming_servers and episode_data.data.streaming_servers.0.streaming_url or episode_data.data.data.streaming_servers and episode_data.data.data.streaming_servers.0.streaming_url %}
                     <!-- For gomunime format (flat structure) with enhanced player -->
-                    <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden mb-8">
+                    <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden mb-8 mobile-full-width">
                         <div class="p-4 border-b border-gray-200 dark:border-korteks-gray">
                             <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-gold-500 dark:text-korteks-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -484,24 +539,31 @@
                             </h2>
                         </div>
                         
-                        <!-- Server Selection Tabs -->
+                        <!-- Server Selection Dropdown -->
                         <div class="p-4 bg-gray-50 dark:bg-korteks-gray border-b border-gray-200 dark:border-korteks-darkgray">
-                            <div class="flex flex-wrap gap-2" id="server-buttons-flat">
-                                {% with streaming_servers=episode_data.data.streaming_servers|default:episode_data.data.data.streaming_servers %}
-                                {% for server in streaming_servers %}
-                                <button 
-                                    data-url="{{ server.streaming_url }}"
-                                    data-server-name="{{ server.server_name }}"
-                                    class="server-btn px-3 py-1 text-sm rounded-md {% if forloop.first %}bg-gold-500 text-white dark:bg-korteks-red active{% else %}bg-gray-200 text-gray-700 dark:bg-korteks-darkgray dark:text-gray-300{% endif %} hover:bg-gold-400 dark:hover:bg-red-700 transition-colors">
-                                    {{ server.server_name }}
-                                </button>
-                                {% endfor %}
-                                {% endwith %}
+                            <div class="flex items-center gap-3">
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Server:</label>
+                                <div class="relative">
+                                    <select id="server-dropdown-flat" class="appearance-none bg-white dark:bg-korteks-darkgray border border-gray-300 dark:border-korteks-gray rounded-lg px-4 py-2 pr-8 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gold-500 dark:focus:ring-korteks-red focus:border-transparent">
+                                        {% with streaming_servers=episode_data.data.streaming_servers|default:episode_data.data.data.streaming_servers %}
+                                        {% for server in streaming_servers %}
+                                        <option value="{{ server.streaming_url }}" data-server-name="{{ server.server_name }}" {% if forloop.first %}selected{% endif %}>
+                                            {{ server.server_name }}
+                                        </option>
+                                        {% endfor %}
+                                        {% endwith %}
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
                         <!-- Enhanced Player Container -->
-                        <div class="relative" style="padding-top: 56.25%;">
+                        <div class="player-container relative" style="padding-top: 56.25%;">
                             <!-- Standard Video Player -->
                             <div id="player-wrapper-flat" class="absolute top-0 left-0 w-full h-full" style="display: none;">
                                 <video id="player-flat" class="absolute top-0 left-0 w-full h-full" playsinline controls>
@@ -534,29 +596,29 @@
                                 let hlsPlayerFlat;
                                 
                                 // DOM elements
-                                const serverButtonsFlat = document.querySelectorAll('#server-buttons-flat .server-btn');
+                                const serverDropdownFlat = document.getElementById('server-dropdown-flat');
                                 const playerWrapperFlat = document.getElementById('player-wrapper-flat');
                                 const hlsPlayerWrapperFlat = document.getElementById('hls-player-wrapper-flat');
                                 const iframePlayerWrapperFlat = document.getElementById('iframe-player-wrapper-flat');
                                 const videoSourceFlat = document.getElementById('video-source-flat');
                                 
-                                // Add click event to server buttons
-                                serverButtonsFlat.forEach(button => {
-                                    button.addEventListener('click', function() {
-                                        // Remove active class from all buttons
-                                        serverButtonsFlat.forEach(btn => {
-                                            btn.classList.remove('active', 'bg-gold-500', 'text-white', 'dark:bg-korteks-red');
-                                            btn.classList.add('bg-gray-200', 'text-gray-700', 'dark:bg-korteks-darkgray', 'dark:text-gray-300');
-                                        });
+                                // Add change event to server dropdown
+                                if (serverDropdownFlat) {
+                                    serverDropdownFlat.addEventListener('change', function() {
+                                        const selectedOption = this.options[this.selectedIndex];
+                                        const url = selectedOption.value;
+                                        const serverName = selectedOption.dataset.serverName;
                                         
-                                        // Add active class to clicked button
-                                        this.classList.add('active', 'bg-gold-500', 'text-white', 'dark:bg-korteks-red');
-                                        this.classList.remove('bg-gray-200', 'text-gray-700', 'dark:bg-korteks-darkgray', 'dark:text-gray-300');
-                                        
-                                        // Set up video player with this server
-                                        setupVideoPlayerFlat(this.dataset.url, this.dataset.serverName);
+                                        // Set up video player with selected server
+                                        setupVideoPlayerFlat(url, serverName);
                                     });
-                                });
+                                    
+                                    // Initialize with first server
+                                    if (serverDropdownFlat.options.length > 0) {
+                                        const firstOption = serverDropdownFlat.options[0];
+                                        setupVideoPlayerFlat(firstOption.value, firstOption.dataset.serverName);
+                                    }
+                                }
                                 
                                 // Initialize Plyr
                                 function initPlyrFlat() {
@@ -777,7 +839,7 @@
                     {% endif %}
                     {% elif episode_data.data.data.streaming_servers and episode_data.data.data.streaming_servers.0.streaming_url %}
                     <!-- For gomunime format (nested structure) with enhanced player -->
-                    <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden mb-8">
+                    <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden mb-8 mobile-full-width">
                         <div class="p-4 border-b border-gray-200 dark:border-korteks-gray">
                             <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-gold-500 dark:text-korteks-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -788,17 +850,24 @@
                             </h2>
                         </div>
                         
-                        <!-- Server Selection Tabs -->
+                        <!-- Server Selection Dropdown -->
                         <div class="p-4 bg-gray-50 dark:bg-korteks-gray border-b border-gray-200 dark:border-korteks-darkgray">
-                            <div class="flex flex-wrap gap-2" id="server-buttons-nested">
-                                {% for server in episode_data.data.data.streaming_servers %}
-                                <button 
-                                    data-url="{{ server.streaming_url }}"
-                                    data-server-name="{{ server.server_name }}"
-                                    class="server-btn px-3 py-1 text-sm rounded-md {% if forloop.first %}bg-gold-500 text-white dark:bg-korteks-red active{% else %}bg-gray-200 text-gray-700 dark:bg-korteks-darkgray dark:text-gray-300{% endif %} hover:bg-gold-400 dark:hover:bg-red-700 transition-colors">
-                                    {{ server.server_name }}
-                                </button>
-                                {% endfor %}
+                            <div class="flex items-center gap-3">
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Server:</label>
+                                <div class="relative">
+                                    <select id="server-dropdown-nested" class="appearance-none bg-white dark:bg-korteks-darkgray border border-gray-300 dark:border-korteks-gray rounded-lg px-4 py-2 pr-8 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gold-500 dark:focus:ring-korteks-red focus:border-transparent">
+                                        {% for server in episode_data.data.data.streaming_servers %}
+                                        <option value="{{ server.streaming_url }}" data-server-name="{{ server.server_name }}" {% if forloop.first %}selected{% endif %}>
+                                            {{ server.server_name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
@@ -836,29 +905,29 @@
                                 let hlsPlayerNested;
                                 
                                 // DOM elements
-                                const serverButtonsNested = document.querySelectorAll('#server-buttons-nested .server-btn');
+                                const serverDropdownNested = document.getElementById('server-dropdown-nested');
                                 const playerWrapperNested = document.getElementById('player-wrapper-nested');
                                 const hlsPlayerWrapperNested = document.getElementById('hls-player-wrapper-nested');
                                 const iframePlayerWrapperNested = document.getElementById('iframe-player-wrapper-nested');
                                 const videoSourceNested = document.getElementById('video-source-nested');
                                 
-                                // Add click event to server buttons
-                                serverButtonsNested.forEach(button => {
-                                    button.addEventListener('click', function() {
-                                        // Remove active class from all buttons
-                                        serverButtonsNested.forEach(btn => {
-                                            btn.classList.remove('active', 'bg-gold-500', 'text-white', 'dark:bg-korteks-red');
-                                            btn.classList.add('bg-gray-200', 'text-gray-700', 'dark:bg-korteks-darkgray', 'dark:text-gray-300');
-                                        });
+                                // Add change event to server dropdown
+                                if (serverDropdownNested) {
+                                    serverDropdownNested.addEventListener('change', function() {
+                                        const selectedOption = this.options[this.selectedIndex];
+                                        const url = selectedOption.value;
+                                        const serverName = selectedOption.dataset.serverName;
                                         
-                                        // Add active class to clicked button
-                                        this.classList.add('active', 'bg-gold-500', 'text-white', 'dark:bg-korteks-red');
-                                        this.classList.remove('bg-gray-200', 'text-gray-700', 'dark:bg-korteks-darkgray', 'dark:text-gray-300');
-                                        
-                                        // Set up video player with this server
-                                        setupVideoPlayerNested(this.dataset.url, this.dataset.serverName);
+                                        // Set up video player with selected server
+                                        setupVideoPlayerNested(url, serverName);
                                     });
-                                });
+                                    
+                                    // Initialize with first server
+                                    if (serverDropdownNested.options.length > 0) {
+                                        const firstOption = serverDropdownNested.options[0];
+                                        setupVideoPlayerNested(firstOption.value, firstOption.dataset.serverName);
+                                    }
+                                }
                                 
                                 // Initialize Plyr
                                 function initPlyrNested() {
@@ -999,11 +1068,7 @@
                                     initPlyrNested();
                                 }
                                 
-                                // Setup the first server by default
-                                if (serverButtonsNested.length > 0) {
-                                    const firstServer = serverButtonsNested[0];
-                                    setupVideoPlayerNested(firstServer.dataset.url, firstServer.dataset.serverName);
-                                }
+                                // Note: First server initialization is now handled in the dropdown change event listener
                             });
                         </script>
                     </div>
@@ -1424,6 +1489,51 @@
             setTimeout(autoRetry, 3000);
             {% endif %}
         });
+        
+        // Mobile video player optimization
+        function optimizeVideoForMobile() {
+            const playerContainers = document.querySelectorAll('.player-container');
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                playerContainers.forEach(container => {
+                    // Add mobile optimization classes
+                    container.classList.add('mobile-optimized');
+                    
+                    // Handle orientation change
+                    const handleOrientationChange = () => {
+                        setTimeout(() => {
+                            if (window.orientation === 90 || window.orientation === -90) {
+                                // Landscape mode
+                                container.style.paddingTop = '100vh';
+                                container.style.position = 'fixed';
+                                container.style.top = '0';
+                                container.style.left = '0';
+                                container.style.right = '0';
+                                container.style.zIndex = '9999';
+                                container.style.background = 'black';
+                            } else {
+                                // Portrait mode
+                                container.style.paddingTop = '75%';
+                                container.style.position = 'relative';
+                                container.style.top = 'auto';
+                                container.style.left = 'auto';
+                                container.style.right = 'auto';
+                                container.style.zIndex = 'auto';
+                                container.style.background = 'transparent';
+                            }
+                        }, 100);
+                    };
+                    
+                    // Listen for orientation changes
+                    window.addEventListener('orientationchange', handleOrientationChange);
+                    window.addEventListener('resize', handleOrientationChange);
+                });
+            }
+        }
+        
+        // Initialize mobile optimization
+        document.addEventListener('DOMContentLoaded', optimizeVideoForMobile);
         
         // Function to retry with reset (smart retry)
         function retryWithReset() {

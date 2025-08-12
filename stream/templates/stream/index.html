@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 {% block title %}
     {% if category %}
         {{ category|title }} | KortekStream
@@ -160,7 +161,7 @@
                                 <h2 class="text-3xl font-bold text-gray-800 dark:text-white capitalize">{{ cat_name }}</h2>
                                 <div class="ml-4 flex-1 section-divider"></div>
                             </div>
-                            {% include 'stream/partials/_category_content.html' with content=cat_data %}
+                            {% include 'stream/partials/_category_content_fixed.html' with content=cat_data %}
                         </div>
                     {% endfor %}
                 {# --- Logic for specific category (anime, etc.) --- #}
@@ -192,7 +193,7 @@
                         </div>
                     </div>
                     
-                    {% include 'stream/partials/_category_content.html' with content=datas %}
+                    {% include 'stream/partials/_category_content_fixed.html' with content=datas %}
                 {% endif %}
             {% endif %}
         </div>

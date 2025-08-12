@@ -15,7 +15,7 @@
                         <p class="text-xs text-gold-700 dark:text-korteks-red font-mono">Slug: {{ item.anime_slug }}</p>
                     </div>
                     
-                    <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="block">
+                    <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ category }}" class="block">
                         <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-md card-hover overflow-hidden h-full">
                             <div class="relative">
                                 <img src="{{ item.cover }}" 
@@ -85,7 +85,7 @@
                         <p class="text-xs text-gold-700 dark:text-korteks-red font-mono">Slug: {{ item.anime_slug }}</p>
                     </div>
                     
-                    <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="block">
+                    <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ category }}" class="block">
                         <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-md card-hover overflow-hidden h-full">
                             <div class="relative">
                                 <img src="{{ item.cover }}" 
@@ -152,7 +152,7 @@
                         <p class="text-xs text-gold-700 dark:text-korteks-red font-mono">Slug: {{ item.anime_slug }}</p>
                     </div>
                     
-                    <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="block">
+                    <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ category }}" class="block">
                         <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-md card-hover overflow-hidden h-full">
                             <div class="relative">
                                 <img src="{{ item.cover }}" 
@@ -226,58 +226,29 @@
                                 {# Loop 3: Untuk menampilkan setiap anime dalam daftar harian #}
                                 {% for anime in anime_list %}
                                     <div class="border-b border-gray-100 dark:border-korteks-gray pb-4 last:border-b-0 last:pb-0">
-                                        <!-- Anime Slug Display -->
-                                        <div class="mb-2 p-2 bg-gold-50 dark:bg-korteks-gray rounded-md border border-gold-100 dark:border-korteks-darkgray">
-                                            <p class="text-xs text-gold-700 dark:text-korteks-red font-mono">Slug: {{ anime.anime_slug }}</p>
-                                        </div>
-                                        
-                                        <div class="flex items-start space-x-3">
-                                            <div class="flex-shrink-0">
-                                                <img src="{{ anime.cover_url }}"
-                                                     class="w-16 h-20 object-cover rounded-lg shadow-sm"
-                                                     alt="{{ anime.title }}" 
-                                                     onerror="this.src='https://via.placeholder.com/64x80?text=No+Image';this.onerror='';" />
+                                        <div class="flex items-start">
+                                            <div class="w-16 h-16 flex-shrink-0 mr-3">
+                                                <img src="{{ anime.cover }}" 
+                                                     class="w-full h-full object-cover rounded" 
+                                                     alt="{{ anime.judul }}" 
+                                                     onerror="this.src='https://via.placeholder.com/64x64?text=No+Image';this.onerror='';" />
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <a href="{% url 'stream:anime_detail' %}?anime_slug={{ anime.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="block hover:text-gold-600 dark:hover:text-korteks-red transition-colors">
-                                                    <h6 class="font-semibold text-gray-800 dark:text-white text-sm mb-1 line-clamp-2">
-                                                        {{ anime.title }}
+                                                <a href="{% url 'stream:anime_detail' %}?anime_slug={{ anime.anime_slug }}&category={{ category }}" class="block hover:text-gold-600 dark:hover:text-korteks-red transition-colors">
+                                                    <h6 class="font-semibold text-gray-800 dark:text-white text-sm mb-1 truncate" title="{{ anime.judul }}">
+                                                        {{ anime.judul }}
                                                     </h6>
                                                 </a>
-                                                
-                                                <!-- Release Time -->
-                                                <div class="flex items-center mb-2">
-                                                    <span class="bg-gold-100 text-gold-800 dark:bg-korteks-gray dark:text-white text-xs px-2 py-1 rounded-full">
-                                                        🕐 {{ anime.release_time }}
-                                                    </span>
-                                                </div>
-                                                
-                                                <!-- Genres Display -->
-                                                {% if anime.genres %}
-                                                    <div class="mb-2">
-                                                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Genres:</p>
-                                                        <div class="flex flex-wrap gap-1">
-                                                            {% for genre in anime.genres %}
-                                                                <span class="bg-gold-50 text-gold-700 dark:bg-korteks-gray dark:text-white text-xs px-2 py-1 rounded">
-                                                                    {{ genre }}
-                                                                </span>
-                                                            {% endfor %}
-                                                        </div>
-                                                    </div>
-                                                {% endif %}
-                                                
-                                                <!-- Additional Info -->
-                                                <div class="flex items-center space-x-4 text-xs text-gray-600 dark:text-gray-400">
-                                                    {% if anime.score and anime.score != "N/A" %}
-                                                        <span class="flex items-center">
-                                                            <span class="text-gold-500 dark:text-gold-400 mr-1">⭐</span>
-                                                            {{ anime.score }}
-                                                        </span>
-                                                    {% endif %}
-                                                    {% if anime.type %}
-                                                        <span class="bg-gold-50 text-gold-700 dark:bg-korteks-gray dark:text-white px-2 py-1 rounded">
-                                                            {{ anime.type }}
-                                                        </span>
+                                                <div class="flex flex-wrap gap-1 mt-1">
+                                                    {% if anime.genres %}
+                                                        {% for genre in anime.genres|slice:":2" %}
+                                                            <span class="bg-gold-50 text-gold-700 dark:bg-korteks-gray dark:text-white text-xs px-1.5 py-0.5 rounded">
+                                                                {{ genre }}
+                                                            </span>
+                                                        {% endfor %}
+                                                        {% if anime.genres|length > 2 %}
+                                                            <span class="text-xs text-gray-500 dark:text-gray-400">+{{ anime.genres|length|add:"-2" }}</span>
+                                                        {% endif %}
                                                     {% endif %}
                                                 </div>
                                             </div>

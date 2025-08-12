@@ -36,9 +36,20 @@
                         🎬 <span class="hidden sm:inline">MOVIE</span>
                     </div>
                 {% else %}
-                    <div class="absolute top-1 sm:top-2 md:top-4 right-1 sm:right-2 md:right-4 bg-gradient-to-r from-emerald-400 to-emerald-600 text-white px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg">
-                        ✨ <span class="hidden sm:inline">NEW</span>
-                    </div>
+                    {% if item.tipe %}
+                        <div class="absolute top-1 sm:top-2 md:top-4 right-1 sm:right-2 md:right-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg">
+                            {{ item.tipe }}
+                        </div>
+                    {% else %}
+                        <div class="absolute top-1 sm:top-2 md:top-4 right-1 sm:right-2 md:right-4 bg-gradient-to-r from-emerald-400 to-emerald-600 text-white px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg">
+                            ✨ <span class="hidden sm:inline">NEW</span>
+                        </div>
+                    {% endif %}
+                    {% if item.skor %}
+                        <div class="absolute top-1 sm:top-2 md:top-4 left-1 sm:left-2 md:left-4 bg-gradient-to-r from-amber-400 to-orange-600 text-white px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg">
+                            ⭐ {{ item.skor }}
+                        </div>
+                    {% endif %}
                 {% endif %}
                 
                 <!-- Play Button -->
@@ -73,8 +84,12 @@
                                 {{ item.tanggal|default:"Movie" }}
                             {% elif card_type == 'top' %}
                                 Popular
-                            {% else %}
+                            {% elif item.status %}
+                                {{ item.status }}
+                            {% elif item.rilis %}
                                 {{ item.rilis }}
+                            {% else %}
+                                Available
                             {% endif %}
                         </span>
                     </div>
@@ -83,21 +98,29 @@
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
                         <span class="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
-                            {% if card_type == 'movie' %}4.7{% elif card_type == 'top' %}{{ item.rating|default:"4.8" }}{% else %}4.8{% endif %}
+                            {% if card_type == 'movie' %}4.7{% elif card_type == 'top' %}{{ item.rating|default:"4.8" }}{% else %}{{ item.skor|default:"4.8" }}{% endif %}
                         </span>
                     </div>
                 </div>
                 
-                <!-- Genres - Only for top and movie cards -->
-                {% if card_type == 'top' or card_type == 'movie' %}
-                    {% if item.genres %}
+                <!-- Genres - For top, movie, and default (search) cards -->
+                {% if card_type == 'top' or card_type == 'movie' or card_type == 'default' %}
+                    {% if item.genres or item.genre %}
                     <div class="mb-2 sm:mb-3 md:mb-4 min-h-[1.5rem] sm:min-h-[2rem]">
                         <div class="flex flex-wrap gap-1">
-                            {% for genre in item.genres|slice:":2" %}
-                                <span class="bg-{% if card_type == 'movie' %}purple{% else %}blue{% endif %}-100 dark:bg-gray-700 text-{% if card_type == 'movie' %}purple{% else %}blue{% endif %}-800 dark:text-{% if card_type == 'movie' %}purple{% else %}blue{% endif %}-300 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
-                                    {{ genre }}
-                                </span>
-                            {% endfor %}
+                            {% if item.genres %}
+                                {% for genre in item.genres|slice:":2" %}
+                                    <span class="bg-{% if card_type == 'movie' %}purple{% elif card_type == 'default' %}green{% else %}blue{% endif %}-100 dark:bg-gray-700 text-{% if card_type == 'movie' %}purple{% elif card_type == 'default' %}green{% else %}blue{% endif %}-800 dark:text-{% if card_type == 'movie' %}purple{% elif card_type == 'default' %}green{% else %}blue{% endif %}-300 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+                                        {{ genre }}
+                                    </span>
+                                {% endfor %}
+                            {% elif item.genre %}
+                                {% for genre in item.genre|slice:":2" %}
+                                    <span class="bg-{% if card_type == 'movie' %}purple{% elif card_type == 'default' %}green{% else %}blue{% endif %}-100 dark:bg-gray-700 text-{% if card_type == 'movie' %}purple{% elif card_type == 'default' %}green{% else %}blue{% endif %}-800 dark:text-{% if card_type == 'movie' %}purple{% elif card_type == 'default' %}green{% else %}blue{% endif %}-300 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+                                        {{ genre }}
+                                    </span>
+                                {% endfor %}
+                            {% endif %}
                         </div>
                     </div>
                     {% else %}

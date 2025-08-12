@@ -196,7 +196,7 @@
                                 <div class="relative w-12 h-12">
                                     <svg class="transform -rotate-90 w-12 h-12">
                                         <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" class="text-gray-200 dark:text-gray-600"/>
-                                        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" stroke-dasharray="125.6" stroke-dashoffset="{{ 125.6|floatformat:1 }}" class="text-green-500" style="stroke-dashoffset: {{ 125.6|add:-125.6|add:datas.confidence_score|mul:125.6|floatformat:1 }};"/>
+                                        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" stroke-dasharray="125.6" stroke-dashoffset="0" class="text-green-500"/>
                                     </svg>
                                     <div class="absolute inset-0 flex items-center justify-center">
                                         <span class="text-xs font-bold text-gray-800 dark:text-white">{{ datas.confidence_score|floatformat:0 }}</span>

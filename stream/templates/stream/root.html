@@ -159,40 +159,76 @@
                 </div>
             </div>
             
-            <!-- API Response Metadata -->
-            <div class="mb-6 p-4 bg-gold-50 dark:bg-korteks-darkgray rounded-lg border border-gold-100 dark:border-korteks-gray">
-                <div class="flex items-center mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold-500 dark:text-korteks-red mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                    </svg>
-                    <h3 class="font-semibold text-gray-800 dark:text-white">API Response Metadata</h3>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    {% if datas.categories %}
-                    <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
-                        <span class="font-medium text-gold-700 dark:text-korteks-red">Categories:</span>
-                        <div class="mt-1 flex flex-wrap gap-1">
-                            {% for cat in datas.categories %}
-                                <span class="badge badge-primary">{{ cat }}</span>
-                            {% endfor %}
+            <!-- Enhanced API Response Metadata -->
+            <div class="stagger-item mb-16">
+                <div class="glass-card p-8 border border-gray-200/30 dark:border-gray-700/30">
+                    <div class="flex items-center justify-center mb-6">
+                        <div class="p-3 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-600 dark:from-korteks-red dark:to-korteks-darkred shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
                         </div>
+                        <h3 class="ml-4 text-2xl font-bold text-gray-800 dark:text-white">System Status</h3>
                     </div>
-                    {% endif %}
-                    <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
-                        <span class="font-medium text-gold-700 dark:text-korteks-red">Confidence Score:</span>
-                        <span class="ml-2">{{ datas.confidence_score }}</span>
-                    </div>
-                    <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
-                        <span class="font-medium text-gold-700 dark:text-korteks-red">Sources:</span>
-                        <div class="mt-1 flex flex-wrap gap-1">
-                            {% for source in datas.sources %}
-                                <span class="badge badge-primary">{{ source }}</span>
-                            {% endfor %}
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {% if datas.categories %}
+                        <div class="modern-card p-6 hover:scale-105 transition-all duration-300">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Categories</span>
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                                    <span class="text-white text-sm font-bold">{{ datas.categories|length }}</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                {% for cat in datas.categories %}
+                                    <span class="px-3 py-1 bg-gradient-to-r from-gold-100 to-gold-200 dark:from-korteks-red/20 dark:to-korteks-darkred/10 text-gold-800 dark:text-korteks-red text-xs font-semibold rounded-full border border-gold-200 dark:border-korteks-red/30">
+                                        {{ cat }}
+                                    </span>
+                                {% endfor %}
+                            </div>
                         </div>
-                    </div>
-                    <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray {% if datas.categories %}md:col-span-3{% endif %}">
-                        <span class="font-medium text-gold-700 dark:text-korteks-red">Message:</span>
-                        <span class="ml-2">{{ datas.message }}</span>
+                        {% endif %}
+
+                        <div class="modern-card p-6 hover:scale-105 transition-all duration-300">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Confidence</span>
+                                <div class="relative w-12 h-12">
+                                    <svg class="transform -rotate-90 w-12 h-12">
+                                        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" class="text-gray-200 dark:text-gray-600"/>
+                                        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" stroke-dasharray="125.6" stroke-dashoffset="{{ 125.6|floatformat:1 }}" class="text-green-500" style="stroke-dashoffset: {{ 125.6|add:-125.6|add:datas.confidence_score|mul:125.6|floatformat:1 }};"/>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <span class="text-xs font-bold text-gray-800 dark:text-white">{{ datas.confidence_score|floatformat:0 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-2xl font-bold text-green-500">{{ datas.confidence_score }}</div>
+                        </div>
+
+                        <div class="modern-card p-6 hover:scale-105 transition-all duration-300">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Sources</span>
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+                                    <span class="text-white text-sm font-bold">{{ datas.sources|length }}</span>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                {% for source in datas.sources %}
+                                    <div class="px-3 py-2 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/10 text-purple-800 dark:text-purple-300 text-sm rounded-lg border border-purple-200 dark:border-purple-700/30">
+                                        {{ source }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="modern-card p-6 hover:scale-105 transition-all duration-300 {% if not datas.categories %}md:col-span-2 lg:col-span-4{% endif %}">
+                            <div class="flex items-center mb-4">
+                                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-3"></div>
+                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Status Message</span>
+                            </div>
+                            <p class="text-gray-800 dark:text-white font-medium">{{ datas.message }}</p>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -27,28 +27,28 @@
         .dark .section-divider {
             @apply bg-gradient-to-r from-korteks-red to-transparent;
         }
-        .day-tab {
-            @apply px-4 py-2.5 text-sm font-medium cursor-pointer;
+        .modern-day-btn {
+            @apply px-4 py-3 text-center cursor-pointer flex flex-col items-center justify-center;
             @apply text-gray-600 dark:text-gray-300;
-            @apply bg-white dark:bg-korteks-gray;
-            @apply hover:bg-gold-50 dark:hover:bg-korteks-darkgray;
-            @apply rounded-lg border border-gray-200 dark:border-korteks-darkgray;
-            @apply text-center whitespace-nowrap;
-            @apply min-w-[90px];
-            @apply shadow-sm;
-            transition: all 0.2s ease;
+            @apply bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800;
+            @apply hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-600 dark:hover:to-gray-700;
+            @apply rounded-2xl border border-gray-200/50 dark:border-gray-600/50;
+            @apply min-w-[85px] min-h-[70px];
+            @apply shadow-lg hover:shadow-xl;
+            @apply backdrop-blur-lg;
+            transition: all 0.3s ease;
         }
-        .day-tab.active {
-            @apply text-white dark:text-white;
-            @apply bg-gold-500 dark:bg-korteks-red;
-            @apply border-gold-500 dark:border-korteks-red;
-            @apply shadow-md;
+        .modern-day-btn.active {
+            @apply text-white;
+            @apply bg-gradient-to-br from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600;
+            @apply border-blue-500/50 dark:border-red-500/50;
+            @apply shadow-2xl;
             @apply transform scale-105;
         }
-        .day-tab:hover:not(.active) {
-            @apply text-gold-600 dark:text-korteks-red;
-            @apply border-gold-300 dark:border-korteks-red;
-            @apply shadow-md;
+        .modern-day-btn:hover:not(.active) {
+            @apply text-blue-600 dark:text-red-400;
+            @apply border-blue-300/50 dark:border-red-300/50;
+            @apply shadow-2xl;
             @apply transform scale-102;
         }
         .day-content, .day-content-anime, .day-content-korean-drama, .day-content-all {
@@ -224,7 +224,7 @@
                         {% for day in days %}
                             <div class="day-content-{{ cat_name }} {% if forloop.first %}active{% endif %}" id="{{ day }}-{{ cat_name }}">
                                 {% if cat_data.data and cat_data.data|get_item:day|length > 0 %}
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
                                         {% for anime in cat_data.data|get_item:day %}
                                             <div class="group">
                                                 <a href="{% url 'stream:anime_detail' %}?anime_slug={{ anime.anime_slug }}&category={{ cat_name }}" class="block">
@@ -314,8 +314,14 @@
                                         {% endfor %}
                                     </div>
                                 {% else %}
-                                    <div class="bg-gold-50 dark:bg-korteks-darkgray p-6 rounded-lg text-center border border-gold-100 dark:border-korteks-gray">
-                                        <p class="text-gray-600 dark:text-gray-300">No schedule found for {{ day|title }} in {{ cat_name }}.</p>
+                                    <div class="modern-card bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-8 rounded-3xl text-center border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+                                        <div class="w-16 h-16 bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">No Releases Scheduled</h3>
+                                        <p class="text-gray-600 dark:text-gray-400">No schedule found for {{ day|title }} in {{ cat_name }}.</p>
                                     </div>
                                 {% endif %}
                             </div>

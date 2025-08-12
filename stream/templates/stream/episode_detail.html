@@ -3,8 +3,8 @@
 {% load custom_filters %}
 
 {% block title %}
-    {% if episode_data.data.title %}
-        {{ episode_data.data.title }} | KortekStream
+    {% if episode_data.data.title or episode_data.data.data.title %}
+        {{ episode_data.data.title|default:episode_data.data.data.title }} | KortekStream
     {% else %}
         Episode Detail | KortekStream
     {% endif %}
@@ -79,6 +79,21 @@
         .dark .download-button {
             @apply bg-korteks-darkgray text-white hover:bg-korteks-gray border border-korteks-gray;
         }
+        .synopsis-text {
+            transition: all 0.3s ease;
+        }
+        .synopsis-collapsed {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        @media (min-width: 768px) {
+            .synopsis-collapsed {
+                -webkit-line-clamp: none;
+                overflow: visible;
+            }
+        }
     </style>
 {% endblock extra_css %}
 
@@ -88,7 +103,7 @@
         {% include 'components/navigation.html' %}
 
         <!-- Main Content -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
             {% if error or episode_data.error %}
                 <div class="bg-white dark:bg-korteks-darkgray border-l-4 border-gold-500 dark:border-korteks-red p-6 rounded-lg shadow-md">
                     <div class="flex items-center">
@@ -112,8 +127,7 @@
                 </div>
             {% else %}
                 {% if episode_data.success and episode_data.data %}
-                    <!-- Enhanced API Response Metadata -->
-                    {% if debug %}
+                    {% if false %}
                     <div class="mb-8">
                         <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
                             <div class="flex items-center justify-between mb-6">
@@ -141,39 +155,29 @@
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                             <!-- Handle both regular and nested gomunime structure -->
-                            {% if episode_data.data.message %}
+                            {% if episode_data.data.message or episode_data.data.data.message %}
                             <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
                                 <span class="font-medium text-gold-700 dark:text-korteks-red">Message:</span>
-                                <span class="ml-2">{{ episode_data.data.message }}</span>
-                            </div>
-                            {% elif episode_data.data.data.message %}
-                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
-                                <span class="font-medium text-gold-700 dark:text-korteks-red">Message:</span>
-                                <span class="ml-2">{{ episode_data.data.data.message }}</span>
+                                <span class="ml-2">{{ episode_data.data.message|default:episode_data.data.data.message }}</span>
                             </div>
                             {% endif %}
                             
-                            {% if episode_data.data.sources %}
+                            {% if episode_data.data.sources or episode_data.data.data.sources %}
                             <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
                                 <span class="font-medium text-gold-700 dark:text-korteks-red">Sources:</span>
-                                <span class="ml-2">{{ episode_data.data.sources|join:", " }}</span>
+                                <span class="ml-2">{{ episode_data.data.sources|default:episode_data.data.data.sources|join:", " }}</span>
                             </div>
-                            {% elif episode_data.data.source %}
+                            {% elif episode_data.data.source or episode_data.data.data.source %}
                             <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
                                 <span class="font-medium text-gold-700 dark:text-korteks-red">Source:</span>
-                                <span class="ml-2">{{ episode_data.data.source }}</span>
+                                <span class="ml-2">{{ episode_data.data.source|default:episode_data.data.data.source }}</span>
                             </div>
                             {% endif %}
                             
-                            {% if episode_data.data.confidence_score %}
+                            {% if episode_data.data.confidence_score or episode_data.data.data.confidence_score %}
                             <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
                                 <span class="font-medium text-gold-700 dark:text-korteks-red">Confidence Score:</span>
-                                <span class="ml-2">{{ episode_data.data.confidence_score }}</span>
-                            </div>
-                            {% elif episode_data.data.data.confidence_score %}
-                            <div class="p-2 bg-white dark:bg-korteks-gray rounded border border-gold-100 dark:border-korteks-darkgray">
-                                <span class="font-medium text-gold-700 dark:text-korteks-red">Confidence Score:</span>
-                                <span class="ml-2">{{ episode_data.data.data.confidence_score }}</span>
+                                <span class="ml-2">{{ episode_data.data.confidence_score|default:episode_data.data.data.confidence_score }}</span>
                             </div>
                             {% endif %}
                             {% if episode_data.metadata %}
@@ -221,26 +225,27 @@
                             </h1>
                             
                             <!-- Anime Info Section -->
-                            {% if episode_data.data.anime_info %}
+                            {% if episode_data.data.anime_info or episode_data.data.data.anime_info %}
+                            {% with anime_info=episode_data.data.anime_info|default:episode_data.data.data.anime_info %}
                             <div class="md:flex mb-6">
                                 <!-- Thumbnail -->
                                 <div class="md:w-1/3 lg:w-1/4 mb-4 md:mb-0">
-                                    <img src="{{ episode_data.data.anime_info.thumbnail_url }}" 
-                                         alt="{{ episode_data.data.anime_info.title }}" 
+                                    <img src="{{ anime_info.thumbnail_url }}" 
+                                         alt="{{ anime_info.title }}" 
                                          class="w-full rounded-lg shadow-md"
                                          onerror="this.src='https://via.placeholder.com/300x450?text=No+Image';this.onerror='';">
                                 </div>
                                 
                                 <!-- Anime Details -->
                                 <div class="md:w-2/3 lg:w-3/4 md:pl-6">
-                                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-3">{{ episode_data.data.anime_info.title }}</h2>
+                                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-3">{{ anime_info.title }}</h2>
                                     
                                     <!-- Genres -->
-                                    {% if episode_data.data.anime_info.genres %}
+                                    {% if anime_info.genres %}
                                     <div class="mb-4">
                                         <h3 class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Genres:</h3>
                                         <div class="flex flex-wrap gap-2">
-                                            {% for genre in episode_data.data.anime_info.genres %}
+                                            {% for genre in anime_info.genres %}
                                                 <span class="bg-gold-100 text-gold-800 dark:bg-korteks-gray dark:text-white px-3 py-1 rounded-full text-xs">
                                                     {{ genre }}
                                                 </span>
@@ -250,16 +255,24 @@
                                     {% endif %}
                                     
                                     <!-- Synopsis -->
-                                    {% if episode_data.data.anime_info.synopsis %}
+                                    {% if anime_info.synopsis %}
                                     <div>
                                         <h3 class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Synopsis:</h3>
-                                        <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-                                            {{ episode_data.data.anime_info.synopsis }}
-                                        </p>
+                                        <div class="synopsis-container">
+                                            <p id="synopsisTextEpisode" class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed synopsis-text">
+                                                {{ anime_info.synopsis }}
+                                            </p>
+                                            {% if anime_info.synopsis|length > 150 %}
+                                            <button id="synopsisToggleEpisode" class="mt-2 text-xs text-gold-600 dark:text-korteks-red hover:underline focus:outline-none md:hidden">
+                                                Show more
+                                            </button>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                     {% endif %}
                                 </div>
                             </div>
+                            {% endwith %}
                             {% elif episode_data.data.data.anime_info %}
                             <!-- Nested structure for gomunime -->
                             <div class="md:flex mb-6">
@@ -293,9 +306,16 @@
                                     {% if episode_data.data.data.anime_info.synopsis %}
                                     <div>
                                         <h3 class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Synopsis:</h3>
-                                        <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-                                            {{ episode_data.data.data.anime_info.synopsis }}
-                                        </p>
+                                        <div class="synopsis-container">
+                                            <p id="synopsisTextEpisodeNested" class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed synopsis-text">
+                                                {{ episode_data.data.data.anime_info.synopsis }}
+                                            </p>
+                                            {% if episode_data.data.data.anime_info.synopsis|length > 150 %}
+                                            <button id="synopsisToggleEpisodeNested" class="mt-2 text-xs text-gold-600 dark:text-korteks-red hover:underline focus:outline-none md:hidden">
+                                                Show more
+                                            </button>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                     {% endif %}
                                 </div>
@@ -303,10 +323,11 @@
                             {% endif %}
                             
                             <!-- Navigation Links -->
-                            {% if episode_data.data.navigation %}
+                            {% if episode_data.data.navigation or episode_data.data.data.navigation %}
+                            {% with navigation=episode_data.data.navigation|default:episode_data.data.data.navigation %}
                             <div class="flex flex-wrap gap-3 mb-6">
-                                {% if episode_data.data.navigation.all_episodes_url %}
-                                <a href="{% url 'stream:anime_detail' %}?anime_slug={{ episode_data.data.data.anime_info.title|slugify }}&category={{ category }}" 
+                                {% if navigation.all_episodes_url %}
+                                <a href="{{ navigation.all_episodes_url }}" 
                                    class="bg-gold-500 hover:bg-gold-600 dark:bg-korteks-red dark:hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
@@ -315,39 +336,39 @@
                                 </a>
                                 {% endif %}
                                 
-                                {% if episode_data.data.navigation.previous_episode_url %}
-                                {% if episode_data.data.navigation.previous_episode_encoded_id and episode_data.data.navigation.previous_episode_encoded_id != '' %}
-                                <a href="{% url 'stream:episode_detail' encoded_id=episode_data.data.navigation.previous_episode_encoded_id %}"
-                                   class="server-button">
+                                {% if navigation.previous_episode_url %}
+                                {% if navigation.previous_episode_encoded_id and navigation.previous_episode_encoded_id != '' %}
+                                <a href="{% url 'stream:episode_detail' encoded_id=navigation.previous_episode_encoded_id %}"
+                                   class="bg-gray-200 hover:bg-gray-300 dark:bg-korteks-gray dark:hover:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                                     </svg>
                                     Previous Episode
                                 </a>
                                 {% else %}
-                                <a href="{% url 'stream:episode_detail_legacy' %}?episode_url={{ episode_data.data.navigation.previous_episode_url|urlencode }}&category={{ category }}"
-                                   class="server-button">
+                                <a href="{% url 'stream:episode_detail_legacy' %}?episode_url={{ navigation.previous_episode_url|urlencode }}&category={{ category }}"
+                                   class="bg-gray-200 hover:bg-gray-300 dark:bg-korteks-gray dark:hover:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                                     </svg>
-                                    Previous Episode (External)
+                                    Previous Episode
                                 </a>
                                 {% endif %}
                                 {% endif %}
                                 
-                                {% if episode_data.data.navigation.next_episode_url %}
-                                {% if episode_data.data.navigation.next_episode_encoded_id and episode_data.data.navigation.next_episode_encoded_id != '' %}
-                                <a href="{% url 'stream:episode_detail' encoded_id=episode_data.data.navigation.next_episode_encoded_id %}"
-                                   class="server-button">
+                                {% if navigation.next_episode_url %}
+                                {% if navigation.next_episode_encoded_id and navigation.next_episode_encoded_id != '' %}
+                                <a href="{% url 'stream:episode_detail' encoded_id=navigation.next_episode_encoded_id %}"
+                                   class="bg-gray-200 hover:bg-gray-300 dark:bg-korteks-gray dark:hover:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
                                     Next Episode
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                                     </svg>
                                 </a>
                                 {% else %}
-                                <a href="{% url 'stream:episode_detail_legacy' %}?episode_url={{ episode_data.data.navigation.next_episode_url|urlencode }}&category={{ category }}"
-                                   class="server-button">
-                                    Next Episode (External)
+                                <a href="{% url 'stream:episode_detail_legacy' %}?episode_url={{ navigation.next_episode_url|urlencode }}&category={{ category }}"
+                                   class="bg-gray-200 hover:bg-gray-300 dark:bg-korteks-gray dark:hover:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
+                                    Next Episode
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                                     </svg>
@@ -355,67 +376,15 @@
                                 {% endif %}
                                 {% endif %}
                             </div>
-                            {% elif episode_data.data.data.navigation %}
-                            <!-- Nested structure for gomunime navigation -->
-                            <div class="flex flex-wrap gap-3 mb-6">
-                                {% if episode_data.data.data.navigation.all_episodes_url %}
-                                <a href="{% url 'stream:anime_detail' %}?anime_slug={{ episode_data.data.data.anime_info.title|slugify }}&category={{ category }}" 
-                                   class="bg-gold-500 hover:bg-gold-600 dark:bg-korteks-red dark:hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
-                                    </svg>
-                                    All Episodes
-                                </a>
-                                {% endif %}
-                                
-                                {% if episode_data.data.data.navigation.previous_episode_url %}
-                                {% if episode_data.data.data.navigation.previous_episode_encoded_id and episode_data.data.data.navigation.previous_episode_encoded_id != '' %}
-                                <a href="{% url 'stream:episode_detail' encoded_id=episode_data.data.data.navigation.previous_episode_encoded_id %}"
-                                   class="server-button">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                    Previous Episode
-                                </a>
-                                {% else %}
-                                <a href="{% url 'stream:episode_detail_legacy' %}?episode_url={{ episode_data.data.data.navigation.previous_episode_url|urlencode }}&category={{ category }}"
-                                   class="server-button">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                    Previous Episode (External)
-                                </a>
-                                {% endif %}
-                                {% endif %}
-                                
-                                {% if episode_data.data.data.navigation.next_episode_url %}
-                                {% if episode_data.data.data.navigation.next_episode_encoded_id and episode_data.data.data.navigation.next_episode_encoded_id != '' %}
-                                <a href="{% url 'stream:episode_detail' encoded_id=episode_data.data.data.navigation.next_episode_encoded_id %}"
-                                   class="server-button">
-                                    Next Episode
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                </a>
-                                {% else %}
-                                <a href="{% url 'stream:episode_detail_legacy' %}?episode_url={{ episode_data.data.data.navigation.next_episode_url|urlencode }}&category={{ category }}"
-                                   class="server-button">
-                                    Next Episode (External)
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                </a>
-                                {% endif %}
-                                {% endif %}
-                            </div>
+                            {% endwith %}
                             {% endif %}
                         </div>
                     </div>
                     
                     <!-- Enhanced Video Player Section -->
                     {% if episode_data.data.embed_url %}
-                    <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden mb-12 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
-                        <div class="p-6 border-b border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-800">
+                    <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden mb-8 sm:mb-12 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
+                        <div class="p-4 sm:p-6 border-b border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-800">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
                                     <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 rounded-2xl flex items-center justify-center mr-4">
@@ -463,7 +432,7 @@
                             </video>
                         </div>
                     </div>
-                    {% elif episode_data.data.streaming_servers and episode_data.data.streaming_servers.0.streaming_url %}
+                    {% elif episode_data.data.streaming_servers and episode_data.data.streaming_servers.0.streaming_url or episode_data.data.data.streaming_servers and episode_data.data.data.streaming_servers.0.streaming_url %}
                     <!-- For gomunime format (flat structure) with enhanced player -->
                     <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden mb-8">
                         <div class="p-4 border-b border-gray-200 dark:border-korteks-gray">
@@ -479,7 +448,8 @@
                         <!-- Server Selection Tabs -->
                         <div class="p-4 bg-gray-50 dark:bg-korteks-gray border-b border-gray-200 dark:border-korteks-darkgray">
                             <div class="flex flex-wrap gap-2" id="server-buttons-flat">
-                                {% for server in episode_data.data.streaming_servers %}
+                                {% with streaming_servers=episode_data.data.streaming_servers|default:episode_data.data.data.streaming_servers %}
+                                {% for server in streaming_servers %}
                                 <button 
                                     data-url="{{ server.streaming_url }}"
                                     data-server-name="{{ server.server_name }}"
@@ -487,6 +457,7 @@
                                     {{ server.server_name }}
                                 </button>
                                 {% endfor %}
+                                {% endwith %}
                             </div>
                         </div>
                         
@@ -507,7 +478,7 @@
                             <!-- Iframe Player -->
                             <div id="iframe-player-wrapper-flat" class="absolute top-0 left-0 w-full h-full">
                                 <iframe id="iframe-player-flat" 
-                                        src="{{ episode_data.data.streaming_servers.0.streaming_url }}" 
+                                        src="{{ episode_data.data.streaming_servers.0.streaming_url|default:episode_data.data.data.streaming_servers.0.streaming_url }}" 
                                         class="absolute top-0 left-0 w-full h-full" 
                                         frameborder="0" 
                                         allowfullscreen
@@ -698,17 +669,24 @@
                     
                     <!-- Other Episodes Section for Gomunime (flat structure) -->
                     {% if episode_data.data.other_episodes %}
-                    <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden mb-8">
-                        <div class="p-4 border-b border-gray-200 dark:border-korteks-gray">
-                            <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-gold-500 dark:text-korteks-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                                </svg>
-                                Other Episodes ({{ episode_data.data.other_episodes|length }})
-                            </h2>
+                    <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden mb-8 sm:mb-12 p-4 sm:p-6 md:p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8">
+                            <div class="flex items-center mb-4 sm:mb-0">
+                                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700 rounded-xl sm:rounded-2xl flex items-center justify-center mr-3 sm:mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-white"> Other Episodes</h2>
+                                    <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">Continue watching from this series</p>
+                                </div>
+                            </div>
+                            <div class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 bg-emerald-100 dark:bg-gray-700 px-3 sm:px-4 py-2 rounded-full w-fit">
+                                {{ episode_data.data.other_episodes|length }} Episode{{ episode_data.data.other_episodes|length|pluralize }}
+                            </div>
                         </div>
-                        <div class="p-4">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
                                 {% for episode in episode_data.data.other_episodes %}
                                 <a href="{% url 'stream:episode_detail_legacy' %}?episode_url={{ episode.url|urlencode }}&category={{ category }}" class="block group">
                                     <div class="bg-gray-50 dark:bg-korteks-gray rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
@@ -1053,16 +1031,35 @@
                         </div>
                     </div>
                     {% endif %}
-                    {% elif episode_data.data.episode_url or episode_identifier %}
-                    <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden mb-8 p-6">
-                        <div class="text-center">
-                            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">External Video Source</h2>
-                            <p class="text-gray-600 dark:text-gray-300 mb-4">
+                    {% elif episode_data.data.episode_url or episode_data.data.data.episode_url or episode_identifier %}
+                    <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden mb-8 sm:mb-12 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
+                        <div class="p-4 sm:p-6 border-b border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-800">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 rounded-2xl flex items-center justify-center mr-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">🎬 External Video Source</h2>
+                                        <p class="text-gray-600 dark:text-gray-400">Watch on the original streaming site</p>
+                                    </div>
+                                </div>
+                                <div class="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-4 py-2 rounded-full text-sm font-semibold flex items-center">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
+                                    Available
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-8 text-center">
+                            <p class="text-gray-600 dark:text-gray-300 mb-6 text-lg">
                                 This episode is available on an external site. Click the button below to watch it.
                             </p>
-                            <a href="{{ episode_data.data.episode_url|default:episode_identifier }}" target="_blank" 
-                               class="inline-flex items-center px-6 py-3 bg-gold-500 dark:bg-korteks-red text-white font-medium rounded-lg hover:bg-gold-600 dark:hover:bg-red-700 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <a href="{{ episode_data.data.episode_url|default:episode_data.data.data.episode_url|default:episode_identifier }}" target="_blank" 
+                               class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 text-white font-medium rounded-xl hover:from-blue-600 hover:to-purple-700 dark:hover:from-red-600 dark:hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
                                 </svg>
                                 Watch on External Site
@@ -1071,29 +1068,33 @@
                     </div>
                     {% endif %}
                     
-                    <!-- Enhanced Streaming Servers Section -->
-                    {% if episode_data.data.streaming_servers %}
-                    <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden mb-12 p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
-                        <div class="flex items-center justify-between mb-8">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700 rounded-2xl flex items-center justify-center mr-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- Enhanced Streaming Servers Section with Dropdown -->
+                    {% if episode_data.data.streaming_servers or episode_data.data.data.streaming_servers %}
+                    <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden mb-8 sm:mb-12 p-4 sm:p-6 md:p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8">
+                            <div class="flex items-center mb-4 sm:mb-0">
+                                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700 rounded-xl sm:rounded-2xl flex items-center justify-center mr-3 sm:mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">🌐 Streaming Servers</h2>
-                                    <p class="text-gray-600 dark:text-gray-400">Multiple server options for optimal streaming</p>
+                                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-white">🌐 Streaming Servers</h2>
+                                    <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">Multiple server options for optimal streaming</p>
                                 </div>
                             </div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400 bg-purple-100 dark:bg-gray-700 px-4 py-2 rounded-full">
-                                {{ episode_data.data.streaming_servers|length }} Server{{ episode_data.data.streaming_servers|length|pluralize }}
-                            </div>
+                            <button id="streamingToggle" class="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 bg-purple-100 dark:bg-gray-700 px-3 sm:px-4 py-2 rounded-full hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-300">
+                                <span class="mr-2">{{ episode_data.data.streaming_servers|default:episode_data.data.data.streaming_servers|length }} Server{{ episode_data.data.streaming_servers|default:episode_data.data.data.streaming_servers|length|pluralize }}</span>
+                                <svg id="streamingChevron" class="w-4 h-4 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {% for server in episode_data.data.streaming_servers %}
+                        <div id="streamingContent" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6 hidden">
+                            {% with streaming_servers=episode_data.data.streaming_servers|default:episode_data.data.data.streaming_servers %}
+                            {% for server in streaming_servers %}
                             <a href="{{ server.streaming_url }}" target="_blank" class="group block">
                                 <div class="modern-card bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-800 p-6 rounded-2xl border border-purple-200/50 dark:border-gray-600/50 hover:shadow-xl transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-1">
                                     <div class="flex items-center justify-center mb-4">
@@ -1109,29 +1110,37 @@
                                 </div>
                             </a>
                             {% endfor %}
+                            {% endwith %}
                         </div>
                     </div>
                     {% endif %}
-                    
-                    <!-- Enhanced Download Links Section -->
-                    {% if episode_data.data.download_links %}
-                    <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden mb-12 p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
-                        <div class="flex items-center justify-between mb-8">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-700 rounded-2xl flex items-center justify-center mr-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+                    <!-- Enhanced Download Links Section with Dropdown -->
+                    {% if episode_data.data.download_links or episode_data.data.data.download_links %}
+                    <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden mb-8 sm:mb-12 p-4 sm:p-6 md:p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8">
+                            <div class="flex items-center mb-4 sm:mb-0">
+                                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-700 rounded-xl sm:rounded-2xl flex items-center justify-center mr-3 sm:mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">💾 Download Links</h2>
-                                    <p class="text-gray-600 dark:text-gray-400">Download this episode in various formats and qualities</p>
+                                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-white">💾 Download Links</h2>
+                                    <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">Download this episode in various formats and qualities</p>
                                 </div>
                             </div>
+                            <button id="downloadToggle" class="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 bg-indigo-100 dark:bg-gray-700 px-3 sm:px-4 py-2 rounded-full hover:bg-indigo-200 dark:hover:bg-gray-600 transition-colors duration-300">
+                                <span class="mr-2">{{ episode_data.data.download_links|default:episode_data.data.data.download_links|length }} Format{{ episode_data.data.download_links|default:episode_data.data.data.download_links|length|pluralize }}</span>
+                                <svg id="downloadChevron" class="w-4 h-4 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
                         </div>
 
-                        <div class="space-y-8">
-                            {% for format_type, resolutions in episode_data.data.download_links.items %}
+                        <div id="downloadContent" class="space-y-6 sm:space-y-8 hidden">
+                            {% with download_links=episode_data.data.download_links|default:episode_data.data.data.download_links %}
+                            {% for format_type, resolutions in download_links.items %}
                             <div class="modern-card bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-gray-700 dark:to-gray-800 p-6 rounded-2xl border border-indigo-200/50 dark:border-gray-600/50">
                                 <div class="flex items-center mb-6">
                                     <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-700 rounded-lg flex items-center justify-center mr-3">
@@ -1170,12 +1179,13 @@
                                 </div>
                             </div>
                             {% endfor %}
+                            {% endwith %}
                         </div>
                     </div>
                     {% endif %}
                     
                     <!-- Enhanced Other Episodes Section -->
-                    {% if episode_data.data.other_episodes %}
+                    {% if episode_data.data.other_episodes or episode_data.data.data.other_episodes %}
                     <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden mb-12 p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
                         <div class="flex items-center justify-between mb-8">
                             <div class="flex items-center">
@@ -1185,17 +1195,18 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">📺 Other Episodes</h2>
+                                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white"> Other Episodes</h2>
                                     <p class="text-gray-600 dark:text-gray-400">Continue watching from this series</p>
                                 </div>
                             </div>
                             <div class="text-sm text-gray-500 dark:text-gray-400 bg-emerald-100 dark:bg-gray-700 px-4 py-2 rounded-full">
-                                {{ episode_data.data.other_episodes|length }} Episode{{ episode_data.data.other_episodes|length|pluralize }}
+                                {{ episode_data.data.other_episodes|default:episode_data.data.data.other_episodes|length }} Episode{{ episode_data.data.other_episodes|default:episode_data.data.data.other_episodes|length|pluralize }}
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                            {% for episode in episode_data.data.other_episodes %}
+                            {% with other_episodes=episode_data.data.other_episodes|default:episode_data.data.data.other_episodes %}
+                            {% for episode in other_episodes %}
                                 {% if episode.encoded_id %}
                                 <a href="{% url 'stream:episode_detail' encoded_id=episode.encoded_id %}" class="block">
                                     <div class="bg-gold-50 dark:bg-korteks-gray/20 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow episode-card">
@@ -1235,6 +1246,7 @@
                                 {% endif %}
                             
                             {% endfor %}
+                            {% endwith %}
                         </div>
                     </div>
                     {% endif %}
@@ -1265,7 +1277,73 @@
 {% block extra_js %}
     <!-- Plyr.js -->
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-    
+
     <!-- HLS.js for HLS support -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+    <!-- Dropdown Toggle and Synopsis Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Download section toggle
+            const downloadToggle = document.getElementById('downloadToggle');
+            const downloadContent = document.getElementById('downloadContent');
+            const downloadChevron = document.getElementById('downloadChevron');
+
+            if (downloadToggle && downloadContent && downloadChevron) {
+                downloadToggle.addEventListener('click', function() {
+                    downloadContent.classList.toggle('hidden');
+                    downloadChevron.classList.toggle('rotate-180');
+                });
+            }
+
+            // Streaming servers toggle
+            const streamingToggle = document.getElementById('streamingToggle');
+            const streamingContent = document.getElementById('streamingContent');
+            const streamingChevron = document.getElementById('streamingChevron');
+
+            if (streamingToggle && streamingContent && streamingChevron) {
+                streamingToggle.addEventListener('click', function() {
+                    streamingContent.classList.toggle('hidden');
+                    streamingChevron.classList.toggle('rotate-180');
+                });
+            }
+
+            // Synopsis toggle functionality
+            function setupSynopsisToggle(textId, toggleId) {
+                const synopsisText = document.getElementById(textId);
+                const synopsisToggle = document.getElementById(toggleId);
+
+                if (synopsisText && synopsisToggle) {
+                    // Initially collapse on mobile
+                    if (window.innerWidth < 768) {
+                        synopsisText.classList.add('synopsis-collapsed');
+                    }
+
+                    synopsisToggle.addEventListener('click', function() {
+                        if (synopsisText.classList.contains('synopsis-collapsed')) {
+                            synopsisText.classList.remove('synopsis-collapsed');
+                            synopsisToggle.textContent = 'Show less';
+                        } else {
+                            synopsisText.classList.add('synopsis-collapsed');
+                            synopsisToggle.textContent = 'Show more';
+                        }
+                    });
+
+                    // Handle window resize
+                    window.addEventListener('resize', function() {
+                        if (window.innerWidth >= 768) {
+                            synopsisText.classList.remove('synopsis-collapsed');
+                            synopsisToggle.textContent = 'Show more';
+                        } else if (synopsisToggle.textContent === 'Show more') {
+                            synopsisText.classList.add('synopsis-collapsed');
+                        }
+                    });
+                }
+            }
+
+            // Setup synopsis toggles for both structures
+            setupSynopsisToggle('synopsisTextEpisode', 'synopsisToggleEpisode');
+            setupSynopsisToggle('synopsisTextEpisodeNested', 'synopsisToggleEpisodeNested');
+        });
+    </script>
 {% endblock extra_js %}

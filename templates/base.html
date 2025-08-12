@@ -189,6 +189,73 @@
                 overflow: hidden;
             }
 
+            /* Responsive utilities */
+            @media (max-width: 640px) {
+                .container {
+                    padding-left: 1rem;
+                    padding-right: 1rem;
+                }
+
+                .text-responsive {
+                    font-size: 0.875rem;
+                    line-height: 1.25rem;
+                }
+
+                .modern-card {
+                    border-radius: 1rem;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                }
+
+                .shadow-responsive {
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                }
+
+                /* Mobile card optimizations */
+                .modern-card img {
+                    border-radius: 0.75rem;
+                }
+
+                .modern-card h3 {
+                    font-size: 0.75rem;
+                    line-height: 1rem;
+                }
+
+                /* Smaller badges on mobile */
+                .modern-card .badge {
+                    font-size: 0.65rem;
+                    padding: 0.125rem 0.375rem;
+                }
+            }
+
+            @media (min-width: 640px) and (max-width: 768px) {
+                .text-responsive {
+                    font-size: 1rem;
+                    line-height: 1.5rem;
+                }
+            }
+
+            @media (min-width: 768px) {
+                .text-responsive {
+                    font-size: 1.125rem;
+                    line-height: 1.75rem;
+                }
+            }
+
+            /* Touch-friendly interactive elements */
+            @media (hover: none) and (pointer: coarse) {
+                .card-hover:hover {
+                    transform: none;
+                }
+
+                .group:hover .opacity-0 {
+                    opacity: 1;
+                }
+
+                .group:hover .transform {
+                    transform: translateY(0);
+                }
+            }
+
             /* Modern Card Hover Effects */
             .card-hover {
                 transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -324,7 +391,7 @@
         {% block extra_head %}
         {% endblock extra_head %}
     </head>
-    <body class="bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-all duration-300">
+    <body class="bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-all duration-300 overflow-x-hidden">
         <!-- Enhanced Theme Toggle Button -->
         <div class="fixed top-6 right-6 z-50">
             <button id="theme-toggle" class="group relative p-3 rounded-full bg-white/80 dark:bg-korteks-gray/80 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-korteks-darkgray shadow-lg hover:shadow-xl transition-all duration-300 ease-out hover:scale-110">

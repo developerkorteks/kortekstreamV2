@@ -79,3 +79,5 @@ celerybeat.pid
 # File-file dari SASS/SCSS
 .sass-cache/
 .node-
+
+.config/

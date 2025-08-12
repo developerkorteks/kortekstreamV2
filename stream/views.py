@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = 'http://apigatway.humanmade.my.id:8080'
 
-def encode_episode_id(episode_data, category='anime'):
+def encode_episode_id(episode_data, category='all'):
     """
     Encode episode data into a base64 string for cleaner URLs
     """
@@ -59,7 +59,7 @@ def get_categories():
             res = requests.get(BASE_URL + '/api/categories/names', timeout=5)
             res.raise_for_status()
             data = res.json()
-            categories = data.get('data', ['anime', 'all'])  # Default to these if API fails
+            categories = data.get('data', ['all'])  # Default to 'all' if API fails
             
             # Cache the categories for 1 hour
             cache.set(cache_key, categories, timeout=3600)
@@ -183,10 +183,11 @@ def anime_detail(request):
     anime_id = request.GET.get('id')
     slug = request.GET.get('slug')
     anime_slug = request.GET.get('anime_slug')
-    category = request.GET.get('category', 'anime')  # Default to 'anime' if not provided
     
     # Get available categories
     categories = get_categories()
+    default_category = categories[0] if categories else 'all'
+    category = request.GET.get('category', default_category)
     
     # Use the first non-empty parameter as the identifier
     identifier = anime_slug or slug or anime_id
@@ -254,13 +255,12 @@ def anime_detail(request):
     return render(request, 'stream/detail.html', context)
 
 def latest(request):
-    # Get category from query parameter, default to 'anime'
-    category = request.GET.get('category', 'anime')
+    # Get category from query parameter, default to first available category
+    categories = get_categories()
+    default_category = categories[0] if categories else 'all'
+    category = request.GET.get('category', default_category)
     # Get page from query parameter, default to 1
     page = request.GET.get('page', 1)
-    
-    # Get available categories
-    categories = get_categories()
     
     cache_key = f"latest_data_{category}_page_{page}"
     data = cache.get(cache_key)
@@ -330,13 +330,12 @@ def latest(request):
     return render(request, 'stream/latest.html', context)
 
 def schedule(request):
-    # Get category from query parameter, default to 'anime'
-    category = request.GET.get('category', 'anime')
+    # Get category from query parameter, default to first available category
+    categories = get_categories()
+    default_category = categories[0] if categories else 'all'
+    category = request.GET.get('category', default_category)
     # Get day from query parameter, if provided
     day = request.GET.get('day')
-    
-    # Get available categories
-    categories = get_categories()
     
     # Define days of the week (Indonesian names as used in API)
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -390,10 +389,11 @@ def search(request):
     # Get search parameters from request
     query = request.GET.get('q', '')
     page = request.GET.get('page', 1)
-    category = request.GET.get('category', 'anime')
     
     # Get available categories
     categories = get_categories()
+    default_category = categories[0] if categories else 'all'
+    category = request.GET.get('category', default_category)
     
     # Create a cache key based on search parameters
     # URL encode the query to handle special characters
@@ -498,7 +498,10 @@ def episode_detail(request, encoded_id=None):
     episode_id = None
     episode_url = None
     episode_slug = None
-    category = 'anime'  # Default to 'anime' if not provided
+    # Get available categories for default
+    categories = get_categories()
+    default_category = categories[0] if categories else 'all'
+    category = default_category  # Default to first available category
     
     # Check if we have an encoded ID in the URL path
     if encoded_id:
@@ -507,13 +510,13 @@ def episode_detail(request, encoded_id=None):
         episode_id = decoded_data.get('id')
         episode_url = decoded_data.get('episode_url')
         episode_slug = decoded_data.get('episode_slug', decoded_data.get('slug'))
-        category = decoded_data.get('category', 'anime')
+        category = decoded_data.get('category', default_category)
     else:
         # Legacy mode: Get parameters from request query string
         episode_id = request.GET.get('id')
         episode_url = request.GET.get('episode_url')
         episode_slug = request.GET.get('episode_slug')
-        category = request.GET.get('category', 'anime')
+        category = request.GET.get('category', default_category)
     
     # Use the first non-empty parameter as the identifier
     identifier = episode_slug or episode_url or episode_id
@@ -595,8 +598,22 @@ def episode_detail(request, encoded_id=None):
     if '_metadata' in data:
         data['metadata'] = data.pop('_metadata')
     
+    # Normalize the data structure for the template
+    # Some APIs return data.data (nested), others return data directly
+    normalized_data = data.copy()
+    
+    # Check if we have a nested data structure (data.data)
+    if 'data' in data and isinstance(data['data'], dict) and 'data' in data['data'] and isinstance(data['data']['data'], dict):
+        # We have a nested structure, keep it as is
+        pass
+    elif 'data' in data and isinstance(data['data'], dict):
+        # We have a flat structure, create a nested one for consistency
+        normalized_data['data'] = {
+            'data': data['data']
+        }
+    
     # Process data to add encoded IDs regardless of whether we have an encoded_id already
-    if data and not data.get('error'):
+    if normalized_data and not normalized_data.get('error'):
         # Create a clean encoded ID for this episode if we don't have one
         if not encoded_id:
             episode_data = {
@@ -607,8 +624,8 @@ def episode_detail(request, encoded_id=None):
             encoded_id = encode_episode_id(episode_data, category)
         
         # Process other episodes to add encoded IDs
-        if 'data' in data and 'other_episodes' in data['data']:
-            for episode in data['data']['other_episodes']:
+        if 'data' in normalized_data and 'other_episodes' in normalized_data['data']:
+            for episode in normalized_data['data']['other_episodes']:
                 if 'url' in episode:
                     try:
                         other_episode_data = {
@@ -622,8 +639,8 @@ def episode_detail(request, encoded_id=None):
                         episode['encoded_id'] = ''
         
         # Add encoded IDs for navigation links
-        if 'data' in data and 'navigation' in data['data']:
-            nav = data['data']['navigation']
+        if 'data' in normalized_data and 'navigation' in normalized_data['data']:
+            nav = normalized_data['data']['navigation']
             
             # Previous episode
             if nav.get('previous_episode_url'):
@@ -651,10 +668,10 @@ def episode_detail(request, encoded_id=None):
     
     # Add debug information
     if settings.DEBUG:
-        logger.info(f"Episode data structure: {json.dumps(data, indent=2, default=str)}")
+        logger.info(f"Episode data structure: {json.dumps(normalized_data, indent=2, default=str)}")
         
     context = {
-        "episode_data": data,
+        "episode_data": normalized_data,
         "category": category,
         "episode_identifier": identifier,
         "encoded_id": encoded_id,

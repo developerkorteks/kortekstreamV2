@@ -1,0 +1,38 @@
+{# Modern Category Content Responsive Partial #}
+{% load custom_filters %}
+
+{# --- Section: Data (General) --- #}
+{% if content.data %}
+    <section class="mb-12 md:mb-20">
+        <div class="flex items-center justify-between mb-6 md:mb-8">
+            <div>
+                <h3 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2">📺 Latest Content</h3>
+                <p class="text-gray-600 dark:text-gray-400">Fresh content just for you</p>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+            {% for item in content.data %}
+                {% include 'stream/partials/_consistent_card.html' with item=item category=category card_type='episode' %}
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
+
+{# --- Section: Episode Terbaru --- #}
+{% if content.new_eps %}
+    <section class="mb-12 md:mb-20">
+        <div class="flex items-center justify-between mb-6 md:mb-8">
+            <div>
+                <h3 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2">📺 Latest Episodes</h3>
+                <p class="text-gray-600 dark:text-gray-400">Fresh content just for you</p>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+            {% for item in content.new_eps %}
+                {% include 'stream/partials/_consistent_card.html' with item=item category=category card_type='episode' %}
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}

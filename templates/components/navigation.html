@@ -1,29 +1,29 @@
 <!-- Modern Glass Navigation -->
 <nav class="sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border-b border-gray-200/20 dark:border-gray-700/20 shadow-lg transition-all duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-20">
+        <div class="flex justify-between items-center h-16 md:h-20">
             <!-- Enhanced Logo Section -->
             <div class="flex items-center">
                 <a href="/" class="group flex items-center space-x-3 transition-all duration-300 hover:scale-105">
                     <!-- Modern Logo Icon -->
                     <div class="relative">
-                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 rounded-2xl flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-500 group-hover:rotate-12 group-hover:scale-110">
-                            <span class="text-2xl">🎬</span>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 rounded-2xl flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-500 group-hover:rotate-12 group-hover:scale-110">
+                            <span class="text-xl sm:text-2xl">🎬</span>
                         </div>
                         <!-- Animated ring -->
                         <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 rounded-2xl blur opacity-0 group-hover:opacity-30 transition duration-500"></div>
                     </div>
                     <!-- Logo Text -->
                     <div class="hidden sm:block">
-                        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-red-500 dark:to-pink-500 bg-clip-text text-transparent">
+                        <h1 class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-red-500 dark:to-pink-500 bg-clip-text text-transparent">
                             KortekStream
                         </h1>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 -mt-1">Ultimate Streaming</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 -mt-1 hidden sm:block">Ultimate Streaming</p>
                     </div>
                 </a>
 
                 <!-- Modern Navigation Menu -->
-                <div class="ml-12 hidden lg:flex items-center space-x-2">
+                <div class="ml-6 md:ml-12 hidden lg:flex items-center space-x-2">
                     <a href="/" class="nav-item group relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white/60 dark:hover:bg-gray-800/60 {% if active_page == 'home' %}bg-gradient-to-r from-blue-100 to-purple-100 dark:from-red-900/30 dark:to-pink-900/30 text-blue-700 dark:text-red-400{% else %}text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-red-400{% endif %}">
                         <span class="relative z-10 flex items-center space-x-2">
                             <span>🏠</span>
@@ -44,7 +44,27 @@
                     </a>
                 </div>
             </div>
-            <!-- Modern Right Section -->
+            <!-- Tablet Search Bar (md screens) -->
+            <div class="hidden md:flex lg:hidden items-center space-x-3">
+                <form action="{% url 'stream:search' %}" method="GET" class="relative">
+                    <div class="relative">
+                        <input
+                            type="text"
+                            name="q"
+                            placeholder="Search..."
+                            class="w-48 pl-10 pr-4 py-2.5 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-gray-200/30 dark:border-gray-700/30 focus:outline-none focus:ring-2 focus:ring-blue-400/50 dark:focus:ring-red-400/50 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-300 focus:w-56 focus:bg-white/90 dark:focus:bg-gray-800/90 text-sm"
+                        >
+                        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input type="hidden" name="category" value="{{ category|default:'all' }}">
+                    </div>
+                </form>
+            </div>
+
+            <!-- Desktop Right Section -->
             <div class="hidden lg:flex items-center space-x-4">
                 <!-- Modern Search Form -->
                 <form action="{% url 'stream:search' %}" method="GET" class="relative group">
@@ -52,8 +72,8 @@
                         <input
                             type="text"
                             name="q"
-                            placeholder="Search anime..."
-                            class="w-72 pl-12 pr-4 py-3 rounded-2xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-gray-200/30 dark:border-gray-700/30 focus:outline-none focus:ring-2 focus:ring-blue-400/50 dark:focus:ring-red-400/50 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-300 focus:w-80 focus:bg-white/90 dark:focus:bg-gray-800/90 focus:shadow-lg"
+                            placeholder="Search content..."
+                            class="w-64 lg:w-72 pl-12 pr-4 py-3 rounded-2xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-gray-200/30 dark:border-gray-700/30 focus:outline-none focus:ring-2 focus:ring-blue-400/50 dark:focus:ring-red-400/50 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-300 focus:w-72 lg:focus:w-80 focus:bg-white/90 dark:focus:bg-gray-800/90 focus:shadow-lg"
                         >
                         <!-- Search Icon -->
                         <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 dark:group-focus-within:text-red-400 transition-colors duration-300">
@@ -61,7 +81,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
-                        <input type="hidden" name="category" value="{{ category|default:'anime' }}">
+                        <input type="hidden" name="category" value="{{ category|default:'all' }}">
                     </div>
                 </form>
 
@@ -83,13 +103,21 @@
             </div>
             
             <!-- Modern Mobile Menu Button -->
-            <div class="lg:hidden flex items-center">
-                <button id="mobile-menu-button" class="group relative p-3 rounded-2xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-gray-200/30 dark:border-gray-700/30 text-gray-700 dark:text-white hover:bg-white/90 dark:hover:bg-gray-800/90 focus:outline-none transition-all duration-300 hover:scale-105">
+            <div class="flex items-center space-x-2 md:hidden lg:hidden">
+                <!-- Mobile Search Button -->
+                <button id="mobile-search-button" class="group relative p-2.5 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-gray-200/30 dark:border-gray-700/30 text-gray-700 dark:text-white hover:bg-white/90 dark:hover:bg-gray-800/90 focus:outline-none transition-all duration-300 hover:scale-105">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </button>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-button" class="group relative p-2.5 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-gray-200/30 dark:border-gray-700/30 text-gray-700 dark:text-white hover:bg-white/90 dark:hover:bg-gray-800/90 focus:outline-none transition-all duration-300 hover:scale-105">
                     <!-- Animated Hamburger -->
-                    <div class="w-6 h-6 flex flex-col justify-center space-y-1">
-                        <span class="block h-0.5 w-6 bg-current transform transition-all duration-300"></span>
-                        <span class="block h-0.5 w-6 bg-current transition-all duration-300"></span>
-                        <span class="block h-0.5 w-6 bg-current transform transition-all duration-300"></span>
+                    <div class="w-5 h-5 flex flex-col justify-center space-y-1">
+                        <span class="block h-0.5 w-5 bg-current transform transition-all duration-300"></span>
+                        <span class="block h-0.5 w-5 bg-current transition-all duration-300"></span>
+                        <span class="block h-0.5 w-5 bg-current transform transition-all duration-300"></span>
                     </div>
                 </button>
             </div>
@@ -97,8 +125,8 @@
     </div>
     
     <!-- Enhanced Mobile Menu -->
-    <div id="mobile-menu" class="hidden lg:hidden absolute top-full left-0 right-0 backdrop-blur-2xl bg-white/95 dark:bg-korteks-black/95 border-b border-gray-200/20 dark:border-gray-700/20 shadow-2xl transform translate-y-4 opacity-0 transition-all duration-300 ease-out">
-        <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <div id="mobile-menu" class="hidden md:hidden lg:hidden absolute top-full left-0 right-0 backdrop-blur-2xl bg-white/95 dark:bg-korteks-black/95 border-b border-gray-200/20 dark:border-gray-700/20 shadow-2xl transform translate-y-4 opacity-0 transition-all duration-300 ease-out z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 space-y-4">
             <!-- Mobile Navigation Links -->
             <div class="space-y-3">
                 <a href="/" class="group flex items-center space-x-3 px-4 py-3 rounded-2xl text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gold-100 hover:to-gold-50 dark:hover:from-korteks-red/20 dark:hover:to-korteks-darkred/10 hover:text-gold-700 dark:hover:text-korteks-red transition-all duration-300 {% if active_page == 'home' %}bg-gradient-to-r from-gold-100 to-gold-50 dark:from-korteks-red/20 dark:to-korteks-darkred/10 text-gold-700 dark:text-korteks-red{% endif %}">
@@ -130,7 +158,7 @@
                     <input
                         type="text"
                         name="q"
-                        placeholder="Search anime, movies..."
+                        placeholder="Search content..."
                         class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/50 dark:bg-korteks-gray/50 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-gold-400/50 dark:focus:ring-korteks-red/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-300"
                     >
                     <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -158,6 +186,39 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Mobile Search Overlay -->
+    <div id="mobile-search-overlay" class="hidden fixed inset-0 z-50 md:hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="search-backdrop"></div>
+        <div class="relative h-full flex flex-col">
+            <div class="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/20 dark:border-gray-700/20 p-4">
+                <div class="flex items-center space-x-3">
+                    <button id="close-search" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    <form action="{% url 'stream:search' %}" method="GET" class="flex-1">
+                        <div class="relative">
+                            <input
+                                type="text"
+                                name="q"
+                                placeholder="Search content..."
+                                class="w-full pl-12 pr-4 py-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400/50 dark:focus:ring-red-400/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                autofocus
+                            >
+                            <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input type="hidden" name="category" value="{{ category|default:'all' }}">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </nav>
 
 <script>
@@ -168,42 +229,80 @@
         const hamburgerLines = mobileMenuButton.querySelectorAll('span');
         let isMenuOpen = false;
 
-        mobileMenuButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            isMenuOpen = !isMenuOpen;
+        // Mobile Search Elements
+        const mobileSearchButton = document.getElementById('mobile-search-button');
+        const mobileSearchOverlay = document.getElementById('mobile-search-overlay');
+        const closeSearchButton = document.getElementById('close-search');
+        const searchBackdrop = document.getElementById('search-backdrop');
 
-            if (isMenuOpen) {
-                // Open menu with animation
-                mobileMenu.classList.remove('hidden');
-                setTimeout(() => {
-                    mobileMenu.style.transform = 'translateY(0)';
-                    mobileMenu.style.opacity = '1';
-                }, 10);
+        // Mobile Menu Functionality
+        if (mobileMenuButton) {
+            mobileMenuButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                isMenuOpen = !isMenuOpen;
 
-                // Animate hamburger to X
-                hamburgerLines[0].style.transform = 'rotate(45deg) translateY(6px)';
-                hamburgerLines[1].style.opacity = '0';
-                hamburgerLines[2].style.transform = 'rotate(-45deg) translateY(-6px)';
+                if (isMenuOpen) {
+                    // Open menu with animation
+                    mobileMenu.classList.remove('hidden');
+                    setTimeout(() => {
+                        mobileMenu.style.transform = 'translateY(0)';
+                        mobileMenu.style.opacity = '1';
+                    }, 10);
 
-                // Prevent body scroll
+                    // Animate hamburger to X
+                    hamburgerLines[0].style.transform = 'rotate(45deg) translateY(4px)';
+                    hamburgerLines[1].style.opacity = '0';
+                    hamburgerLines[2].style.transform = 'rotate(-45deg) translateY(-4px)';
+
+                    // Prevent body scroll
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    // Close menu with animation
+                    mobileMenu.style.transform = 'translateY(1rem)';
+                    mobileMenu.style.opacity = '0';
+                    setTimeout(() => {
+                        mobileMenu.classList.add('hidden');
+                    }, 300);
+
+                    // Reset hamburger
+                    hamburgerLines[0].style.transform = '';
+                    hamburgerLines[1].style.opacity = '';
+                    hamburgerLines[2].style.transform = '';
+
+                    // Restore body scroll
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+
+        // Mobile Search Functionality
+        if (mobileSearchButton) {
+            mobileSearchButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                mobileSearchOverlay.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
-            } else {
-                // Close menu with animation
-                mobileMenu.style.transform = 'translateY(1rem)';
-                mobileMenu.style.opacity = '0';
+
+                // Focus search input after animation
                 setTimeout(() => {
-                    mobileMenu.classList.add('hidden');
-                }, 300);
+                    const searchInput = mobileSearchOverlay.querySelector('input[name="q"]');
+                    if (searchInput) searchInput.focus();
+                }, 100);
+            });
+        }
 
-                // Reset hamburger
-                hamburgerLines[0].style.transform = '';
-                hamburgerLines[1].style.opacity = '';
-                hamburgerLines[2].style.transform = '';
+        // Close Search Functionality
+        const closeSearch = () => {
+            mobileSearchOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        };
 
-                // Restore body scroll
-                document.body.style.overflow = '';
-            }
-        });
+        if (closeSearchButton) {
+            closeSearchButton.addEventListener('click', closeSearch);
+        }
+
+        if (searchBackdrop) {
+            searchBackdrop.addEventListener('click', closeSearch);
+        }
 
         // Close menu when clicking outside
         document.addEventListener('click', function(e) {
@@ -250,7 +349,7 @@
 
             // Search suggestions placeholder animation
             const placeholders = [
-                'Search anime...',
+                'Search content...',
                 'Find your favorite series...',
                 'Discover new episodes...',
                 'Search movies...'

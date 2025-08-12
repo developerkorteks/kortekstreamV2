@@ -51,10 +51,10 @@
             @apply shadow-2xl;
             @apply transform scale-102;
         }
-        .day-content, .day-content-anime, .day-content-korean-drama, .day-content-all {
+        .day-content, [class^="day-content-"] {
             display: none;
         }
-        .day-content.active, .day-content-anime.active, .day-content-korean-drama.active, .day-content-all.active {
+        .day-content.active, [class^="day-content-"].active {
             display: block;
         }
     </style>
@@ -69,17 +69,17 @@
     <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <!-- Background Effects -->
         <div class="absolute inset-0">
-            <div class="absolute top-10 right-10 w-64 h-64 bg-gradient-to-br from-blue-300/20 to-purple-400/20 dark:from-red-500/20 dark:to-pink-500/20 rounded-full blur-3xl"></div>
-            <div class="absolute bottom-10 left-10 w-80 h-80 bg-gradient-to-tr from-purple-300/20 to-blue-400/20 dark:from-pink-500/20 dark:to-red-500/20 rounded-full blur-3xl"></div>
+            <div class="absolute top-5 sm:top-10 right-5 sm:right-10 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-gradient-to-br from-blue-300/20 to-purple-400/20 dark:from-red-500/20 dark:to-pink-500/20 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-5 sm:bottom-10 left-5 sm:left-10 w-40 h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-tr from-purple-300/20 to-blue-400/20 dark:from-pink-500/20 dark:to-red-500/20 rounded-full blur-3xl"></div>
         </div>
 
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 md:py-12 lg:py-16">
             <!-- Hero Content -->
-            <div class="text-center mb-12">
-                <h1 class="text-5xl md:text-7xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-red-500 dark:to-pink-500 bg-clip-text text-transparent mb-4">
+            <div class="text-center mb-6 sm:mb-8 md:mb-12">
+                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-red-500 dark:to-pink-500 bg-clip-text text-transparent mb-2 sm:mb-3 md:mb-4 leading-tight px-2">
                     📅 Release Schedule
                 </h1>
-                <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                <p class="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-2 sm:px-4 leading-relaxed">
                     Stay updated with the latest releases - Never miss your favorite shows
                 </p>
             </div>
@@ -104,7 +104,7 @@
             </div>
         </div>
         
-        <!-- Enhanced API Response Metadata -->
+        <!-- Schedule Information -->
         <div class="mb-8">
             <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
                 <div class="flex items-center mb-6">
@@ -114,8 +114,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold text-gray-800 dark:text-white">📊 API Response Metadata</h3>
-                        <p class="text-gray-600 dark:text-gray-400">Real-time data insights</p>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-white">📅 Weekly Schedule</h3>
+                        <p class="text-gray-600 dark:text-gray-400">Schedule status and information</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -137,7 +137,7 @@
                         </div>
                         <div class="flex flex-wrap gap-1">
                             {% for source in datas.sources %}
-                                <span class="bg-purple-100 text-purple-800 dark:bg-gray-600 dark:text-white px-3 py-1 rounded-full text-xs font-bold">{{ source }}</span>
+                                <span class="bg-purple-100 text-purple-800 dark:bg-gray-600 dark:text-white px-3 py-1 rounded-full text-xs font-bold">KortekStream</span>
                             {% endfor %}
                         </div>
                     </div>
@@ -224,7 +224,7 @@
                         {% for day in days %}
                             <div class="day-content-{{ cat_name }} {% if forloop.first %}active{% endif %}" id="{{ day }}-{{ cat_name }}">
                                 {% if cat_data.data and cat_data.data|get_item:day|length > 0 %}
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
                                         {% for anime in cat_data.data|get_item:day %}
                                             <div class="group">
                                                 <a href="{% url 'stream:anime_detail' %}?anime_slug={{ anime.anime_slug }}&category={{ cat_name }}" class="block">
@@ -327,7 +327,7 @@
                 {% for day in days %}
                     <div class="day-content {% if forloop.first %}active{% endif %}" id="{{ day }}">
                         {% if datas.data and datas.data|get_item:day|length > 0 %}
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
                                 {% for anime in datas.data|get_item:day %}
                                     <div class="group">
                                         <a href="{% url 'stream:anime_detail' %}?anime_slug={{ anime.anime_slug }}&category={{ category }}" class="block">
@@ -438,9 +438,7 @@
         // Day tabs functionality
         const dayTabs = document.querySelectorAll('.day-tab');
         const dayContents = document.querySelectorAll('.day-content');
-        const dayContentsAnime = document.querySelectorAll('.day-content-anime');
-        const dayContentsKoreanDrama = document.querySelectorAll('.day-content-korean-drama');
-        const dayContentsAll = document.querySelectorAll('.day-content-all');
+        const categoryContents = document.querySelectorAll('[class^="day-content-"]');
         
         dayTabs.forEach(tab => {
             tab.addEventListener('click', () => {
@@ -460,27 +458,11 @@
                     }
                 });
                 
-                // Handle category=all view with data_by_category
-                // For anime
-                dayContentsAnime.forEach(content => {
+                // Handle category=all view with data_by_category (dynamic for all categories)
+                categoryContents.forEach(content => {
                     content.classList.remove('active');
-                    if (content.id === day + '-anime') {
-                        content.classList.add('active');
-                    }
-                });
-                
-                // For korean-drama
-                dayContentsKoreanDrama.forEach(content => {
-                    content.classList.remove('active');
-                    if (content.id === day + '-korean-drama') {
-                        content.classList.add('active');
-                    }
-                });
-                
-                // For all
-                dayContentsAll.forEach(content => {
-                    content.classList.remove('active');
-                    if (content.id === day + '-all') {
+                    // Check if the content ID starts with the day and ends with any category
+                    if (content.id && content.id.startsWith(day + '-')) {
                         content.classList.add('active');
                     }
                 });

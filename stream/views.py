@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.core.cache import cache
 from django.conf import settings
 from django.urls import reverse
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET
 import requests
 import logging
@@ -11,11 +11,119 @@ import base64
 import json
 import re
 import os
+import time
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 BASE_URL = 'http://apigatway.humanmade.my.id:8080'
+
+# Circuit breaker state
+CIRCUIT_BREAKER_KEY = 'api_circuit_breaker'
+CIRCUIT_BREAKER_FAILURE_THRESHOLD = 10  # Increased from 5 to be less sensitive
+CIRCUIT_BREAKER_TIMEOUT = 60  # Reduced from 5 minutes to 1 minute
+
+def is_circuit_breaker_open():
+    """Check if circuit breaker is open (API is considered down)"""
+    breaker_data = cache.get(CIRCUIT_BREAKER_KEY, {'failures': 0, 'last_failure': 0})
+    
+    # If we have too many failures recently, circuit is open
+    if breaker_data['failures'] >= CIRCUIT_BREAKER_FAILURE_THRESHOLD:
+        time_since_last_failure = time.time() - breaker_data['last_failure']
+        if time_since_last_failure < CIRCUIT_BREAKER_TIMEOUT:
+            logger.info(f"Circuit breaker is open. Time since last failure: {time_since_last_failure:.2f}s, timeout: {CIRCUIT_BREAKER_TIMEOUT}s")
+            return True
+        else:
+            # Reset circuit breaker after timeout
+            logger.info("Circuit breaker timeout reached, resetting...")
+            cache.delete(CIRCUIT_BREAKER_KEY)
+            return False
+    
+    return False
+
+def record_api_failure():
+    """Record an API failure for circuit breaker"""
+    breaker_data = cache.get(CIRCUIT_BREAKER_KEY, {'failures': 0, 'last_failure': 0})
+    breaker_data['failures'] += 1
+    breaker_data['last_failure'] = time.time()
+    cache.set(CIRCUIT_BREAKER_KEY, breaker_data, timeout=CIRCUIT_BREAKER_TIMEOUT * 2)
+    logger.warning(f"API failure recorded. Total failures: {breaker_data['failures']}")
+
+def record_api_success():
+    """Record an API success for circuit breaker"""
+    cache.delete(CIRCUIT_BREAKER_KEY)
+    logger.info("API success recorded. Circuit breaker reset.")
+
+def make_api_request_with_retry(url, params=None, max_retries=3, timeout=15, backoff_factor=1):
+    """
+    Make API request with retry mechanism and exponential backoff
+    """
+    # Check circuit breaker first, but allow occasional test requests
+    if is_circuit_breaker_open():
+        # Try to make a test request every 10th time to see if API is back
+        breaker_data = cache.get(CIRCUIT_BREAKER_KEY, {'failures': 0, 'last_failure': 0})
+        time_since_last_failure = time.time() - breaker_data['last_failure']
+        
+        # If it's been more than 30 seconds, try one test request
+        if time_since_last_failure > 30:
+            logger.info("Circuit breaker is open, but trying one test request...")
+        else:
+            logger.warning("Circuit breaker is open, skipping API request")
+            raise requests.exceptions.ConnectionError("API circuit breaker is open - service temporarily unavailable")
+    
+    for attempt in range(max_retries):
+        try:
+            logger.info(f"API Request attempt {attempt + 1}/{max_retries}: {url} with params={params}")
+            
+            # Increase timeout for each retry
+            current_timeout = timeout + (attempt * 5)
+            
+            response = requests.get(url, params=params, timeout=current_timeout)
+            response.raise_for_status()
+            
+            logger.info(f"API Request successful on attempt {attempt + 1}")
+            record_api_success()  # Record success for circuit breaker
+            return response
+            
+        except requests.exceptions.Timeout as e:
+            logger.warning(f"Timeout on attempt {attempt + 1}: {str(e)}")
+            record_api_failure()  # Record failure for circuit breaker
+            if attempt == max_retries - 1:
+                raise
+                
+        except requests.exceptions.ConnectionError as e:
+            logger.warning(f"Connection error on attempt {attempt + 1}: {str(e)}")
+            record_api_failure()  # Record failure for circuit breaker
+            if attempt == max_retries - 1:
+                raise
+                
+        except requests.exceptions.HTTPError as e:
+            # For 5xx errors, retry. For 4xx errors, don't retry
+            if e.response.status_code >= 500:
+                logger.warning(f"Server error {e.response.status_code} on attempt {attempt + 1}: {str(e)}")
+                record_api_failure()  # Record failure for circuit breaker
+                if attempt == max_retries - 1:
+                    raise
+            else:
+                # Client error, don't retry
+                logger.error(f"Client error {e.response.status_code}: {str(e)}")
+                # Don't record 4xx errors as circuit breaker failures
+                raise
+                
+        except Exception as e:
+            logger.error(f"Unexpected error on attempt {attempt + 1}: {str(e)}")
+            record_api_failure()  # Record failure for circuit breaker
+            if attempt == max_retries - 1:
+                raise
+        
+        # Wait before retrying (exponential backoff)
+        if attempt < max_retries - 1:
+            wait_time = backoff_factor * (2 ** attempt)
+            logger.info(f"Waiting {wait_time} seconds before retry...")
+            time.sleep(wait_time)
+    
+    # This should never be reached, but just in case
+    raise Exception("Max retries exceeded")
 
 def encode_episode_id(episode_data, category='all'):
     """
@@ -549,50 +657,88 @@ def episode_detail(request, encoded_id=None):
             if category:
                 params['category'] = category
                 
-            # Make API request
+            # Make API request with retry mechanism
             api_url = f"{BASE_URL}/api/v1/episode-detail"
             logger.info(f"Fetching episode detail from: {api_url} with params={params}")
             
-            res = requests.get(api_url, params=params, timeout=10)
-            res.raise_for_status()
+            # Use retry mechanism with increased timeout
+            res = make_api_request_with_retry(api_url, params=params, max_retries=3, timeout=15)
             data = res.json()
             
             # Log the response for debugging
             logger.info(f"API Response: {data.get('message', 'No message')}")
             
-            # Cache the result for 5 minutes
-            cache.set(cache_key, data, timeout=300)
+            # Cache the result for 15 minutes (increased from 5 minutes)
+            cache.set(cache_key, data, timeout=900)
+            
+            # Also store as stale cache for 24 hours as fallback
+            stale_cache_key = f"episode_detail_stale_{identifier}_{category}"
+            cache.set(stale_cache_key, data, timeout=86400)  # 24 hours
             
         except requests.exceptions.RequestException as e:
             # More specific error handling for network issues
-            error_details = f"API Connection Error: {str(e)}"
+            error_details = f"API Connection Error: {str(e)}" if settings.DEBUG else "Service temporarily unavailable"
             logger.error(f"API Connection Error: {str(e)}")
-            data = {
-                "error": str(e),
-                "message": "API Connection Error",
-                "error_details": error_details,
-                "success": False
-            }
+            
+            # Try to get stale cache data as fallback
+            stale_cache_key = f"episode_detail_stale_{identifier}_{category}"
+            stale_data = cache.get(stale_cache_key)
+            
+            if stale_data:
+                logger.info("Using stale cache data as fallback")
+                data = stale_data
+                # Add a flag to indicate this is stale data
+                data['is_stale'] = True
+                data['stale_message'] = "Data might be outdated due to service issues"
+            else:
+                data = {
+                    "error": "Service temporarily unavailable" if not settings.DEBUG else str(e),
+                    "message": "Something went wrong",
+                    "error_details": error_details,
+                    "success": False
+                }
         except ValueError as e:
             # Handle JSON parsing errors
-            error_details = f"Invalid JSON Response: {str(e)}"
+            error_details = f"Invalid JSON Response: {str(e)}" if settings.DEBUG else "Service temporarily unavailable"
             logger.error(f"Invalid JSON Response: {str(e)}")
-            data = {
-                "error": str(e),
-                "message": "Invalid API Response Format",
-                "error_details": error_details,
-                "success": False
-            }
+            
+            # Try to get stale cache data as fallback
+            stale_cache_key = f"episode_detail_stale_{identifier}_{category}"
+            stale_data = cache.get(stale_cache_key)
+            
+            if stale_data:
+                logger.info("Using stale cache data as fallback")
+                data = stale_data
+                data['is_stale'] = True
+                data['stale_message'] = "Data might be outdated due to service issues"
+            else:
+                data = {
+                    "error": "Service temporarily unavailable" if not settings.DEBUG else str(e),
+                    "message": "Something went wrong",
+                    "error_details": error_details,
+                    "success": False
+                }
         except Exception as e:
             # Catch-all for other errors
-            error_details = f"Unexpected Error: {str(e)}"
+            error_details = f"Unexpected Error: {str(e)}" if settings.DEBUG else "Service temporarily unavailable"
             logger.error(f"Unexpected Error: {str(e)}")
-            data = {
-                "error": str(e),
-                "message": "Unexpected Error",
-                "error_details": error_details,
-                "success": False
-            }
+            
+            # Try to get stale cache data as fallback
+            stale_cache_key = f"episode_detail_stale_{identifier}_{category}"
+            stale_data = cache.get(stale_cache_key)
+            
+            if stale_data:
+                logger.info("Using stale cache data as fallback")
+                data = stale_data
+                data['is_stale'] = True
+                data['stale_message'] = "Data might be outdated due to service issues"
+            else:
+                data = {
+                    "error": "Service temporarily unavailable" if not settings.DEBUG else str(e),
+                    "message": "Something went wrong",
+                    "error_details": error_details,
+                    "success": False
+                }
     
     # Handle _metadata field - Django templates don't allow attributes starting with underscore
     if '_metadata' in data:
@@ -698,4 +844,85 @@ def favicon_view(request):
     
     # If not, return an empty response with the correct content type
     return HttpResponse('', content_type='image/x-icon')
+
+@require_GET
+def api_health_check(request):
+    """
+    Health check endpoint untuk monitoring status API dan sistem
+    """
+    health_status = {
+        'status': 'healthy',
+        'timestamp': time.time(),
+        'api_base_url': BASE_URL,
+        'circuit_breaker_open': is_circuit_breaker_open(),
+        'cache_working': False,
+        'api_reachable': False
+    }
+    
+    # Test cache
+    try:
+        test_key = 'health_check_cache_test'
+        test_value = {'test': True, 'timestamp': time.time()}
+        cache.set(test_key, test_value, timeout=60)
+        cached_value = cache.get(test_key)
+        health_status['cache_working'] = cached_value is not None
+        cache.delete(test_key)
+    except Exception as e:
+        logger.error(f"Cache health check failed: {str(e)}")
+        health_status['cache_working'] = False
+    
+    # Test API reachability (quick test)
+    try:
+        # Use a simple endpoint with short timeout
+        test_response = requests.get(f"{BASE_URL}/api/categories/names", timeout=5)
+        health_status['api_reachable'] = test_response.status_code == 200
+        health_status['api_response_time'] = test_response.elapsed.total_seconds()
+    except Exception as e:
+        logger.error(f"API health check failed: {str(e)}")
+        health_status['api_reachable'] = False
+        health_status['api_error'] = str(e)
+    
+    # Get circuit breaker stats
+    breaker_data = cache.get(CIRCUIT_BREAKER_KEY, {'failures': 0, 'last_failure': 0})
+    health_status['circuit_breaker_failures'] = breaker_data['failures']
+    health_status['circuit_breaker_last_failure'] = breaker_data['last_failure']
+    
+    # Determine overall health
+    if not health_status['cache_working'] or health_status['circuit_breaker_open']:
+        health_status['status'] = 'degraded'
+    
+    if not health_status['api_reachable']:
+        health_status['status'] = 'unhealthy'
+    
+    # Return appropriate HTTP status code
+    status_code = 200
+    if health_status['status'] == 'degraded':
+        status_code = 200  # Still OK but with warnings
+    elif health_status['status'] == 'unhealthy':
+        status_code = 503  # Service unavailable
+    
+    return JsonResponse(health_status, status=status_code)
+
+@require_GET
+def reset_circuit_breaker(request):
+    """
+    Reset circuit breaker secara manual
+    """
+    try:
+        # Delete circuit breaker data
+        cache.delete(CIRCUIT_BREAKER_KEY)
+        logger.info("Circuit breaker has been manually reset")
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Circuit breaker has been reset',
+            'timestamp': time.time()
+        })
+    except Exception as e:
+        logger.error(f"Failed to reset circuit breaker: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Failed to reset circuit breaker: {str(e)}',
+            'timestamp': time.time()
+        }, status=500)
 

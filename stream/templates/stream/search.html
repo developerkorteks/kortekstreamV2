@@ -322,7 +322,7 @@
                                     {% for item in cat_data.data %}
                                         <div class="group">
                                             <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ cat_name }}" class="block">
-                                                <div class="modern-card bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group-hover:scale-105 group-hover:-translate-y-2">
+                                                <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-700 overflow-hidden group-hover:scale-105 group-hover:-translate-y-2 border border-gray-200/20 dark:border-gray-700/20">
                                                     <!-- Image Container -->
                                                     <div class="relative aspect-[3/4] overflow-hidden">
                                                         <img src="{{ item.cover }}"
@@ -493,7 +493,7 @@
                             {% for item in datas.data %}
                                 <div class="group">
                                     <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ category }}" class="block">
-                                        <div class="modern-card bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group-hover:scale-105 group-hover:-translate-y-2">
+                                        <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-700 overflow-hidden group-hover:scale-105 group-hover:-translate-y-2 border border-gray-200/20 dark:border-gray-700/20">
                                             <!-- Image Container -->
                                             <div class="relative aspect-[3/4] overflow-hidden">
                                                 <img src="{{ item.cover }}"

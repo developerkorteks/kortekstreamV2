@@ -742,32 +742,55 @@
                     </div>
                     {% endif %}
                     
-                    <!-- Download Links Section -->
+                    <!-- Enhanced Download Links Section -->
                     {% if episode_data.data.download_links %}
-                    <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden mb-8 p-6">
-                        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-gold-500 dark:text-korteks-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                            Download Links
-                        </h2>
-                        
-                        <div class="space-y-4">
+                    <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden mb-12 p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
+                        <div class="flex items-center justify-between mb-8">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-700 rounded-2xl flex items-center justify-center mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">💾 Download Links</h2>
+                                    <p class="text-gray-600 dark:text-gray-400">Download this episode in various formats and qualities</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-8">
                             {% for format_type, resolutions in episode_data.data.download_links.items %}
-                            <div class="bg-gold-50 dark:bg-korteks-gray/20 p-4 rounded-lg">
-                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">{{ format_type }}</h3>
+                            <div class="modern-card bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-gray-700 dark:to-gray-800 p-6 rounded-2xl border border-indigo-200/50 dark:border-gray-600/50">
+                                <div class="flex items-center mb-6">
+                                    <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                                        <span class="text-white font-bold text-sm">{{ format_type|slice:":1"|upper }}</span>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">{{ format_type }}</h3>
+                                </div>
                                 
-                                <div class="space-y-3">
+                                <div class="space-y-6">
                                     {% for resolution, links in resolutions.items %}
-                                    <div>
-                                        <h4 class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">{{ resolution }}</h4>
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                                    <div class="bg-white/70 dark:bg-gray-800/70 p-4 rounded-xl border border-indigo-100/50 dark:border-gray-600/50">
+                                        <div class="flex items-center mb-4">
+                                            <div class="w-6 h-6 bg-gradient-to-r from-indigo-400 to-blue-500 rounded-lg flex items-center justify-center mr-3">
+                                                <span class="text-white font-bold text-xs">{{ resolution|slice:":1" }}</span>
+                                            </div>
+                                            <h4 class="text-lg font-semibold text-gray-800 dark:text-white">{{ resolution }}</h4>
+                                        </div>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                             {% for link in links %}
-                                            <a href="{{ link.url }}" target="_blank" class="download-button">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                                </svg>
-                                                {{ link.provider }}
+                                            <a href="{{ link.url }}" target="_blank" class="group block">
+                                                <div class="modern-card bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl border border-gray-200/50 dark:border-gray-600/50 hover:shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-1">
+                                                    <div class="flex items-center justify-center">
+                                                        <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-700 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform duration-300">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                            </svg>
+                                                        </div>
+                                                        <span class="font-semibold text-gray-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-blue-400 transition-colors duration-300">{{ link.provider }}</span>
+                                                    </div>
+                                                </div>
                                             </a>
                                             {% endfor %}
                                         </div>

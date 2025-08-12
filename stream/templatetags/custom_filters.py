@@ -59,3 +59,32 @@ def encode_episode_id(episode_data, category='anime'):
     json_str = json.dumps(data)
     encoded = base64.urlsafe_b64encode(json_str.encode()).decode()
     return encoded
+
+@register.filter
+def split(value, delimiter):
+    """
+    Split a string by delimiter.
+    Usage: {{ string|split:"delimiter" }}
+    """
+    if not value or not isinstance(value, str):
+        return []
+    
+    return value.split(delimiter)
+
+@register.filter
+def slice(value, arg):
+    """
+    Return a slice of the list.
+    Usage: {{ list|slice:"start:end" }} or {{ list|slice:"start" }}
+    """
+    if not value:
+        return []
+    
+    try:
+        if ':' in arg:
+            start, end = map(lambda x: int(x) if x else None, arg.split(':'))
+            return value[start:end]
+        else:
+            return value[int(arg)]
+    except (ValueError, IndexError):
+        return []

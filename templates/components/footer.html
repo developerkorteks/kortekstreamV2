@@ -71,48 +71,62 @@
                 </div>
             </div>
             
-            <!-- Quick Links -->
-            <div>
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Quick Links</h3>
-                <ul class="space-y-2">
-                    <li>
-                        <a href="/" class="text-gray-600 dark:text-gray-300 hover:text-gold-500 dark:hover:text-korteks-red">
-                            Home
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'stream:latest' %}" class="text-gray-600 dark:text-gray-300 hover:text-gold-500 dark:hover:text-korteks-red">
-                            Latest Episodes
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'stream:schedule' %}" class="text-gray-600 dark:text-gray-300 hover:text-gold-500 dark:hover:text-korteks-red">
-                            Release Schedule
-                        </a>
-                    </li>
-                </ul>
+            <!-- Enhanced Quick Navigation -->
+            <div class="space-y-6">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-6 relative">
+                    Quick Navigation
+                    <div class="absolute -bottom-2 left-0 w-16 h-1 bg-gradient-to-r from-gold-500 to-gold-400 dark:from-korteks-red dark:to-korteks-darkred rounded-full"></div>
+                </h3>
+                <div class="space-y-3">
+                    <a href="/" class="group flex items-center space-x-3 text-gray-600 dark:text-gray-300 hover:text-gold-600 dark:hover:text-korteks-red transition-all duration-300">
+                        <div class="w-2 h-2 bg-current rounded-full transform group-hover:scale-150 transition-transform duration-300"></div>
+                        <span class="group-hover:translate-x-1 transition-transform duration-300">Home</span>
+                    </a>
+                    <a href="{% url 'stream:latest' %}" class="group flex items-center space-x-3 text-gray-600 dark:text-gray-300 hover:text-gold-600 dark:hover:text-korteks-red transition-all duration-300">
+                        <div class="w-2 h-2 bg-current rounded-full transform group-hover:scale-150 transition-transform duration-300"></div>
+                        <span class="group-hover:translate-x-1 transition-transform duration-300">Latest Episodes</span>
+                    </a>
+                    <a href="{% url 'stream:schedule' %}" class="group flex items-center space-x-3 text-gray-600 dark:text-gray-300 hover:text-gold-600 dark:hover:text-korteks-red transition-all duration-300">
+                        <div class="w-2 h-2 bg-current rounded-full transform group-hover:scale-150 transition-transform duration-300"></div>
+                        <span class="group-hover:translate-x-1 transition-transform duration-300">Release Schedule</span>
+                    </a>
+                    <a href="{% url 'stream:search' %}" class="group flex items-center space-x-3 text-gray-600 dark:text-gray-300 hover:text-gold-600 dark:hover:text-korteks-red transition-all duration-300">
+                        <div class="w-2 h-2 bg-current rounded-full transform group-hover:scale-150 transition-transform duration-300"></div>
+                        <span class="group-hover:translate-x-1 transition-transform duration-300">Advanced Search</span>
+                    </a>
+                </div>
             </div>
-            
-            <!-- Categories -->
-            <div>
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Categories</h3>
-                <ul class="space-y-2">
+
+            <!-- Enhanced Categories -->
+            <div class="space-y-6">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-6 relative">
+                    Browse Categories
+                    <div class="absolute -bottom-2 left-0 w-16 h-1 bg-gradient-to-r from-gold-500 to-gold-400 dark:from-korteks-red dark:to-korteks-darkred rounded-full"></div>
+                </h3>
+                <div class="space-y-3">
                     {% if categories %}
                         {% for cat in categories %}
-                            <li>
-                                <a href="/{{ cat }}/" class="text-gray-600 dark:text-gray-300 hover:text-gold-500 dark:hover:text-korteks-red capitalize">
-                                    {{ cat }}
-                                </a>
-                            </li>
+                            <a href="/{{ cat }}/" class="group flex items-center space-x-3 text-gray-600 dark:text-gray-300 hover:text-gold-600 dark:hover:text-korteks-red transition-all duration-300 capitalize">
+                                <div class="w-2 h-2 bg-current rounded-full transform group-hover:scale-150 transition-transform duration-300"></div>
+                                <span class="group-hover:translate-x-1 transition-transform duration-300">{{ cat }}</span>
+                                <div class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </div>
+                            </a>
                         {% endfor %}
                     {% else %}
-                        <li>
-                            <a href="/anime/" class="text-gray-600 dark:text-gray-300 hover:text-gold-500 dark:hover:text-korteks-red">
-                                Anime
-                            </a>
-                        </li>
+                        <a href="/anime/" class="group flex items-center space-x-3 text-gray-600 dark:text-gray-300 hover:text-gold-600 dark:hover:text-korteks-red transition-all duration-300">
+                            <div class="w-2 h-2 bg-current rounded-full transform group-hover:scale-150 transition-transform duration-300"></div>
+                            <span class="group-hover:translate-x-1 transition-transform duration-300">Anime</span>
+                        </a>
+                        <a href="/manga/" class="group flex items-center space-x-3 text-gray-600 dark:text-gray-300 hover:text-gold-600 dark:hover:text-korteks-red transition-all duration-300">
+                            <div class="w-2 h-2 bg-current rounded-full transform group-hover:scale-150 transition-transform duration-300"></div>
+                            <span class="group-hover:translate-x-1 transition-transform duration-300">Manga</span>
+                        </a>
                     {% endif %}
-                </ul>
+                </div>
             </div>
         </div>
         

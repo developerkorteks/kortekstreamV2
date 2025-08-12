@@ -77,86 +77,97 @@
     </style>
 {% endblock extra_css %}
 {% block content %}
-    <div class="min-h-screen bg-white dark:bg-korteks-black">
-        <!-- Navigation -->
-        <nav class="gradient-bg shadow-lg border-b border-gold-200 dark:border-korteks-gray">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center">
-                        <a href="/" class="text-gold-700 dark:text-white text-2xl font-bold hover:text-gold-500 dark:hover:text-korteks-red transition-colors flex items-center">
-                            <span class="text-gold-500 dark:text-korteks-red mr-2">🎬</span> 
-                            <span>KortekStream</span>
-                        </a>
+    <div class="min-h-screen">
+        <!-- Include Navigation -->
+        {% include 'components/navigation.html' %}
+
+        <!-- Modern Hero Section -->
+        <div class="relative overflow-hidden bg-gradient-to-br from-violet-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+            <!-- Background Effects -->
+            <div class="absolute inset-0">
+                <div class="absolute top-10 right-10 w-64 h-64 bg-gradient-to-br from-violet-300/20 to-purple-400/20 dark:from-violet-500/20 dark:to-purple-500/20 rounded-full blur-3xl"></div>
+                <div class="absolute bottom-10 left-10 w-80 h-80 bg-gradient-to-tr from-purple-300/20 to-violet-400/20 dark:from-purple-500/20 dark:to-violet-500/20 rounded-full blur-3xl"></div>
+            </div>
+
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <!-- Hero Content -->
+                <div class="text-center mb-12">
+                    <h1 class="text-5xl md:text-7xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 dark:from-violet-500 dark:to-purple-500 bg-clip-text text-transparent mb-4">
+                        {% if query %}
+                            🔍 Search Results
+                        {% else %}
+                            🔍 Search Content
+                        {% endif %}
+                    </h1>
+                    <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                        {% if query %}
+                            Results for "{{ query }}" in {{ category|title }}
+                        {% else %}
+                            Find your favorite {{ category|title }} content in our collection
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- Enhanced Search Form -->
+            <div class="mb-8">
+                <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-gradient-to-r from-violet-500 to-purple-600 dark:from-violet-600 dark:to-purple-700 rounded-2xl flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">🔍 Advanced Search</h2>
+                            <p class="text-gray-600 dark:text-gray-400">Find exactly what you're looking for</p>
+                        </div>
                     </div>
-                    <div class="hidden md:block">
-                        <div class="ml-10 flex items-baseline space-x-4">
-                            <span class="text-gold-700/80 dark:text-white/80 text-sm">
-                                Category: 
-                                <select id="categorySelector" class="font-semibold text-gold-600 dark:text-korteks-red bg-transparent border-none focus:outline-none cursor-pointer">
+
+                    <form action="{% url 'stream:search' %}" method="GET" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div class="md:col-span-3">
+                                <label for="q" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">Search Query</label>
+                                <div class="relative">
+                                    <input
+                                        type="text"
+                                        name="q"
+                                        id="q"
+                                        value="{{ query }}"
+                                        placeholder="Enter anime title, genre, or keyword..."
+                                        class="w-full px-6 py-4 rounded-2xl border-2 border-gray-200 dark:border-gray-600 focus:border-violet-500 dark:focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-violet-200 dark:focus:ring-purple-900/30 bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-lg transition-all duration-300"
+                                        required
+                                    >
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-6">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="category" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">Category</label>
+                                <select name="category" id="category" class="w-full px-6 py-4 rounded-2xl border-2 border-gray-200 dark:border-gray-600 focus:border-violet-500 dark:focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-violet-200 dark:focus:ring-purple-900/30 bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-lg transition-all duration-300">
                                     {% for cat in categories %}
                                         <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>{{ cat|title }}</option>
                                     {% endfor %}
                                 </select>
-                            </span>
+                            </div>
                         </div>
-                    </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-gradient-to-r from-violet-500 to-purple-600 dark:from-violet-600 dark:to-purple-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center space-x-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <span>Search Now</span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </div>
-        </nav>
-
-        <!-- Main Content -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="mb-8">
-                <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-2 border-l-4 border-gold-500 dark:border-korteks-red pl-4">
-                    {% if query %}
-                        Search Results: "{{ query }}"
-                    {% else %}
-                        Search {{ category|title }} Content
-                    {% endif %}
-                </h1>
-                <p class="text-gray-600 dark:text-gray-300 ml-6">
-                    {% if query %}
-                        Showing results for your search query
-                    {% else %}
-                        Find your favorite content in our collection
-                    {% endif %}
-                </p>
-            </div>
-            
-            <!-- Search Form -->
-            <div class="mb-8 bg-white dark:bg-korteks-darkgray rounded-xl shadow-md p-6">
-                <form action="{% url 'stream:search' %}" method="GET" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="md:col-span-3">
-                            <label for="q" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search Query</label>
-                            <input 
-                                type="text" 
-                                name="q" 
-                                id="q" 
-                                value="{{ query }}" 
-                                placeholder="Enter anime title, genre, or keyword..." 
-                                class="search-input"
-                                required
-                            >
-                        </div>
-                        <div>
-                            <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                            <select name="category" id="category" class="search-input">
-                                {% for cat in categories %}
-                                    <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>{{ cat|title }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="flex justify-end">
-                        <button type="submit" class="search-btn flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            Search
-                        </button>
-                    </div>
-                </form>
             </div>
             
             {# --- Error Handling Block --- #}

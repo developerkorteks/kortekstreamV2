@@ -1,64 +1,96 @@
-{# Variabel 'content' diterima dari template index.html #}
+{# Modern Category Content Partial - Consistent Card Design #}
 {% load custom_filters %}
+
 {# --- Section: Episode Terbaru --- #}
 {% if content.new_eps %}
-    <section class="mb-12">
-        <div class="flex items-center mb-6">
-            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">📺 Episode Terbaru</h3>
-            <div class="ml-4 flex-1 section-divider"></div>
+    <section class="mb-20">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h3 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">📺 Latest Episodes</h3>
+                <p class="text-gray-600 dark:text-gray-400">Fresh content just for you</p>
+            </div>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
             {% for item in content.new_eps %}
                 <div class="group">
-                    <!-- Anime Slug Display -->
-                    <div class="mb-2 p-2 bg-gold-50 dark:bg-korteks-gray rounded-md border border-gold-100 dark:border-korteks-darkgray">
-                        <p class="text-xs text-gold-700 dark:text-korteks-red font-mono">Slug: {{ item.anime_slug }}</p>
-                    </div>
-                    
                     <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="block">
-                        <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-md card-hover overflow-hidden h-full">
-                            <div class="relative">
+                        <div class="modern-card bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group-hover:scale-105 group-hover:-translate-y-2">
+                            <!-- Image Container -->
+                            <div class="relative aspect-[3/4] overflow-hidden">
                                 <img src="{{ item.cover }}" 
-                                     class="card-img-top w-full rounded-t-xl" 
-                                     alt="{{ item.judul }}" 
-                                     onerror="this.src='https://via.placeholder.com/300x450?text=No+Image';this.onerror='';" />
-                                <div class="absolute top-2 right-2 bg-gold-500 dark:bg-korteks-red text-white px-2 py-1 rounded-full text-xs font-semibold">
-                                    NEW
+                                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                     alt="{{ item.judul }}"
+                                     loading="lazy"
+                                     onerror="this.src='https://via.placeholder.com/300x400/1f1f1f/ffffff?text=No+Image';this.onerror='';" />
+                                
+                                <!-- Gradient Overlay -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                
+                                <!-- NEW Badge -->
+                                <div class="absolute top-4 right-4 bg-gradient-to-r from-emerald-400 to-emerald-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
+                                    ✨ NEW
                                 </div>
+                                
+                                <!-- Episode Badge -->
+                                <div class="absolute top-4 left-4 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                    EP {{ item.episode }}
+                                </div>
+                                
+                                <!-- Play Button -->
+                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                    <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 hover:scale-110 transition-transform duration-200">
+                                        <svg class="h-8 w-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                
                                 {% if item.uploader %}
-                                <div class="absolute bottom-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-xs">
+                                <div class="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-lg text-xs font-medium border border-white/20">
                                     {{ item.uploader }}
                                 </div>
                                 {% endif %}
                             </div>
-                            <div class="p-4">
-                                <h6 class="font-semibold text-gray-800 dark:text-white text-sm mb-3 line-clamp-2 h-10" title="{{ item.judul }}">
+                            
+                            <!-- Content -->
+                            <div class="p-6">
+                                <h3 class="font-bold text-gray-800 dark:text-white text-lg mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-red-400 transition-colors duration-300" title="{{ item.judul }}">
                                     {{ item.judul }}
-                                </h6>
-                                <div class="space-y-2">
-                                    <div class="flex justify-between items-center">
-                                        {% if item.url %}
-                                        {% with episode_data=item.url|make_dict:"episode_url" %}
-                                        <a href="{% url 'stream:episode_detail' encoded_id=episode_data|encode_episode_id:category %}" class="badge badge-primary hover:bg-gold-200 dark:hover:bg-korteks-gray/50 transition-colors">
-                                            Episode: {{ item.episode }}
-                                        </a>
-                                        {% endwith %}
-                                        {% else %}
-                                        <span class="badge badge-primary">
-                                            Episode: {{ item.episode }}
-                                        </span>
-                                        {% endif %}
-                                        <span class="text-xs text-gray-500 dark:text-gray-400">
-                                            {{ item.rilis }}
-                                        </span>
+                                </h3>
+                                
+                                <!-- Info Row -->
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">{{ item.rilis }}</span>
                                     </div>
-                                    
+                                    <div class="flex items-center space-x-1">
+                                        <svg class="h-4 w-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                        </svg>
+                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">4.8</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Watch Button -->
+                                <div class="opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                                     {% if item.url %}
-                                    <div class="mt-3 pt-2 border-t border-gray-100 dark:border-korteks-gray">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate" title="{{ item.url }}">
-                                            <span class="font-medium text-gold-700 dark:text-korteks-red">URL:</span> {{ item.url }}
-                                        </p>
-                                    </div>
+                                    {% with episode_data=item.url|make_dict:"episode_url" %}
+                                    <a href="{% url 'stream:episode_detail' encoded_id=episode_data|encode_episode_id:category %}" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 text-white py-3 px-4 rounded-2xl font-semibold hover:scale-105 transition-transform duration-200 shadow-lg flex items-center justify-center space-x-2">
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                        <span>Watch Now</span>
+                                    </a>
+                                    {% endwith %}
+                                    {% else %}
+                                    <button class="w-full bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 text-white py-3 px-4 rounded-2xl font-semibold hover:scale-105 transition-transform duration-200 shadow-lg flex items-center justify-center space-x-2">
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                        <span>Watch Now</span>
+                                    </button>
                                     {% endif %}
                                 </div>
                             </div>
@@ -72,62 +104,78 @@
 
 {# --- Section: Top 10 --- #}
 {% if content.top10 %}
-    <section class="mb-12">
-        <div class="flex items-center mb-6">
-            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">🏆 Top 10</h3>
-            <div class="ml-4 flex-1 section-divider"></div>
+    <section class="mb-20">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h3 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">🏆 Top 10 Anime</h3>
+                <p class="text-gray-600 dark:text-gray-400">Highest rated content</p>
+            </div>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
             {% for item in content.top10 %}
                 <div class="group">
-                    <!-- Anime Slug Display -->
-                    <div class="mb-2 p-2 bg-gold-50 dark:bg-korteks-gray rounded-md border border-gold-100 dark:border-korteks-darkgray">
-                        <p class="text-xs text-gold-700 dark:text-korteks-red font-mono">Slug: {{ item.anime_slug }}</p>
-                    </div>
-                    
                     <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="block">
-                        <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-md card-hover overflow-hidden h-full">
-                            <div class="relative">
+                        <div class="modern-card bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group-hover:scale-105 group-hover:-translate-y-2">
+                            <!-- Image Container -->
+                            <div class="relative aspect-[3/4] overflow-hidden">
                                 <img src="{{ item.cover }}" 
-                                     class="card-img-top w-full rounded-t-xl" 
-                                     alt="{{ item.judul }}" 
-                                     onerror="this.src='https://via.placeholder.com/300x450?text=No+Image';this.onerror='';" />
-                                <div class="absolute top-2 right-2 bg-gold-500 dark:bg-korteks-red text-white px-2 py-1 rounded-full text-xs font-semibold">
-                                    TOP
+                                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                     alt="{{ item.judul }}"
+                                     loading="lazy"
+                                     onerror="this.src='https://via.placeholder.com/300x400/1f1f1f/ffffff?text=No+Image';this.onerror='';" />
+                                
+                                <!-- Gradient Overlay -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                
+                                <!-- TOP Badge -->
+                                <div class="absolute top-4 right-4 bg-gradient-to-r from-amber-400 to-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                    🏆 TOP
+                                </div>
+                                
+                                <!-- Rating Badge -->
+                                <div class="absolute top-4 left-4 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                    ⭐ {{ item.rating }}
+                                </div>
+                                
+                                <!-- Play Button -->
+                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                    <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 hover:scale-110 transition-transform duration-200">
+                                        <svg class="h-8 w-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="p-4">
-                                <h6 class="font-semibold text-gray-800 dark:text-white text-sm mb-3 line-clamp-2 h-10" title="{{ item.judul }}">
+                            
+                            <!-- Content -->
+                            <div class="p-6">
+                                <h3 class="font-bold text-gray-800 dark:text-white text-lg mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-red-400 transition-colors duration-300" title="{{ item.judul }}">
                                     {{ item.judul }}
-                                </h6>
+                                </h3>
                                 
-                                <!-- Rating Display -->
-                                <div class="flex items-center mb-3">
-                                    <span class="text-gold-500 dark:text-gold-400 text-sm">⭐</span>
-                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">{{ item.rating }}</span>
-                                </div>
-                                
-                                <!-- Genres Display -->
+                                <!-- Genres -->
                                 {% if item.genres %}
-                                    <div class="mb-3">
-                                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Genres:</p>
-                                        <div class="flex flex-wrap gap-1">
-                                            {% for genre in item.genres %}
-                                                <span class="bg-gold-100 text-gold-800 dark:bg-korteks-gray dark:text-white text-xs px-2 py-1 rounded-full">
-                                                    {{ genre }}
-                                                </span>
-                                            {% endfor %}
-                                        </div>
+                                <div class="mb-4">
+                                    <div class="flex flex-wrap gap-2">
+                                        {% for genre in item.genres|slice:":3" %}
+                                            <span class="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-red-900/30 dark:to-pink-900/30 text-blue-700 dark:text-red-400 text-xs px-3 py-1 rounded-full font-medium">
+                                                {{ genre }}
+                                            </span>
+                                        {% endfor %}
                                     </div>
-                                {% endif %}
-                                
-                                {% if item.url %}
-                                <div class="mt-3 pt-2 border-t border-gray-100 dark:border-korteks-gray">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate" title="{{ item.url }}">
-                                        <span class="font-medium text-gold-700 dark:text-korteks-red">URL:</span> {{ item.url }}
-                                    </p>
                                 </div>
                                 {% endif %}
+                                
+                                <!-- Watch Button -->
+                                <div class="opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                                    <button class="w-full bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 text-white py-3 px-4 rounded-2xl font-semibold hover:scale-105 transition-transform duration-200 shadow-lg flex items-center justify-center space-x-2">
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                        <span>Watch Now</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </a>
@@ -139,63 +187,78 @@
 
 {# --- Section: Movies --- #}
 {% if content.movies %}
-    <section class="mb-12">
-        <div class="flex items-center mb-6">
-            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">🎬 Movies</h3>
-            <div class="ml-4 flex-1 section-divider"></div>
+    <section class="mb-20">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h3 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">🎬 Movies</h3>
+                <p class="text-gray-600 dark:text-gray-400">Cinema quality entertainment</p>
+            </div>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
             {% for item in content.movies %}
                 <div class="group">
-                    <!-- Anime Slug Display -->
-                    <div class="mb-2 p-2 bg-gold-50 dark:bg-korteks-gray rounded-md border border-gold-100 dark:border-korteks-darkgray">
-                        <p class="text-xs text-gold-700 dark:text-korteks-red font-mono">Slug: {{ item.anime_slug }}</p>
-                    </div>
-                    
                     <a href="{% url 'stream:anime_detail' %}?anime_slug={{ item.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="block">
-                        <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-md card-hover overflow-hidden h-full">
-                            <div class="relative">
+                        <div class="modern-card bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group-hover:scale-105 group-hover:-translate-y-2">
+                            <!-- Image Container -->
+                            <div class="relative aspect-[3/4] overflow-hidden">
                                 <img src="{{ item.cover }}" 
-                                     class="card-img-top w-full rounded-t-xl" 
-                                     alt="{{ item.judul }}" 
-                                     onerror="this.src='https://via.placeholder.com/300x450?text=No+Image';this.onerror='';" />
-                                <div class="absolute top-2 right-2 bg-gold-500 dark:bg-korteks-red text-white px-2 py-1 rounded-full text-xs font-semibold">
-                                    MOVIE
+                                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                     alt="{{ item.judul }}"
+                                     loading="lazy"
+                                     onerror="this.src='https://via.placeholder.com/300x400/1f1f1f/ffffff?text=No+Image';this.onerror='';" />
+                                
+                                <!-- Gradient Overlay -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                
+                                <!-- MOVIE Badge -->
+                                <div class="absolute top-4 right-4 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                    🎬 MOVIE
+                                </div>
+                                
+                                <!-- Date Badge -->
+                                <div class="absolute top-4 left-4 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                    📅 {{ item.tanggal }}
+                                </div>
+                                
+                                <!-- Play Button -->
+                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                    <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 hover:scale-110 transition-transform duration-200">
+                                        <svg class="h-8 w-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="p-4">
-                                <h6 class="font-semibold text-gray-800 dark:text-white text-sm mb-3 line-clamp-2 h-10" title="{{ item.judul }}">
+                            
+                            <!-- Content -->
+                            <div class="p-6">
+                                <h3 class="font-bold text-gray-800 dark:text-white text-lg mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-red-400 transition-colors duration-300" title="{{ item.judul }}">
                                     {{ item.judul }}
-                                </h6>
+                                </h3>
                                 
-                                <!-- Release Date -->
-                                <div class="mb-3">
-                                    <p class="text-xs bg-gold-50 dark:bg-korteks-gray text-gold-700 dark:text-white px-2 py-1 rounded inline-flex items-center">
-                                        <span class="mr-1">📅</span> {{ item.tanggal }}
-                                    </p>
-                                </div>
-                                
-                                <!-- Genres Display -->
+                                <!-- Genres -->
                                 {% if item.genres %}
-                                    <div class="mb-3">
-                                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Genres:</p>
-                                        <div class="flex flex-wrap gap-1">
-                                            {% for genre in item.genres %}
-                                                <span class="bg-gold-100 text-gold-800 dark:bg-korteks-gray dark:text-white text-xs px-2 py-1 rounded-full">
-                                                    {{ genre }}
-                                                </span>
-                                            {% endfor %}
-                                        </div>
+                                <div class="mb-4">
+                                    <div class="flex flex-wrap gap-2">
+                                        {% for genre in item.genres|slice:":3" %}
+                                            <span class="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-700 dark:text-pink-400 text-xs px-3 py-1 rounded-full font-medium">
+                                                {{ genre }}
+                                            </span>
+                                        {% endfor %}
                                     </div>
-                                {% endif %}
-                                
-                                {% if item.url %}
-                                <div class="mt-3 pt-2 border-t border-gray-100 dark:border-korteks-gray">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate" title="{{ item.url }}">
-                                        <span class="font-medium text-gold-700 dark:text-korteks-red">URL:</span> {{ item.url }}
-                                    </p>
                                 </div>
                                 {% endif %}
+                                
+                                <!-- Watch Button -->
+                                <div class="opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                                    <button class="w-full bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 text-white py-3 px-4 rounded-2xl font-semibold hover:scale-105 transition-transform duration-200 shadow-lg flex items-center justify-center space-x-2">
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                        <span>Watch Now</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </a>
@@ -205,83 +268,67 @@
     </section>
 {% endif %}
 
-{# --- Section: Jadwal Rilis --- #}
+{# --- Section: Schedule (Separate Design for this) --- #}
 {% if content.jadwal_rilis %}
-    <section class="mb-12">
-        <div class="flex items-center mb-6">
-            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">📅 Jadwal Rilis</h3>
-            <div class="ml-4 flex-1 section-divider"></div>
+    <section class="mb-20">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h3 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">📅 Release Schedule</h3>
+                <p class="text-gray-600 dark:text-gray-400">Never miss your favorite shows</p>
+            </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {# Loop 1: Untuk mengakses objek di dalam array 'jadwal_rilis' #}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {% for schedule_obj in content.jadwal_rilis %}
-                {# Loop 2: Untuk mengakses setiap hari ('Monday', 'Tuesday', dst.) dan daftar anime-nya #}
                 {% for day, anime_list in schedule_obj.items %}
-                    <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden border border-transparent hover:border-gold-200 dark:hover:border-korteks-red transition-colors">
-                        <div class="gradient-bg p-4 border-b border-gold-200 dark:border-korteks-gray">
-                            <h5 class="text-lg font-bold text-gold-700 dark:text-white">{{ day }}</h5>
+                    <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden">
+                        <!-- Day Header -->
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 p-6">
+                            <h4 class="text-xl font-bold text-white text-center">{{ day }}</h4>
                         </div>
-                        <div class="p-4">
+                        
+                        <!-- Anime List -->
+                        <div class="p-6">
                             <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                                {# Loop 3: Untuk menampilkan setiap anime dalam daftar harian #}
                                 {% for anime in anime_list %}
-                                    <div class="border-b border-gray-100 dark:border-korteks-gray pb-4 last:border-b-0 last:pb-0">
-                                        <!-- Anime Slug Display -->
-                                        <div class="mb-2 p-2 bg-gold-50 dark:bg-korteks-gray rounded-md border border-gold-100 dark:border-korteks-darkgray">
-                                            <p class="text-xs text-gold-700 dark:text-korteks-red font-mono">Slug: {{ anime.anime_slug }}</p>
-                                        </div>
-                                        
-                                        <div class="flex items-start space-x-3">
+                                    <div class="group p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-300">
+                                        <a href="{% url 'stream:anime_detail' %}?anime_slug={{ anime.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="flex items-start space-x-4">
                                             <div class="flex-shrink-0">
                                                 <img src="{{ anime.cover_url }}"
-                                                     class="w-16 h-20 object-cover rounded-lg shadow-sm"
+                                                     class="w-16 h-20 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-300"
                                                      alt="{{ anime.title }}" 
                                                      onerror="this.src='https://via.placeholder.com/64x80?text=No+Image';this.onerror='';" />
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <a href="{% url 'stream:anime_detail' %}?anime_slug={{ anime.anime_slug }}&category={{ view.kwargs.category|default:category }}" class="block hover:text-gold-600 dark:hover:text-korteks-red transition-colors">
-                                                    <h6 class="font-semibold text-gray-800 dark:text-white text-sm mb-1 line-clamp-2">
-                                                        {{ anime.title }}
-                                                    </h6>
-                                                </a>
+                                                <h5 class="font-bold text-gray-800 dark:text-white text-sm mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-red-400 transition-colors duration-300">
+                                                    {{ anime.title }}
+                                                </h5>
                                                 
                                                 <!-- Release Time -->
                                                 <div class="flex items-center mb-2">
-                                                    <span class="bg-gold-100 text-gold-800 dark:bg-korteks-gray dark:text-white text-xs px-2 py-1 rounded-full">
+                                                    <span class="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-red-900/30 dark:to-pink-900/30 text-blue-700 dark:text-red-400 text-xs px-3 py-1 rounded-full font-medium">
                                                         🕐 {{ anime.release_time }}
                                                     </span>
                                                 </div>
                                                 
-                                                <!-- Genres Display -->
-                                                {% if anime.genres %}
-                                                    <div class="mb-2">
-                                                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Genres:</p>
-                                                        <div class="flex flex-wrap gap-1">
-                                                            {% for genre in anime.genres %}
-                                                                <span class="bg-gold-50 text-gold-700 dark:bg-korteks-gray dark:text-white text-xs px-2 py-1 rounded">
-                                                                    {{ genre }}
-                                                                </span>
-                                                            {% endfor %}
-                                                        </div>
-                                                    </div>
-                                                {% endif %}
-                                                
                                                 <!-- Additional Info -->
-                                                <div class="flex items-center space-x-4 text-xs text-gray-600 dark:text-gray-400">
+                                                <div class="flex items-center space-x-3 text-xs text-gray-600 dark:text-gray-400">
                                                     {% if anime.score and anime.score != "N/A" %}
                                                         <span class="flex items-center">
-                                                            <span class="text-gold-500 dark:text-gold-400 mr-1">⭐</span>
+                                                            <svg class="h-3 w-3 text-yellow-500 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                                            </svg>
                                                             {{ anime.score }}
                                                         </span>
                                                     {% endif %}
                                                     {% if anime.type %}
-                                                        <span class="bg-gold-50 text-gold-700 dark:bg-korteks-gray dark:text-white px-2 py-1 rounded">
+                                                        <span class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-lg font-medium">
                                                             {{ anime.type }}
                                                         </span>
                                                     {% endif %}
                                                 </div>
                                             </div>
-                                        </div>
+                                        </a>
                                     </div>
                                 {% endfor %}
                             </div>

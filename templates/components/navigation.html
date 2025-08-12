@@ -102,44 +102,60 @@
         </div>
     </div>
     
-    <!-- Mobile menu, toggle classes based on menu state -->
-    <div id="mobile-menu" class="hidden md:hidden">
-        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <a href="/" class="block px-3 py-2 rounded-md text-base font-medium text-gold-700 dark:text-white hover:bg-gold-100 dark:hover:bg-korteks-darkgray">
-                Home
-            </a>
-            <a href="{% url 'stream:latest' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gold-700 dark:text-white hover:bg-gold-100 dark:hover:bg-korteks-darkgray">
-                Latest
-            </a>
-            <a href="{% url 'stream:schedule' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gold-700 dark:text-white hover:bg-gold-100 dark:hover:bg-korteks-darkgray">
-                Schedule
-            </a>
-            
+    <!-- Enhanced Mobile Menu -->
+    <div id="mobile-menu" class="hidden lg:hidden absolute top-full left-0 right-0 backdrop-blur-2xl bg-white/95 dark:bg-korteks-black/95 border-b border-gray-200/20 dark:border-gray-700/20 shadow-2xl transform translate-y-4 opacity-0 transition-all duration-300 ease-out">
+        <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+            <!-- Mobile Navigation Links -->
+            <div class="space-y-3">
+                <a href="/" class="group flex items-center space-x-3 px-4 py-3 rounded-2xl text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gold-100 hover:to-gold-50 dark:hover:from-korteks-red/20 dark:hover:to-korteks-darkred/10 hover:text-gold-700 dark:hover:text-korteks-red transition-all duration-300 {% if active_page == 'home' %}bg-gradient-to-r from-gold-100 to-gold-50 dark:from-korteks-red/20 dark:to-korteks-darkred/10 text-gold-700 dark:text-korteks-red{% endif %}">
+                    <span class="text-xl">🏠</span>
+                    <span>Home</span>
+                    <svg class="ml-auto h-5 w-5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+                <a href="{% url 'stream:latest' %}" class="group flex items-center space-x-3 px-4 py-3 rounded-2xl text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gold-100 hover:to-gold-50 dark:hover:from-korteks-red/20 dark:hover:to-korteks-darkred/10 hover:text-gold-700 dark:hover:text-korteks-red transition-all duration-300 {% if active_page == 'latest' %}bg-gradient-to-r from-gold-100 to-gold-50 dark:from-korteks-red/20 dark:to-korteks-darkred/10 text-gold-700 dark:text-korteks-red{% endif %}">
+                    <span class="text-xl">⚡</span>
+                    <span>Latest</span>
+                    <svg class="ml-auto h-5 w-5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+                <a href="{% url 'stream:schedule' %}" class="group flex items-center space-x-3 px-4 py-3 rounded-2xl text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gold-100 hover:to-gold-50 dark:hover:from-korteks-red/20 dark:hover:to-korteks-darkred/10 hover:text-gold-700 dark:hover:text-korteks-red transition-all duration-300 {% if active_page == 'schedule' %}bg-gradient-to-r from-gold-100 to-gold-50 dark:from-korteks-red/20 dark:to-korteks-darkred/10 text-gold-700 dark:text-korteks-red{% endif %}">
+                    <span class="text-xl">📅</span>
+                    <span>Schedule</span>
+                    <svg class="ml-auto h-5 w-5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+            </div>
+
             <!-- Mobile Search Form -->
-            <form action="{% url 'stream:search' %}" method="GET" class="px-3 py-2">
-                <div class="flex space-x-2">
-                    <input 
-                        type="text" 
-                        name="q" 
-                        placeholder="Search..." 
-                        class="flex-1 px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all
-                               border-gold-200 focus:border-gold-400 focus:ring-gold-200 bg-white text-gray-800
-                               dark:border-korteks-gray dark:focus:border-korteks-red dark:focus:ring-korteks-darkgray dark:bg-korteks-darkgray dark:text-white"
+            <form action="{% url 'stream:search' %}" method="GET" class="space-y-3">
+                <div class="relative">
+                    <input
+                        type="text"
+                        name="q"
+                        placeholder="Search anime, movies..."
+                        class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/50 dark:bg-korteks-gray/50 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-gold-400/50 dark:focus:ring-korteks-red/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-300"
                     >
-                    <input type="hidden" name="category" value="{{ category|default:'anime' }}">
-                    <button type="submit" class="px-4 py-2 bg-gold-500 dark:bg-korteks-red text-white rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                    </button>
+                    </div>
+                    <input type="hidden" name="category" value="{{ category|default:'anime' }}">
                 </div>
+                <button type="submit" class="w-full py-4 bg-gradient-to-r from-gold-500 to-gold-600 dark:from-korteks-red dark:to-korteks-darkred text-white rounded-2xl font-semibold hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+                    Search Now
+                </button>
             </form>
-            
+
             <!-- Mobile Category Selector -->
             {% if categories %}
-            <div class="px-3 py-2">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                <select id="mobileCategorySelector" class="w-full px-4 py-2 rounded-lg border border-gold-200 dark:border-korteks-gray bg-white dark:bg-korteks-darkgray text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-gold-200 dark:focus:ring-korteks-darkgray">
+            <div class="space-y-3">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Browse Category</label>
+                <select id="mobileCategorySelector" class="w-full px-4 py-4 rounded-2xl bg-white/50 dark:bg-korteks-gray/50 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-gold-400/50 dark:focus:ring-korteks-red/50 font-medium">
                     {% for cat in categories %}
                         <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>{{ cat|title }}</option>
                     {% endfor %}

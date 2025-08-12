@@ -1,9 +1,13 @@
 from django.shortcuts import render, redirect
-from django.core.cache import cache
+from django.core.cache import cache, caches
 from django.conf import settings
 from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
+from django.utils.decorators import method_decorator
+from django.views.generic import TemplateView
 import requests
 import logging
 import urllib.parse
@@ -13,8 +17,16 @@ import re
 import os
 import time
 
+# Import API client with fallback
+try:
+    from .api_client import api_client, make_api_request, get_api_stats, api_health_check
+except ImportError:
+    # Fallback to simple API client
+    from .simple_api_client import simple_api_client as api_client, simple_make_api_request as make_api_request, simple_get_api_stats as get_api_stats, simple_api_health_check as api_health_check
+
 # Configure logging
 logger = logging.getLogger(__name__)
+performance_logger = logging.getLogger('stream.performance')
 
 BASE_URL = 'http://apigatway.humanmade.my.id:8080'
 
@@ -158,131 +170,153 @@ def decode_episode_id(encoded_id):
         return {}
 
 def get_categories():
-    """Helper function to get available categories from API"""
-    cache_key = "available_categories"
-    categories = cache.get(cache_key)
-    
-    if not categories:
-        try:
-            res = requests.get(BASE_URL + '/api/categories/names', timeout=5)
-            res.raise_for_status()
-            data = res.json()
-            categories = data.get('data', ['all'])  # Default to 'all' if API fails
+    """Helper function to get available categories from API using robust client"""
+    try:
+        response = make_api_request(
+            'api/categories/names',
+            cache_timeout=getattr(settings, 'CACHE_TIMEOUT_LONG', 3600)
+        )
+        
+        if response.status_code == 200 and 'data' in response.data:
+            return response.data.get('data', ['anime', 'all'])
+        else:
+            logger.warning(f"Categories API returned unexpected response: {response.data}")
+            return ['anime', 'all']
             
-            # Cache the categories for 1 hour
-            cache.set(cache_key, categories, timeout=3600)
-        except Exception as e:
-            # Fallback to default categories if API fails
-            categories = ['anime', 'all']
-    
-    return categories
+    except Exception as e:
+        logger.error(f"Failed to get categories: {str(e)}")
+        return ['anime', 'all']  # Fallback categories
 
+@cache_page(getattr(settings, 'CACHE_TIMEOUT_SHORT', 60))
+@vary_on_headers('User-Agent')
 def root(request):
+    """Root page with optimized caching and error handling"""
+    start_time = time.time()
+    
     # Get available categories from API
     categories = get_categories()
     
     # Get content for the "all" category to show all available content
     default_category = "all"
-    cache_key_content = f"home_data_{default_category}"
-    content_data = cache.get(cache_key_content)
     
-    if not content_data:
-        try:
-            res = requests.get(BASE_URL + '/api/v1/home', params={'category': default_category}, timeout=10)
-            res.raise_for_status()
-            content_data = res.json()
+    try:
+        response = make_api_request(
+            'api/v1/home',
+            params={'category': default_category},
+            cache_timeout=getattr(settings, 'CACHE_TIMEOUT_SHORT', 60)
+        )
+        
+        content_data = response.data
+        
+        # Add metadata about the response
+        if response.cached:
+            content_data['_response_meta'] = {
+                'cached': True,
+                'stale': response.stale,
+                'source': response.source
+            }
             
-            # Cache the content data for 60 seconds
-            cache.set(cache_key_content, content_data, timeout=60)
-        except Exception as e:
-            content_data = {"error": str(e)}
+    except Exception as e:
+        logger.error(f"Root page API error: {str(e)}")
+        content_data = {
+            "error": "Service temporarily unavailable",
+            "message": "Please try again later",
+            "debug_info": str(e) if settings.DEBUG else None
+        }
+    
+    # Log performance
+    response_time = time.time() - start_time
+    performance_logger.info(json.dumps({
+        'view': 'root',
+        'category': default_category,
+        'response_time_ms': round(response_time * 1000, 2),
+        'has_error': 'error' in content_data
+    }))
     
     context = {
         "categories": categories,
         "datas": content_data,
         "category": default_category,
-        "is_root": True,  # Flag to indicate this is the root page
-        "active_page": "home"  # For navigation active state
+        "is_root": True,
+        "active_page": "home"
     }
     
     return render(request, 'stream/root.html', context)
 
+@cache_page(getattr(settings, 'CACHE_TIMEOUT_MEDIUM', 300))
+@vary_on_headers('User-Agent')
 def home(request, category):
+    """Category home page with robust error handling and caching"""
+    start_time = time.time()
+    
     # Get available categories
     categories = get_categories()
     
-    cache_key = f"home_data_{category}"
-    data = cache.get(cache_key)  # cek apakah sudah ada di cache
+    # Validate category
+    if category not in categories:
+        logger.warning(f"Invalid category requested: {category}")
+        category = categories[0] if categories else 'all'
     
-    # For debugging purposes, we'll add more detailed error information
     error_details = None
     
-    if not data:
-        try:
-            # Print the URL we're trying to access for debugging
-            api_url = f"{BASE_URL}/api/v1/home"
-            logger.info(f"Fetching data from: {api_url} with category={category}")
-            
-            # Increase timeout to 10 seconds to allow for slower responses
-            res = requests.get(api_url, params={'category': category}, timeout=10)
-            
-            # Check status code
-            res.raise_for_status()
-            
-            # Parse the JSON response
-            data = res.json()
-            
-            # Log the response for debugging
-            logger.info(f"API Response: {data.get('message', 'No message')}, Confidence: {data.get('confidence_score', 'N/A')}")
-            
-            # Validasi confidence_score
-            if data.get("confidence_score", 0) <= 0.5:
-                error_details = f"Low confidence score: {data.get('confidence_score', 0)}"
-                logger.warning(f"Low confidence score: {data.get('confidence_score', 0)}")
-                data = {
-                    "message": "Something went wrong",
-                    "confidence_score": data.get("confidence_score", 0),
-                    "error_details": error_details
-                }
-            else:
-                # Only cache successful responses with good confidence score
-                cache.set(cache_key, data, timeout=60)
-                
-        except requests.exceptions.RequestException as e:
-            # More specific error handling for network issues
-            error_details = f"API Connection Error: {str(e)}"
-            logger.error(f"API Connection Error: {str(e)}")
+    try:
+        response = make_api_request(
+            'api/v1/home',
+            params={'category': category},
+            cache_timeout=getattr(settings, 'CACHE_TIMEOUT_SHORT', 60)
+        )
+        
+        data = response.data
+        
+        # Validate confidence score if present
+        confidence_score = data.get("confidence_score", 1.0)
+        if confidence_score <= 0.5:
+            error_details = f"Low confidence score: {confidence_score}"
+            logger.warning(f"Low confidence score for category {category}: {confidence_score}")
             data = {
-                "error": str(e),
-                "message": "API Connection Error",
+                "message": "Data quality is low, please try again",
+                "confidence_score": confidence_score,
                 "error_details": error_details
             }
-        except ValueError as e:
-            # Handle JSON parsing errors
-            error_details = f"Invalid JSON Response: {str(e)}"
-            logger.error(f"Invalid JSON Response: {str(e)}")
-            data = {
-                "error": str(e),
-                "message": "Invalid API Response Format",
-                "error_details": error_details
+        
+        # Add response metadata
+        if response.cached:
+            data['_response_meta'] = {
+                'cached': True,
+                'stale': response.stale,
+                'source': response.source,
+                'response_time': response.response_time
             }
-        except Exception as e:
-            # Catch-all for other errors
-            error_details = f"Unexpected Error: {str(e)}"
-            logger.error(f"Unexpected Error: {str(e)}")
-            data = {
-                "error": str(e),
-                "message": "Unexpected Error",
-                "error_details": error_details
-            }
+            
+        logger.info(f"Home page loaded for category {category}: confidence={confidence_score}")
+        
+    except Exception as e:
+        error_details = f"Service Error: {str(e)}" if settings.DEBUG else "Service temporarily unavailable"
+        logger.error(f"Home page error for category {category}: {str(e)}")
+        data = {
+            "error": "Service temporarily unavailable",
+            "message": "Please try again later",
+            "error_details": error_details,
+            "debug_info": str(e) if settings.DEBUG else None
+        }
+    
+    # Log performance
+    response_time = time.time() - start_time
+    performance_logger.info(json.dumps({
+        'view': 'home',
+        'category': category,
+        'response_time_ms': round(response_time * 1000, 2),
+        'has_error': 'error' in data,
+        'confidence_score': data.get('confidence_score', 'N/A')
+    }))
     
     context = {
         "datas": data,
         "category": category,
         "categories": categories,
         "error_details": error_details,
-        "debug": settings.DEBUG,  # Pass DEBUG setting to template
-        "active_page": "category"  # For navigation active state
+        "debug": settings.DEBUG,
+        "active_page": "category"
     }
     return render(request, 'stream/index.html', context)
 
@@ -594,22 +628,24 @@ def search(request):
     
     return render(request, 'stream/search_results.html', context)
 
+@cache_page(getattr(settings, 'CACHE_TIMEOUT_LONG', 900))
+@vary_on_headers('User-Agent')
 def episode_detail(request, encoded_id=None):
     """
-    View function for getting episode details
+    Optimized episode detail view with robust error handling and caching
     Supports both encoded ID in URL path and legacy query parameters
     """
+    start_time = time.time()
+    
     # Get available categories
     categories = get_categories()
+    default_category = categories[0] if categories else 'all'
     
     # Initialize parameters
     episode_id = None
     episode_url = None
     episode_slug = None
-    # Get available categories for default
-    categories = get_categories()
-    default_category = categories[0] if categories else 'all'
-    category = default_category  # Default to first available category
+    category = default_category
     
     # Check if we have an encoded ID in the URL path
     if encoded_id:
@@ -637,108 +673,53 @@ def episode_detail(request, encoded_id=None):
             "active_page": "episode_detail"
         })
     
-    # Create cache key based on identifier and category
-    cache_key = f"episode_detail_{identifier}_{category}"
-    data = cache.get(cache_key)
-    
-    # For debugging purposes, we'll add more detailed error information
     error_details = None
     
-    if not data:
-        try:
-            # Prepare parameters for API request
-            params = {}
-            if episode_id:
-                params['id'] = episode_id
-            if episode_url:
-                params['episode_url'] = episode_url
-            if episode_slug:
-                params['episode_slug'] = episode_slug
-            if category:
-                params['category'] = category
-                
-            # Make API request with retry mechanism
-            api_url = f"{BASE_URL}/api/v1/episode-detail"
-            logger.info(f"Fetching episode detail from: {api_url} with params={params}")
+    try:
+        # Prepare parameters for API request
+        params = {}
+        if episode_id:
+            params['id'] = episode_id
+        if episode_url:
+            params['episode_url'] = episode_url
+        if episode_slug:
+            params['episode_slug'] = episode_slug
+        if category:
+            params['category'] = category
+        
+        # Make API request using robust client
+        response = make_api_request(
+            'api/v1/episode-detail',
+            params=params,
+            cache_timeout=getattr(settings, 'CACHE_TIMEOUT_LONG', 900)  # 15 minutes
+        )
+        
+        data = response.data
+        
+        # Add response metadata
+        if response.cached or response.stale:
+            data['_response_meta'] = {
+                'cached': response.cached,
+                'stale': response.stale,
+                'source': response.source,
+                'response_time': response.response_time
+            }
             
-            # Use retry mechanism with increased timeout
-            res = make_api_request_with_retry(api_url, params=params, max_retries=3, timeout=15)
-            data = res.json()
+        if response.stale:
+            data['stale_message'] = "Data might be outdated due to service issues"
             
-            # Log the response for debugging
-            logger.info(f"API Response: {data.get('message', 'No message')}")
-            
-            # Cache the result for 15 minutes (increased from 5 minutes)
-            cache.set(cache_key, data, timeout=900)
-            
-            # Also store as stale cache for 24 hours as fallback
-            stale_cache_key = f"episode_detail_stale_{identifier}_{category}"
-            cache.set(stale_cache_key, data, timeout=86400)  # 24 hours
-            
-        except requests.exceptions.RequestException as e:
-            # More specific error handling for network issues
-            error_details = f"API Connection Error: {str(e)}" if settings.DEBUG else "Service temporarily unavailable"
-            logger.error(f"API Connection Error: {str(e)}")
-            
-            # Try to get stale cache data as fallback
-            stale_cache_key = f"episode_detail_stale_{identifier}_{category}"
-            stale_data = cache.get(stale_cache_key)
-            
-            if stale_data:
-                logger.info("Using stale cache data as fallback")
-                data = stale_data
-                # Add a flag to indicate this is stale data
-                data['is_stale'] = True
-                data['stale_message'] = "Data might be outdated due to service issues"
-            else:
-                data = {
-                    "error": "Service temporarily unavailable" if not settings.DEBUG else str(e),
-                    "message": "Something went wrong",
-                    "error_details": error_details,
-                    "success": False
-                }
-        except ValueError as e:
-            # Handle JSON parsing errors
-            error_details = f"Invalid JSON Response: {str(e)}" if settings.DEBUG else "Service temporarily unavailable"
-            logger.error(f"Invalid JSON Response: {str(e)}")
-            
-            # Try to get stale cache data as fallback
-            stale_cache_key = f"episode_detail_stale_{identifier}_{category}"
-            stale_data = cache.get(stale_cache_key)
-            
-            if stale_data:
-                logger.info("Using stale cache data as fallback")
-                data = stale_data
-                data['is_stale'] = True
-                data['stale_message'] = "Data might be outdated due to service issues"
-            else:
-                data = {
-                    "error": "Service temporarily unavailable" if not settings.DEBUG else str(e),
-                    "message": "Something went wrong",
-                    "error_details": error_details,
-                    "success": False
-                }
-        except Exception as e:
-            # Catch-all for other errors
-            error_details = f"Unexpected Error: {str(e)}" if settings.DEBUG else "Service temporarily unavailable"
-            logger.error(f"Unexpected Error: {str(e)}")
-            
-            # Try to get stale cache data as fallback
-            stale_cache_key = f"episode_detail_stale_{identifier}_{category}"
-            stale_data = cache.get(stale_cache_key)
-            
-            if stale_data:
-                logger.info("Using stale cache data as fallback")
-                data = stale_data
-                data['is_stale'] = True
-                data['stale_message'] = "Data might be outdated due to service issues"
-            else:
-                data = {
-                    "error": "Service temporarily unavailable" if not settings.DEBUG else str(e),
-                    "message": "Something went wrong",
-                    "error_details": error_details,
-                    "success": False
-                }
+        logger.info(f"Episode detail loaded: {identifier} (category: {category})")
+        
+    except Exception as e:
+        error_details = f"Service Error: {str(e)}" if settings.DEBUG else "Service temporarily unavailable"
+        logger.error(f"Episode detail error for {identifier}: {str(e)}")
+        data = {
+            "error": "Service temporarily unavailable",
+            "message": "Unable to load episode details",
+            "error_details": error_details,
+            "success": False,
+            "debug_info": str(e) if settings.DEBUG else None
+        }
     
     # Handle _metadata field - Django templates don't allow attributes starting with underscore
     if '_metadata' in data:
@@ -812,6 +793,18 @@ def episode_detail(request, encoded_id=None):
                     logger.error(f"Error encoding next episode ID: {str(e)}")
                     nav['next_episode_encoded_id'] = ''
     
+    # Log performance
+    response_time = time.time() - start_time
+    performance_logger.info(json.dumps({
+        'view': 'episode_detail',
+        'identifier': identifier,
+        'category': category,
+        'response_time_ms': round(response_time * 1000, 2),
+        'has_error': 'error' in normalized_data,
+        'cached': normalized_data.get('_response_meta', {}).get('cached', False),
+        'stale': normalized_data.get('_response_meta', {}).get('stale', False)
+    }))
+    
     # Add debug information
     if settings.DEBUG:
         logger.info(f"Episode data structure: {json.dumps(normalized_data, indent=2, default=str)}")
@@ -823,8 +816,8 @@ def episode_detail(request, encoded_id=None):
         "encoded_id": encoded_id,
         "categories": categories,
         "error_details": error_details,
-        "debug": settings.DEBUG,  # Pass DEBUG setting to template
-        "active_page": "episode_detail"  # For navigation active state
+        "debug": settings.DEBUG,
+        "active_page": "episode_detail"
     }
     
     return render(request, 'stream/episode_detail.html', context)
@@ -848,58 +841,129 @@ def favicon_view(request):
 @require_GET
 def api_health_check(request):
     """
-    Health check endpoint untuk monitoring status API dan sistem
+    Enhanced health check endpoint with comprehensive monitoring
     """
+    start_time = time.time()
+    
+    # Get API client health
+    api_health = api_health_check()
+    api_stats = get_api_stats()
+    
     health_status = {
         'status': 'healthy',
         'timestamp': time.time(),
         'api_base_url': BASE_URL,
-        'circuit_breaker_open': is_circuit_breaker_open(),
         'cache_working': False,
-        'api_reachable': False
+        'api_reachable': api_health.get('healthy', False),
+        'api_response_time': api_health.get('response_time', 0),
+        'circuit_breaker_state': api_health.get('circuit_breaker_state', 'UNKNOWN'),
+        'api_stats': api_stats
     }
     
-    # Test cache
+    # Test cache systems
+    cache_tests = {}
+    
+    # Test default cache
     try:
-        test_key = 'health_check_cache_test'
+        test_key = 'health_check_cache_test_default'
         test_value = {'test': True, 'timestamp': time.time()}
         cache.set(test_key, test_value, timeout=60)
         cached_value = cache.get(test_key)
-        health_status['cache_working'] = cached_value is not None
+        cache_tests['default'] = cached_value is not None
         cache.delete(test_key)
     except Exception as e:
-        logger.error(f"Cache health check failed: {str(e)}")
-        health_status['cache_working'] = False
+        logger.error(f"Default cache health check failed: {str(e)}")
+        cache_tests['default'] = False
     
-    # Test API reachability (quick test)
+    # Test fast cache if available
     try:
-        # Use a simple endpoint with short timeout
-        test_response = requests.get(f"{BASE_URL}/api/categories/names", timeout=5)
-        health_status['api_reachable'] = test_response.status_code == 200
-        health_status['api_response_time'] = test_response.elapsed.total_seconds()
+        from django.core.cache import caches
+        fast_cache = caches['fast']
+        test_key = 'health_check_cache_test_fast'
+        test_value = {'test': True, 'timestamp': time.time()}
+        fast_cache.set(test_key, test_value, timeout=60)
+        cached_value = fast_cache.get(test_key)
+        cache_tests['fast'] = cached_value is not None
+        fast_cache.delete(test_key)
     except Exception as e:
-        logger.error(f"API health check failed: {str(e)}")
-        health_status['api_reachable'] = False
-        health_status['api_error'] = str(e)
+        logger.error(f"Fast cache health check failed: {str(e)}")
+        cache_tests['fast'] = False
     
-    # Get circuit breaker stats
-    breaker_data = cache.get(CIRCUIT_BREAKER_KEY, {'failures': 0, 'last_failure': 0})
-    health_status['circuit_breaker_failures'] = breaker_data['failures']
-    health_status['circuit_breaker_last_failure'] = breaker_data['last_failure']
+    health_status['cache_working'] = cache_tests.get('default', False)
+    health_status['cache_tests'] = cache_tests
     
-    # Determine overall health
-    if not health_status['cache_working'] or health_status['circuit_breaker_open']:
-        health_status['status'] = 'degraded'
+    # Database health check
+    try:
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            health_status['database_working'] = True
+    except Exception as e:
+        logger.error(f"Database health check failed: {str(e)}")
+        health_status['database_working'] = False
+        health_status['database_error'] = str(e)
+    
+    # Memory usage (if available)
+    try:
+        import psutil
+        process = psutil.Process()
+        memory_info = process.memory_info()
+        health_status['memory_usage'] = {
+            'rss_mb': round(memory_info.rss / 1024 / 1024, 2),
+            'vms_mb': round(memory_info.vms / 1024 / 1024, 2),
+            'percent': round(process.memory_percent(), 2)
+        }
+    except ImportError:
+        health_status['memory_usage'] = 'psutil not available'
+    except Exception as e:
+        health_status['memory_usage'] = f'Error: {str(e)}'
+    
+    # Performance metrics from cache
+    try:
+        current_time = int(time.time())
+        hour_key = f"health_metrics:{current_time // 3600}"
+        metrics = cache.get(hour_key, {})
+        if metrics:
+            health_status['performance_metrics'] = {
+                'total_requests': metrics.get('total_requests', 0),
+                'error_rate': round(metrics.get('error_count', 0) / max(metrics.get('total_requests', 1), 1) * 100, 2),
+                'avg_response_time': round(metrics.get('avg_response_time', 0), 3),
+                'slow_requests': metrics.get('slow_requests', 0)
+            }
+    except Exception as e:
+        logger.error(f"Failed to get performance metrics: {str(e)}")
+    
+    # Determine overall health status
+    issues = []
+    
+    if not health_status['cache_working']:
+        issues.append('cache_failure')
     
     if not health_status['api_reachable']:
-        health_status['status'] = 'unhealthy'
+        issues.append('api_unreachable')
     
-    # Return appropriate HTTP status code
-    status_code = 200
-    if health_status['status'] == 'degraded':
-        status_code = 200  # Still OK but with warnings
-    elif health_status['status'] == 'unhealthy':
-        status_code = 503  # Service unavailable
+    if not health_status.get('database_working', True):
+        issues.append('database_failure')
+    
+    if health_status.get('circuit_breaker_state') == 'OPEN':
+        issues.append('circuit_breaker_open')
+    
+    # Set status based on issues
+    if not issues:
+        health_status['status'] = 'healthy'
+        status_code = 200
+    elif len(issues) == 1 and 'circuit_breaker_open' in issues:
+        health_status['status'] = 'degraded'
+        status_code = 200
+    elif 'api_unreachable' in issues or 'database_failure' in issues:
+        health_status['status'] = 'unhealthy'
+        status_code = 503
+    else:
+        health_status['status'] = 'degraded'
+        status_code = 200
+    
+    health_status['issues'] = issues
+    health_status['health_check_duration'] = round((time.time() - start_time) * 1000, 2)
     
     return JsonResponse(health_status, status=status_code)
 

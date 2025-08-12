@@ -78,6 +78,30 @@ celerybeat.pid
 
 # File-file dari SASS/SCSS
 .sass-cache/
-.node-
+.node_modules/
 
+# Configuration files
 .config/
+
+# Logs directory
+logs/
+*.log
+
+# Performance reports
+performance_reports/
+cache_dumps/
+backup/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# Production specific
+gunicorn.pid
+nginx.conf
+supervisor.conf
+
+# Test files
+test_setup.py

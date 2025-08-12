@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
+from django.core.management.utils import get_random_secret_key
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,12 +23,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-7z)l7a3(7wwlwg4eefs*dh%glqanvj^8@7sabn1!*_3@$emh-$'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-7z)l7a3(7wwlwg4eefs*dh%glqanvj^8@7sabn1!*_3@$emh-$')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
+# DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+DEBUG = True
+# Production-ready allowed hosts
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
-ALLOWED_HOSTS = ['*']
+# Environment detection
+ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
+IS_PRODUCTION = ENVIRONMENT == 'production'
 
 
 # Application definition
@@ -37,19 +45,36 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'stream'
+    'stream',
+    # Performance and monitoring
+    'django.contrib.humanize',  # For better number formatting
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Move WhiteNoise early for better static file serving
+    'django.middleware.cache.UpdateCacheMiddleware',  # Cache middleware (first)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',  # Cache middleware (last)
 ]
+
+# Add custom middleware only when available (for development flexibility)
+try:
+    import stream.middleware
+    MIDDLEWARE.extend([
+        'stream.middleware.RateLimitMiddleware',  # Custom rate limiting
+        'stream.middleware.APIHealthMiddleware',  # Custom API health monitoring
+        'stream.middleware.SecurityMiddleware',   # Additional security headers
+        'stream.middleware.CacheControlMiddleware',  # Smart cache control
+    ])
+except ImportError:
+    # Custom middleware not available, continue without it
+    pass
 
 ROOT_URLCONF = 'mysite.urls'
 
@@ -75,12 +100,37 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Production-ready database configuration
+if IS_PRODUCTION:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'kortekstream'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+            'CONN_MAX_AGE': 600,  # Connection pooling
+            'OPTIONS': {
+                'MAX_CONNS': 20,
+                'MIN_CONNS': 5,
+            }
+        }
     }
-}
+else:
+    # Development database (SQLite)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+            'OPTIONS': {
+                'timeout': 20,  # Increase timeout for SQLite
+            }
+        }
+    }
+
+# Database connection health check
+DATABASE_CONNECTION_POOLING = True
 
 
 # Password validation
@@ -137,20 +187,89 @@ X_FRAME_OPTIONS = 'ALLOWALL'
 # Additional security settings for iframe
 SECURE_FRAME_DENY = False
 
-# Cache configuration
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,  # 5 minutes default
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
-            'CULL_FREQUENCY': 3,
+# Advanced Cache configuration for high-traffic
+if IS_PRODUCTION:
+    # Redis cache for production (recommended for multiple servers)
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+            'TIMEOUT': 300,  # 5 minutes default
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'CONNECTION_POOL_KWARGS': {
+                    'max_connections': 50,
+                    'retry_on_timeout': True,
+                },
+                'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+                'IGNORE_EXCEPTIONS': True,  # Don't fail if Redis is down
+            },
+            'KEY_PREFIX': 'kortekstream',
+            'VERSION': 1,
+        },
+        # Separate cache for sessions
+        'sessions': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/2'),
+            'TIMEOUT': 86400,  # 24 hours for sessions
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'CONNECTION_POOL_KWARGS': {
+                    'max_connections': 20,
+                    'retry_on_timeout': True,
+                },
+                'IGNORE_EXCEPTIONS': True,
+            },
+            'KEY_PREFIX': 'kortekstream_session',
+        },
+        # Fast cache for frequently accessed data
+        'fast': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'fast-cache',
+            'TIMEOUT': 60,  # 1 minute for very fast data
+            'OPTIONS': {
+                'MAX_ENTRIES': 2000,
+                'CULL_FREQUENCY': 2,
+            }
         }
     }
-}
+    
+    # Use Redis for sessions in production
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'sessions'
+    
+else:
+    # Development cache (in-memory)
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+            'TIMEOUT': 300,  # 5 minutes default
+            'OPTIONS': {
+                'MAX_ENTRIES': 2000,  # Increased for development
+                'CULL_FREQUENCY': 3,
+            }
+        },
+        'fast': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'fast-cache',
+            'TIMEOUT': 60,
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000,
+                'CULL_FREQUENCY': 2,
+            }
+        }
+    }
 
-# Logging configuration
+# Cache middleware settings
+CACHE_MIDDLEWARE_ALIAS = 'default'
+CACHE_MIDDLEWARE_SECONDS = 300  # 5 minutes
+CACHE_MIDDLEWARE_KEY_PREFIX = 'kortekstream'
+
+# Cache versioning for safe cache invalidation
+CACHE_VERSION = 1
+
+# Enhanced Logging configuration for production
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -163,18 +282,55 @@ LOGGING = {
             'format': '{levelname} {message}',
             'style': '{',
         },
+        'json': {
+            'format': '{{"level": "{levelname}", "time": "{asctime}", "module": "{module}", "message": "{message}"}}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
     },
     'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'debug.log'),
-            'formatter': 'verbose',
-        },
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
+            'filters': ['require_debug_true'],
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'maxBytes': 1024*1024*10,  # 10MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django_errors.log'),
+            'maxBytes': 1024*1024*10,  # 10MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'performance_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'performance.log'),
+            'maxBytes': 1024*1024*5,  # 5MB
+            'backupCount': 3,
+            'formatter': 'json',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'filters': ['require_debug_false'],
+            'formatter': 'verbose',
         },
     },
     'root': {
@@ -182,10 +338,94 @@ LOGGING = {
         'level': 'INFO',
     },
     'loggers': {
+        'django': {
+            'handlers': ['console', 'file', 'mail_admins'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['error_file', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
         'stream.views': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'stream.performance': {
+            'handlers': ['performance_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'stream.api': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': False,
         },
     },
 }
+
+# Create logs directory if it doesn't exist
+os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
+
+# Performance and Security Settings
+if IS_PRODUCTION:
+    # Security settings for production
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Session security
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_AGE = 86400  # 24 hours
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+    
+    # CSRF protection
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = True
+    
+    # Force HTTPS
+    SECURE_SSL_REDIRECT = os.environ.get('FORCE_HTTPS', 'False').lower() == 'true'
+
+# Performance settings
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+
+# Email configuration for error reporting
+if IS_PRODUCTION:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@kortekstream.com')
+    
+    # Admin emails for error notifications
+    ADMINS = [
+        ('Admin', os.environ.get('ADMIN_EMAIL', 'admin@kortekstream.com')),
+    ]
+    MANAGERS = ADMINS
+
+# Rate limiting settings
+RATE_LIMIT_ENABLE = True
+RATE_LIMIT_PER_MINUTE = 60  # requests per minute per IP
+RATE_LIMIT_PER_HOUR = 1000  # requests per hour per IP
+RATE_LIMIT_BURST = 10  # burst allowance
+
+# API settings
+API_TIMEOUT = 15  # seconds
+API_MAX_RETRIES = 3
+API_BACKOFF_FACTOR = 1.5
+API_CIRCUIT_BREAKER_THRESHOLD = 10
+API_CIRCUIT_BREAKER_TIMEOUT = 300  # 5 minutes
+
+# Cache timeouts (in seconds)
+CACHE_TIMEOUT_SHORT = 60      # 1 minute
+CACHE_TIMEOUT_MEDIUM = 300    # 5 minutes  
+CACHE_TIMEOUT_LONG = 3600     # 1 hour
+CACHE_TIMEOUT_VERY_LONG = 86400  # 24 hours

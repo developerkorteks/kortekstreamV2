@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plyr.io Video Player Test</title>
+    
+    <!-- Plyr CSS -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    
+    <!-- Bootstrap CSS for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #121212;
+            color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .player-container {
+            margin-top: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        }
+        
+        #player-wrapper, #hls-player-wrapper, #iframe-player-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #player, #hls-player, #iframe-player {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        /* Specific styling for pixeldrain embeds */
+        #iframe-player[src*="pixeldrain.com"] {
+            background-color: #000;
+        }
+        
+        .episode-info {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .episode-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .anime-info {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .anime-thumbnail {
+            width: 150px;
+            height: auto;
+            border-radius: 5px;
+            margin-right: 20px;
+        }
+        
+        .anime-details {
+            flex: 1;
+        }
+        
+        .genre-badge {
+            background-color: #3a3a3a;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            display: inline-block;
+            font-size: 12px;
+        }
+        
+        .server-selector {
+            margin-bottom: 20px;
+        }
+        
+        .server-btn {
+            background-color: #2d2d2d;
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .server-btn:hover {
+            background-color: #3a3a3a;
+        }
+        
+        .server-btn.active {
+            background-color: #007bff;
+        }
+        
+        .episode-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background-color: #2d2d2d;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .nav-btn:hover:not(:disabled) {
+            background-color: #3a3a3a;
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .other-episodes {
+            margin-top: 30px;
+        }
+        
+        .episode-card {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        
+        .episode-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .episode-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        
+        .episode-card-body {
+            padding: 15px;
+        }
+        
+        .episode-card-title {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .episode-card-date {
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .form-container {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #007bff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Plyr.io Video Player Test</h1>
+        
+        <div class="form-container">
+            <h3>Test Episode Detail API</h3>
+            <div class="mb-3">
+                <label for="episodeInput" class="form-label">Episode URL or Slug</label>
+                <input type="text" class="form-control" id="episodeInput" 
+                       value="https://gomunime.co/dandadan-season-2-3">
+                <small class="form-text text-muted">Enter a full URL or episode slug</small>
+            </div>
+            <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-select" id="category">
+                    <option value="anime" selected>Anime</option>
+                    <option value="korean-drama">Korean Drama</option>
+                    <option value="all">All</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="useFullUrl" checked>
+                    <label class="form-check-label" for="useFullUrl">
+                        Use full URL (checked for URLs, uncheck for slugs)
+                    </label>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="fetchBtn">Fetch Episode</button>
+        </div>
+        
+        <div id="loadingIndicator" class="loading" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+        
+        <div id="playerContainer" style="display: none;">
+            <div class="episode-info">
+                <h2 id="episodeTitle" class="episode-title"></h2>
+                
+                <div class="anime-info">
+                    <img id="animeThumbnail" class="anime-thumbnail" src="" alt="Anime Thumbnail">
+                    <div class="anime-details">
+                        <h4 id="animeTitle"></h4>
+                        <div id="animeGenres" class="mb-2"></div>
+                        <p id="animeSynopsis"></p>
+                    </div>
+                </div>
+                
+                <div class="server-selector">
+                    <h5>Streaming Servers:</h5>
+                    <div id="serverButtons"></div>
+                </div>
+            </div>
+            
+            <div class="player-container">
+                <!-- Video player will be inserted here -->
+                <div id="player-wrapper">
+                    <video id="player" playsinline controls>
+                        <source id="videoSource" src="" type="video/mp4">
+                    </video>
+                </div>
+                
+                <!-- HLS player will be inserted here if needed -->
+                <div id="hls-player-wrapper" style="display: none;">
+                    <video id="hls-player" playsinline controls></video>
+                </div>
+                
+                <!-- Iframe player will be inserted here if needed -->
+                <div id="iframe-player-wrapper" style="display: none;">
+                    <iframe id="iframe-player" width="100%" height="500" frameborder="0" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+                </div>
+            </div>
+            
+            <div class="episode-navigation">
+                <button id="prevEpisodeBtn" class="nav-btn" disabled>Previous Episode</button>
+                <button id="allEpisodesBtn" class="nav-btn">All Episodes</button>
+                <button id="nextEpisodeBtn" class="nav-btn" disabled>Next Episode</button>
+            </div>
+            
+            <div class="other-episodes mt-4">
+                <h3>Other Episodes</h3>
+                <div id="otherEpisodesContainer" class="row"></div>
+            </div>
+        </div>
+        
+        <div id="errorContainer" class="alert alert-danger mt-3" style="display: none;"></div>
+    </div>
+    
+    <!-- Plyr.js -->
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    
+    <!-- HLS.js for HLS support -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize variables
+            let player;
+            let hlsPlayer;
+            let currentEpisodeData = null;
+            let activeServer = null;
+            
+            // DOM elements
+            const fetchBtn = document.getElementById('fetchBtn');
+            const episodeInput = document.getElementById('episodeInput');
+            const categorySelect = document.getElementById('category');
+            const useFullUrlCheckbox = document.getElementById('useFullUrl');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const playerContainer = document.getElementById('playerContainer');
+            const errorContainer = document.getElementById('errorContainer');
+            const episodeTitle = document.getElementById('episodeTitle');
+            const animeThumbnail = document.getElementById('animeThumbnail');
+            const animeTitle = document.getElementById('animeTitle');
+            const animeGenres = document.getElementById('animeGenres');
+            const animeSynopsis = document.getElementById('animeSynopsis');
+            const serverButtons = document.getElementById('serverButtons');
+            const videoSource = document.getElementById('videoSource');
+            const playerWrapper = document.getElementById('player-wrapper');
+            const hlsPlayerWrapper = document.getElementById('hls-player-wrapper');
+            const iframePlayerWrapper = document.getElementById('iframe-player-wrapper');
+            let prevEpisodeBtn = document.getElementById('prevEpisodeBtn');
+            let nextEpisodeBtn = document.getElementById('nextEpisodeBtn');
+            let allEpisodesBtn = document.getElementById('allEpisodesBtn');
+            const otherEpisodesContainer = document.getElementById('otherEpisodesContainer');
+            
+            // Initialize Plyr
+            function initPlyr() {
+                if (player) {
+                    player.destroy();
+                }
+                
+                player = new Plyr('#player', {
+                    controls: [
+                        'play-large', 'play', 'progress', 'current-time', 'mute', 
+                        'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
+                    ],
+                    seekTime: 10,
+                    keyboard: { focused: true, global: true },
+                    tooltips: { controls: true, seek: true },
+                    captions: { active: true, language: 'auto', update: true }
+                });
+            }
+            
+            // Initialize HLS player
+            function initHlsPlayer(url) {
+                const video = document.getElementById('hls-player');
+                
+                if (hlsPlayer) {
+                    hlsPlayer.destroy();
+                }
+                
+                if (Hls.isSupported()) {
+                    hlsPlayer = new Hls();
+                    hlsPlayer.loadSource(url);
+                    hlsPlayer.attachMedia(video);
+                    
+                    hlsPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
+                        video.play();
+                    });
+                    
+                    // Initialize Plyr for HLS video
+                    new Plyr(video, {
+                        controls: [
+                            'play-large', 'play', 'progress', 'current-time', 'mute', 
+                            'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
+                        ]
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Native HLS support (Safari)
+                    video.src = url;
+                    
+                    // Initialize Plyr for HLS video
+                    new Plyr(video, {
+                        controls: [
+                            'play-large', 'play', 'progress', 'current-time', 'mute', 
+                            'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
+                        ]
+                    });
+                }
+            }
+            
+            // Set up iframe player
+            function setupIframePlayer(url) {
+                console.log("Setting up iframe player for URL:", url);
+                const iframe = document.getElementById('iframe-player');
+                
+                // Make sure the URL is properly formatted for embedding
+                if (url.includes('mega.nz') && !url.includes('embed')) {
+                    // Convert regular Mega URL to embed URL if needed
+                    url = url.replace('mega.nz/', 'mega.nz/embed/');
+                }
+                
+                // Handle pixeldrain URLs
+                if (url.includes('pixeldrain.com/u/')) {
+                    // Make sure it's a proper embed URL for pixeldrain
+                    console.log("Setting up pixeldrain embed:", url);
+                    
+                    // No need to modify the URL, pixeldrain.com/u/ works directly in iframe
+                    // Just ensure we're using the iframe player
+                }
+                
+                // Handle wibufile direct URLs
+                if (url.includes('wibufile.com') && !url.includes('embed')) {
+                    // For direct MP4 links, we'll use the standard player instead
+                    console.log("Detected direct wibufile URL, switching to standard player");
+                    playerWrapper.style.display = 'block';
+                    iframePlayerWrapper.style.display = 'none';
+                    videoSource.src = url;
+                    const videoPlayer = document.getElementById('player');
+                    videoPlayer.load();
+                    initPlyr();
+                    return;
+                }
+                
+                // Handle filedon.co URLs
+                if (url.includes('filedon.co') && !url.includes('embed')) {
+                    // Convert to embed URL if needed
+                    url = url.replace('filedon.co/', 'filedon.co/embed/');
+                    console.log("Converted filedon URL to:", url);
+                }
+                
+                // Set the iframe source
+                iframe.src = url;
+                
+                // Add event listener to handle iframe load errors
+                iframe.onerror = function() {
+                    console.error("Error loading iframe with URL:", url);
+                    showError(`Error loading video from ${url}. The server might be blocking embedding.`);
+                };
+            }
+            
+            // Detect video type and set up appropriate player
+            function setupVideoPlayer(url, serverName) {
+                // Hide all player wrappers first
+                playerWrapper.style.display = 'none';
+                hlsPlayerWrapper.style.display = 'none';
+                iframePlayerWrapper.style.display = 'none';
+                
+                console.log("Setting up player for URL:", url, "Server:", serverName);
+                
+                // Check if it's a pixeldrain direct API URL
+                if (url.includes('pixeldrain.com/api/file/')) {
+                    console.log("Using iframe player for pixeldrain:", url);
+                    
+                    // Convert to embed URL for pixeldrain
+                    const fileId = url.split('/').pop();
+                    const embedUrl = `https://pixeldrain.com/u/${fileId}`;
+                    
+                    console.log("Converted pixeldrain URL to embed:", embedUrl);
+                    iframePlayerWrapper.style.display = 'block';
+                    setupIframePlayer(embedUrl);
+                    return;
+                }
+                
+                // Check if it's an iframe embed URL or needs special handling
+                if (url.includes('embed') || 
+                    url.includes('mega.nz') || 
+                    url.includes('krakenfiles.com') || 
+                    url.includes('abysscdn.com') || 
+                    url.includes('vidhide') || 
+                    url.includes('filedon.co') ||
+                    url.includes('pixeldrain.com/u/') ||
+                    url.includes('wibufile.com/embed') ||
+                    serverName.toLowerCase().includes('iframe') ||
+                    serverName.toLowerCase().includes('pucuk')) {
+                    
+                    console.log("Using iframe player for:", url);
+                    iframePlayerWrapper.style.display = 'block';
+                    setupIframePlayer(url);
+                    return;
+                }
+                
+                // Check if it's an HLS stream (.m3u8)
+                if (url.includes('.m3u8')) {
+                    console.log("Using HLS player for:", url);
+                    hlsPlayerWrapper.style.display = 'block';
+                    initHlsPlayer(url);
+                    return;
+                }
+                
+                // Check if it's a direct MP4 URL
+                if (url.includes('.mp4')) {
+                    console.log("Detected direct MP4 URL, using standard player");
+                    playerWrapper.style.display = 'block';
+                    videoSource.src = url;
+                    const videoPlayer = document.getElementById('player');
+                    videoPlayer.load();
+                    initPlyr();
+                    return;
+                }
+                
+                // For any other URL, try to use it with the standard player
+                console.log("Using standard player for:", url);
+                playerWrapper.style.display = 'block';
+                videoSource.src = url;
+                const videoPlayer = document.getElementById('player');
+                videoPlayer.load();
+                initPlyr();
+            }
+            
+            // Fetch episode data from API
+            async function fetchEpisodeData() {
+                const episodeValue = episodeInput.value.trim();
+                const category = categorySelect.value;
+                const useFullUrl = useFullUrlCheckbox.checked;
+                
+                if (!episodeValue) {
+                    showError('Please enter an episode URL or slug');
+                    return;
+                }
+                
+                showLoading();
+                hideError();
+                
+                try {
+                    // Construct API URL based on whether we're using a full URL or just a slug
+                    let apiUrl;
+                    if (useFullUrl) {
+                        // Using full URL - pass it as all three parameters to ensure it works
+                        const encodedUrl = encodeURIComponent(episodeValue);
+                        apiUrl = `http://apigatway.humanmade.my.id:8080/api/v1/episode-detail?id=${encodedUrl}&episode_url=${encodedUrl}&episode_slug=${encodedUrl}&category=${category}`;
+                    } else {
+                        // Using just the slug
+                        apiUrl = `http://apigatway.humanmade.my.id:8080/api/v1/episode-detail?episode_slug=${episodeValue}&category=${category}`;
+                    }
+                    
+                    console.log("Fetching from API URL:", apiUrl);
+                    
+                    const response = await fetch(apiUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+                    
+                    const responseData = await response.json();
+                    console.log("API Response:", responseData);
+                    
+                    // Handle different response structures
+                    let episodeData;
+                    
+                    if (responseData.data) {
+                        // Check if there's another nested data object
+                        if (responseData.data.data) {
+                            episodeData = responseData.data.data;
+                        } else {
+                            episodeData = responseData.data;
+                        }
+                    } else if (responseData.success && responseData.data === null) {
+                        throw new Error('No data found for this episode');
+                    } else {
+                        throw new Error('Unexpected API response structure');
+                    }
+                    
+                    console.log("Processed episode data:", episodeData);
+                    currentEpisodeData = episodeData;
+                    displayEpisodeData(currentEpisodeData);
+                    
+                } catch (error) {
+                    console.error("API Error:", error);
+                    showError(`Error fetching episode data: ${error.message}`);
+                    hideLoading();
+                }
+            }
+            
+            // Display episode data in the UI
+            function displayEpisodeData(data) {
+                console.log("Displaying data:", data);
+                
+                // Set episode title
+                episodeTitle.textContent = data.title || 'Unknown Title';
+                
+                // Set anime info
+                if (data.anime_info) {
+                    animeThumbnail.src = data.anime_info.thumbnail_url || '';
+                    animeThumbnail.alt = data.anime_info.title || 'Anime Thumbnail';
+                    animeTitle.textContent = data.anime_info.title || 'Unknown Anime';
+                    
+                    // Set genres
+                    animeGenres.innerHTML = '';
+                    if (data.anime_info.genres && data.anime_info.genres.length > 0) {
+                        data.anime_info.genres.forEach(genre => {
+                            const genreBadge = document.createElement('span');
+                            genreBadge.className = 'genre-badge';
+                            genreBadge.textContent = genre;
+                            animeGenres.appendChild(genreBadge);
+                        });
+                    }
+                    
+                    animeSynopsis.textContent = data.anime_info.synopsis || 'No synopsis available.';
+                }
+                
+                // Set up streaming servers
+                serverButtons.innerHTML = '';
+                
+                // Check for streaming servers
+                if (data.streaming_servers && data.streaming_servers.length > 0) {
+                    console.log("Found streaming servers:", data.streaming_servers);
+                    
+                    data.streaming_servers.forEach((server, index) => {
+                        if (!server.streaming_url) {
+                            console.warn("Server missing streaming_url:", server);
+                            return;
+                        }
+                        
+                        const button = document.createElement('button');
+                        button.className = 'server-btn';
+                        button.textContent = server.server_name || `Server ${index + 1}`;
+                        button.dataset.url = server.streaming_url;
+                        button.dataset.serverName = server.server_name || `Server ${index + 1}`;
+                        
+                        button.addEventListener('click', function() {
+                            // Remove active class from all buttons
+                            document.querySelectorAll('.server-btn').forEach(btn => {
+                                btn.classList.remove('active');
+                            });
+                            
+                            // Add active class to clicked button
+                            this.classList.add('active');
+                            
+                            // Set up video player with this server
+                            setupVideoPlayer(this.dataset.url, this.dataset.serverName);
+                            activeServer = this.dataset.serverName;
+                        });
+                        
+                        serverButtons.appendChild(button);
+                        
+                        // Activate the first server by default
+                        if (index === 0) {
+                            button.classList.add('active');
+                            setupVideoPlayer(server.streaming_url, server.server_name || `Server ${index + 1}`);
+                            activeServer = server.server_name || `Server ${index + 1}`;
+                        }
+                    });
+                } 
+                // Check for download links that might contain streaming URLs (some APIs put them here)
+                else if (data.download_links) {
+                    console.log("Checking download links for streaming URLs:", data.download_links);
+                    
+                    let serverIndex = 0;
+                    // Loop through each quality category
+                    Object.entries(data.download_links).forEach(([category, qualities]) => {
+                        // Loop through each quality
+                        Object.entries(qualities).forEach(([quality, providers]) => {
+                            // Loop through each provider
+                            if (Array.isArray(providers)) {
+                                providers.forEach(provider => {
+                                    if (provider.url && provider.provider) {
+                                        const button = document.createElement('button');
+                                        button.className = 'server-btn';
+                                        button.textContent = `${provider.provider} (${quality})`;
+                                        button.dataset.url = provider.url;
+                                        button.dataset.serverName = provider.provider;
+                                        
+                                        button.addEventListener('click', function() {
+                                            document.querySelectorAll('.server-btn').forEach(btn => {
+                                                btn.classList.remove('active');
+                                            });
+                                            this.classList.add('active');
+                                            setupVideoPlayer(this.dataset.url, this.dataset.serverName);
+                                            activeServer = this.dataset.serverName;
+                                        });
+                                        
+                                        serverButtons.appendChild(button);
+                                        
+                                        // Activate the first server by default
+                                        if (serverIndex === 0) {
+                                            button.classList.add('active');
+                                            setupVideoPlayer(provider.url, provider.provider);
+                                            activeServer = provider.provider;
+                                        }
+                                        
+                                        serverIndex++;
+                                    }
+                                });
+                            }
+                        });
+                    });
+                }
+                
+                // If no streaming servers were found
+                if (serverButtons.children.length === 0) {
+                    console.warn("No streaming servers found in data");
+                    const noServers = document.createElement('p');
+                    noServers.textContent = 'No streaming servers available.';
+                    serverButtons.appendChild(noServers);
+                }
+                
+                // Set up navigation buttons
+                if (data.navigation) {
+                    // Clear previous event listeners
+                    prevEpisodeBtn.replaceWith(prevEpisodeBtn.cloneNode(true));
+                    nextEpisodeBtn.replaceWith(nextEpisodeBtn.cloneNode(true));
+                    allEpisodesBtn.replaceWith(allEpisodesBtn.cloneNode(true));
+                    
+                    // Get fresh references
+                    prevEpisodeBtn = document.getElementById('prevEpisodeBtn');
+                    nextEpisodeBtn = document.getElementById('nextEpisodeBtn');
+                    allEpisodesBtn = document.getElementById('allEpisodesBtn');
+                    
+                    prevEpisodeBtn.disabled = !data.navigation.previous_episode_url;
+                    nextEpisodeBtn.disabled = !data.navigation.next_episode_url;
+                    
+                    if (data.navigation.previous_episode_url) {
+                        prevEpisodeBtn.addEventListener('click', function() {
+                            // Use the full URL
+                            const url = data.navigation.previous_episode_url;
+                            episodeInput.value = url;
+                            useFullUrlCheckbox.checked = true;
+                            fetchEpisodeData();
+                        });
+                    }
+                    
+                    if (data.navigation.next_episode_url) {
+                        nextEpisodeBtn.addEventListener('click', function() {
+                            // Use the full URL
+                            const url = data.navigation.next_episode_url;
+                            episodeInput.value = url;
+                            useFullUrlCheckbox.checked = true;
+                            fetchEpisodeData();
+                        });
+                    }
+                    
+                    if (data.navigation.all_episodes_url) {
+                        allEpisodesBtn.disabled = false;
+                        allEpisodesBtn.addEventListener('click', function() {
+                            window.open(data.navigation.all_episodes_url, '_blank');
+                        });
+                    } else {
+                        allEpisodesBtn.disabled = true;
+                    }
+                }
+                
+                // Display other episodes
+                otherEpisodesContainer.innerHTML = '';
+                if (data.other_episodes && data.other_episodes.length > 0) {
+                    data.other_episodes.forEach(episode => {
+                        if (!episode.url) {
+                            console.warn("Episode missing URL:", episode);
+                            return;
+                        }
+                        
+                        const col = document.createElement('div');
+                        col.className = 'col-md-4 col-lg-3 mb-3';
+                        
+                        const card = document.createElement('div');
+                        card.className = 'episode-card';
+                        card.addEventListener('click', function() {
+                            // Use the full URL
+                            const url = episode.url;
+                            console.log("Clicking on episode with URL:", url);
+                            episodeInput.value = url;
+                            useFullUrlCheckbox.checked = true;
+                            fetchEpisodeData();
+                        });
+                        
+                        const img = document.createElement('img');
+                        img.src = episode.thumbnail_url || '';
+                        img.alt = episode.title || 'Episode Thumbnail';
+                        img.onerror = function() {
+                            // If image fails to load, use a placeholder
+                            this.src = 'https://via.placeholder.com/150x200?text=No+Image';
+                        };
+                        
+                        const cardBody = document.createElement('div');
+                        cardBody.className = 'episode-card-body';
+                        
+                        const title = document.createElement('h5');
+                        title.className = 'episode-card-title';
+                        title.textContent = episode.title || 'Unknown Episode';
+                        
+                        const date = document.createElement('div');
+                        date.className = 'episode-card-date';
+                        date.textContent = episode.release_date || '';
+                        
+                        cardBody.appendChild(title);
+                        cardBody.appendChild(date);
+                        
+                        card.appendChild(img);
+                        card.appendChild(cardBody);
+                        
+                        col.appendChild(card);
+                        otherEpisodesContainer.appendChild(col);
+                    });
+                } else {
+                    const noEpisodes = document.createElement('p');
+                    noEpisodes.textContent = 'No other episodes available.';
+                    otherEpisodesContainer.appendChild(noEpisodes);
+                }
+                
+                // Show player container
+                hideLoading();
+                playerContainer.style.display = 'block';
+            }
+            
+            // Show loading indicator
+            function showLoading() {
+                loadingIndicator.style.display = 'flex';
+                playerContainer.style.display = 'none';
+            }
+            
+            // Hide loading indicator
+            function hideLoading() {
+                loadingIndicator.style.display = 'none';
+            }
+            
+            // Show error message
+            function showError(message) {
+                errorContainer.textContent = message;
+                errorContainer.style.display = 'block';
+            }
+            
+            // Hide error message
+            function hideError() {
+                errorContainer.style.display = 'none';
+            }
+            
+            // Event listeners
+            fetchBtn.addEventListener('click', fetchEpisodeData);
+            
+            // Allow pressing Enter in the input field to fetch data
+            episodeInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    fetchEpisodeData();
+                }
+            });
+            
+            // Initialize Plyr
+            initPlyr();
+        });
+    </script>
+</body>
+</html>

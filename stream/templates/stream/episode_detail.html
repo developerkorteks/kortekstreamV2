@@ -11,6 +11,9 @@
 {% endblock title %}
 
 {% block extra_css %}
+    <!-- Plyr.io CSS -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    
     <style>
         .card-img-top {
             height: 250px;
@@ -461,7 +464,7 @@
                         </div>
                     </div>
                     {% elif episode_data.data.streaming_servers and episode_data.data.streaming_servers.0.streaming_url %}
-                    <!-- For gomunime format (flat structure) -->
+                    <!-- For gomunime format (flat structure) with enhanced player -->
                     <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden mb-8">
                         <div class="p-4 border-b border-gray-200 dark:border-korteks-gray">
                             <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center">
@@ -469,49 +472,227 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                Video Player (Embed)
+                                Video Player (Enhanced)
                             </h2>
                         </div>
                         
                         <!-- Server Selection Tabs -->
                         <div class="p-4 bg-gray-50 dark:bg-korteks-gray border-b border-gray-200 dark:border-korteks-darkgray">
-                            <div class="flex flex-wrap gap-2">
+                            <div class="flex flex-wrap gap-2" id="server-buttons-flat">
                                 {% for server in episode_data.data.streaming_servers %}
                                 <button 
-                                    onclick="changeServerFlat('{{ server.streaming_url }}')" 
-                                    class="px-3 py-1 text-sm rounded-md {% if forloop.first %}bg-gold-500 text-white dark:bg-korteks-red{% else %}bg-gray-200 text-gray-700 dark:bg-korteks-darkgray dark:text-gray-300{% endif %} hover:bg-gold-400 dark:hover:bg-red-700 transition-colors">
+                                    data-url="{{ server.streaming_url }}"
+                                    data-server-name="{{ server.server_name }}"
+                                    class="server-btn px-3 py-1 text-sm rounded-md {% if forloop.first %}bg-gold-500 text-white dark:bg-korteks-red active{% else %}bg-gray-200 text-gray-700 dark:bg-korteks-darkgray dark:text-gray-300{% endif %} hover:bg-gold-400 dark:hover:bg-red-700 transition-colors">
                                     {{ server.server_name }}
                                 </button>
                                 {% endfor %}
                             </div>
                         </div>
                         
+                        <!-- Enhanced Player Container -->
                         <div class="relative" style="padding-top: 56.25%;">
-                            <iframe id="video-player-iframe-flat" 
-                                    src="{{ episode_data.data.streaming_servers.0.streaming_url }}" 
-                                    class="absolute top-0 left-0 w-full h-full" 
-                                    frameborder="0" 
-                                    allowfullscreen>
-                            </iframe>
+                            <!-- Standard Video Player -->
+                            <div id="player-wrapper-flat" class="absolute top-0 left-0 w-full h-full" style="display: none;">
+                                <video id="player-flat" class="absolute top-0 left-0 w-full h-full" playsinline controls>
+                                    <source id="video-source-flat" src="" type="video/mp4">
+                                </video>
+                            </div>
+                            
+                            <!-- HLS Player -->
+                            <div id="hls-player-wrapper-flat" class="absolute top-0 left-0 w-full h-full" style="display: none;">
+                                <video id="hls-player-flat" class="absolute top-0 left-0 w-full h-full" playsinline controls></video>
+                            </div>
+                            
+                            <!-- Iframe Player -->
+                            <div id="iframe-player-wrapper-flat" class="absolute top-0 left-0 w-full h-full">
+                                <iframe id="iframe-player-flat" 
+                                        src="{{ episode_data.data.streaming_servers.0.streaming_url }}" 
+                                        class="absolute top-0 left-0 w-full h-full" 
+                                        frameborder="0" 
+                                        allowfullscreen
+                                        allow="autoplay; encrypted-media; picture-in-picture">
+                                </iframe>
+                            </div>
                         </div>
                         
-                        <!-- JavaScript for server switching -->
+                        <!-- JavaScript for enhanced player -->
                         <script>
-                            function changeServerFlat(url) {
-                                document.getElementById('video-player-iframe-flat').src = url;
+                            document.addEventListener('DOMContentLoaded', function() {
+                                // Initialize variables
+                                let playerFlat;
+                                let hlsPlayerFlat;
                                 
-                                // Update button styles
-                                const buttons = document.querySelectorAll('.p-4.bg-gray-50 button');
-                                buttons.forEach(button => {
-                                    if (button.getAttribute('onclick').includes(url)) {
-                                        button.classList.add('bg-gold-500', 'text-white', 'dark:bg-korteks-red');
-                                        button.classList.remove('bg-gray-200', 'text-gray-700', 'dark:bg-korteks-darkgray', 'dark:text-gray-300');
-                                    } else {
-                                        button.classList.remove('bg-gold-500', 'text-white', 'dark:bg-korteks-red');
-                                        button.classList.add('bg-gray-200', 'text-gray-700', 'dark:bg-korteks-darkgray', 'dark:text-gray-300');
-                                    }
+                                // DOM elements
+                                const serverButtonsFlat = document.querySelectorAll('#server-buttons-flat .server-btn');
+                                const playerWrapperFlat = document.getElementById('player-wrapper-flat');
+                                const hlsPlayerWrapperFlat = document.getElementById('hls-player-wrapper-flat');
+                                const iframePlayerWrapperFlat = document.getElementById('iframe-player-wrapper-flat');
+                                const videoSourceFlat = document.getElementById('video-source-flat');
+                                
+                                // Add click event to server buttons
+                                serverButtonsFlat.forEach(button => {
+                                    button.addEventListener('click', function() {
+                                        // Remove active class from all buttons
+                                        serverButtonsFlat.forEach(btn => {
+                                            btn.classList.remove('active', 'bg-gold-500', 'text-white', 'dark:bg-korteks-red');
+                                            btn.classList.add('bg-gray-200', 'text-gray-700', 'dark:bg-korteks-darkgray', 'dark:text-gray-300');
+                                        });
+                                        
+                                        // Add active class to clicked button
+                                        this.classList.add('active', 'bg-gold-500', 'text-white', 'dark:bg-korteks-red');
+                                        this.classList.remove('bg-gray-200', 'text-gray-700', 'dark:bg-korteks-darkgray', 'dark:text-gray-300');
+                                        
+                                        // Set up video player with this server
+                                        setupVideoPlayerFlat(this.dataset.url, this.dataset.serverName);
+                                    });
                                 });
-                            }
+                                
+                                // Initialize Plyr
+                                function initPlyrFlat() {
+                                    if (playerFlat) {
+                                        playerFlat.destroy();
+                                    }
+                                    
+                                    playerFlat = new Plyr('#player-flat', {
+                                        controls: [
+                                            'play-large', 'play', 'progress', 'current-time', 'mute', 
+                                            'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
+                                        ],
+                                        seekTime: 10,
+                                        keyboard: { focused: true, global: true },
+                                        tooltips: { controls: true, seek: true },
+                                        captions: { active: true, language: 'auto', update: true }
+                                    });
+                                }
+                                
+                                // Initialize HLS player
+                                function initHlsPlayerFlat(url) {
+                                    const video = document.getElementById('hls-player-flat');
+                                    
+                                    if (hlsPlayerFlat) {
+                                        hlsPlayerFlat.destroy();
+                                    }
+                                    
+                                    if (Hls.isSupported()) {
+                                        hlsPlayerFlat = new Hls();
+                                        hlsPlayerFlat.loadSource(url);
+                                        hlsPlayerFlat.attachMedia(video);
+                                        
+                                        hlsPlayerFlat.on(Hls.Events.MANIFEST_PARSED, function() {
+                                            video.play();
+                                        });
+                                        
+                                        // Initialize Plyr for HLS video
+                                        new Plyr(video, {
+                                            controls: [
+                                                'play-large', 'play', 'progress', 'current-time', 'mute', 
+                                                'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
+                                            ]
+                                        });
+                                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                                        // Native HLS support (Safari)
+                                        video.src = url;
+                                        
+                                        // Initialize Plyr for HLS video
+                                        new Plyr(video, {
+                                            controls: [
+                                                'play-large', 'play', 'progress', 'current-time', 'mute', 
+                                                'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
+                                            ]
+                                        });
+                                    }
+                                }
+                                
+                                // Set up iframe player
+                                function setupIframePlayerFlat(url) {
+                                    const iframe = document.getElementById('iframe-player-flat');
+                                    
+                                    // Make sure the URL is properly formatted for embedding
+                                    if (url.includes('mega.nz') && !url.includes('embed')) {
+                                        url = url.replace('mega.nz/', 'mega.nz/embed/');
+                                    }
+                                    
+                                    // Handle pixeldrain URLs
+                                    if (url.includes('pixeldrain.com/api/file/')) {
+                                        const fileId = url.split('/').pop();
+                                        url = `https://pixeldrain.com/u/${fileId}`;
+                                    }
+                                    
+                                    // Handle filedon.co URLs
+                                    if (url.includes('filedon.co') && !url.includes('embed')) {
+                                        url = url.replace('filedon.co/', 'filedon.co/embed/');
+                                    }
+                                    
+                                    // Set the iframe source
+                                    iframe.src = url;
+                                }
+                                
+                                // Detect video type and set up appropriate player
+                                function setupVideoPlayerFlat(url, serverName) {
+                                    // Hide all player wrappers first
+                                    playerWrapperFlat.style.display = 'none';
+                                    hlsPlayerWrapperFlat.style.display = 'none';
+                                    iframePlayerWrapperFlat.style.display = 'none';
+                                    
+                                    // Check if it's a pixeldrain direct API URL
+                                    if (url.includes('pixeldrain.com/api/file/')) {
+                                        const fileId = url.split('/').pop();
+                                        const embedUrl = `https://pixeldrain.com/u/${fileId}`;
+                                        
+                                        iframePlayerWrapperFlat.style.display = 'block';
+                                        setupIframePlayerFlat(embedUrl);
+                                        return;
+                                    }
+                                    
+                                    // Check if it's an iframe embed URL or needs special handling
+                                    if (url.includes('embed') || 
+                                        url.includes('mega.nz') || 
+                                        url.includes('krakenfiles.com') || 
+                                        url.includes('abysscdn.com') || 
+                                        url.includes('vidhide') || 
+                                        url.includes('filedon.co') ||
+                                        url.includes('pixeldrain.com/u/') ||
+                                        url.includes('wibufile.com/embed') ||
+                                        serverName.toLowerCase().includes('iframe') ||
+                                        serverName.toLowerCase().includes('pucuk')) {
+                                        
+                                        iframePlayerWrapperFlat.style.display = 'block';
+                                        setupIframePlayerFlat(url);
+                                        return;
+                                    }
+                                    
+                                    // Check if it's an HLS stream (.m3u8)
+                                    if (url.includes('.m3u8')) {
+                                        hlsPlayerWrapperFlat.style.display = 'block';
+                                        initHlsPlayerFlat(url);
+                                        return;
+                                    }
+                                    
+                                    // Check if it's a direct MP4 URL
+                                    if (url.includes('.mp4')) {
+                                        playerWrapperFlat.style.display = 'block';
+                                        videoSourceFlat.src = url;
+                                        const videoPlayer = document.getElementById('player-flat');
+                                        videoPlayer.load();
+                                        initPlyrFlat();
+                                        return;
+                                    }
+                                    
+                                    // For any other URL, try to use it with the standard player
+                                    playerWrapperFlat.style.display = 'block';
+                                    videoSourceFlat.src = url;
+                                    const videoPlayer = document.getElementById('player-flat');
+                                    videoPlayer.load();
+                                    initPlyrFlat();
+                                }
+                                
+                                // Setup the first server by default
+                                if (serverButtonsFlat.length > 0) {
+                                    const firstServer = serverButtonsFlat[0];
+                                    setupVideoPlayerFlat(firstServer.dataset.url, firstServer.dataset.serverName);
+                                }
+                            });
                         </script>
                     </div>
                     
@@ -578,7 +759,7 @@
                     </div>
                     {% endif %}
                     {% elif episode_data.data.data.streaming_servers and episode_data.data.data.streaming_servers.0.streaming_url %}
-                    <!-- For gomunime format (nested structure) -->
+                    <!-- For gomunime format (nested structure) with enhanced player -->
                     <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden mb-8">
                         <div class="p-4 border-b border-gray-200 dark:border-korteks-gray">
                             <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center">
@@ -586,49 +767,227 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                Video Player (Embed)
+                                Video Player (Enhanced)
                             </h2>
                         </div>
                         
                         <!-- Server Selection Tabs -->
                         <div class="p-4 bg-gray-50 dark:bg-korteks-gray border-b border-gray-200 dark:border-korteks-darkgray">
-                            <div class="flex flex-wrap gap-2">
+                            <div class="flex flex-wrap gap-2" id="server-buttons-nested">
                                 {% for server in episode_data.data.data.streaming_servers %}
                                 <button 
-                                    onclick="changeServer('{{ server.streaming_url }}')" 
-                                    class="px-3 py-1 text-sm rounded-md {% if forloop.first %}bg-gold-500 text-white dark:bg-korteks-red{% else %}bg-gray-200 text-gray-700 dark:bg-korteks-darkgray dark:text-gray-300{% endif %} hover:bg-gold-400 dark:hover:bg-red-700 transition-colors">
+                                    data-url="{{ server.streaming_url }}"
+                                    data-server-name="{{ server.server_name }}"
+                                    class="server-btn px-3 py-1 text-sm rounded-md {% if forloop.first %}bg-gold-500 text-white dark:bg-korteks-red active{% else %}bg-gray-200 text-gray-700 dark:bg-korteks-darkgray dark:text-gray-300{% endif %} hover:bg-gold-400 dark:hover:bg-red-700 transition-colors">
                                     {{ server.server_name }}
                                 </button>
                                 {% endfor %}
                             </div>
                         </div>
                         
+                        <!-- Enhanced Player Container -->
                         <div class="relative" style="padding-top: 56.25%;">
-                            <iframe id="video-player-iframe" 
-                                    src="{{ episode_data.data.data.streaming_servers.0.streaming_url }}" 
-                                    class="absolute top-0 left-0 w-full h-full" 
-                                    frameborder="0" 
-                                    allowfullscreen>
-                            </iframe>
+                            <!-- Standard Video Player -->
+                            <div id="player-wrapper-nested" class="absolute top-0 left-0 w-full h-full" style="display: none;">
+                                <video id="player-nested" class="absolute top-0 left-0 w-full h-full" playsinline controls>
+                                    <source id="video-source-nested" src="" type="video/mp4">
+                                </video>
+                            </div>
+                            
+                            <!-- HLS Player -->
+                            <div id="hls-player-wrapper-nested" class="absolute top-0 left-0 w-full h-full" style="display: none;">
+                                <video id="hls-player-nested" class="absolute top-0 left-0 w-full h-full" playsinline controls></video>
+                            </div>
+                            
+                            <!-- Iframe Player -->
+                            <div id="iframe-player-wrapper-nested" class="absolute top-0 left-0 w-full h-full">
+                                <iframe id="iframe-player-nested" 
+                                        src="{{ episode_data.data.data.streaming_servers.0.streaming_url }}" 
+                                        class="absolute top-0 left-0 w-full h-full" 
+                                        frameborder="0" 
+                                        allowfullscreen
+                                        allow="autoplay; encrypted-media; picture-in-picture">
+                                </iframe>
+                            </div>
                         </div>
                         
-                        <!-- JavaScript for server switching -->
+                        <!-- JavaScript for enhanced player -->
                         <script>
-                            function changeServer(url) {
-                                document.getElementById('video-player-iframe').src = url;
+                            document.addEventListener('DOMContentLoaded', function() {
+                                // Initialize variables
+                                let playerNested;
+                                let hlsPlayerNested;
                                 
-                                // Update button styles
-                                const buttons = document.querySelectorAll('.p-4.bg-gray-50 button');
-                                buttons.forEach(button => {
-                                    if (button.getAttribute('onclick').includes(url)) {
-                                        button.classList.add('bg-gold-500', 'text-white', 'dark:bg-korteks-red');
-                                        button.classList.remove('bg-gray-200', 'text-gray-700', 'dark:bg-korteks-darkgray', 'dark:text-gray-300');
-                                    } else {
-                                        button.classList.remove('bg-gold-500', 'text-white', 'dark:bg-korteks-red');
-                                        button.classList.add('bg-gray-200', 'text-gray-700', 'dark:bg-korteks-darkgray', 'dark:text-gray-300');
-                                    }
+                                // DOM elements
+                                const serverButtonsNested = document.querySelectorAll('#server-buttons-nested .server-btn');
+                                const playerWrapperNested = document.getElementById('player-wrapper-nested');
+                                const hlsPlayerWrapperNested = document.getElementById('hls-player-wrapper-nested');
+                                const iframePlayerWrapperNested = document.getElementById('iframe-player-wrapper-nested');
+                                const videoSourceNested = document.getElementById('video-source-nested');
+                                
+                                // Add click event to server buttons
+                                serverButtonsNested.forEach(button => {
+                                    button.addEventListener('click', function() {
+                                        // Remove active class from all buttons
+                                        serverButtonsNested.forEach(btn => {
+                                            btn.classList.remove('active', 'bg-gold-500', 'text-white', 'dark:bg-korteks-red');
+                                            btn.classList.add('bg-gray-200', 'text-gray-700', 'dark:bg-korteks-darkgray', 'dark:text-gray-300');
+                                        });
+                                        
+                                        // Add active class to clicked button
+                                        this.classList.add('active', 'bg-gold-500', 'text-white', 'dark:bg-korteks-red');
+                                        this.classList.remove('bg-gray-200', 'text-gray-700', 'dark:bg-korteks-darkgray', 'dark:text-gray-300');
+                                        
+                                        // Set up video player with this server
+                                        setupVideoPlayerNested(this.dataset.url, this.dataset.serverName);
+                                    });
                                 });
-                            }
+                                
+                                // Initialize Plyr
+                                function initPlyrNested() {
+                                    if (playerNested) {
+                                        playerNested.destroy();
+                                    }
+                                    
+                                    playerNested = new Plyr('#player-nested', {
+                                        controls: [
+                                            'play-large', 'play', 'progress', 'current-time', 'mute', 
+                                            'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
+                                        ],
+                                        seekTime: 10,
+                                        keyboard: { focused: true, global: true },
+                                        tooltips: { controls: true, seek: true },
+                                        captions: { active: true, language: 'auto', update: true }
+                                    });
+                                }
+                                
+                                // Initialize HLS player
+                                function initHlsPlayerNested(url) {
+                                    const video = document.getElementById('hls-player-nested');
+                                    
+                                    if (hlsPlayerNested) {
+                                        hlsPlayerNested.destroy();
+                                    }
+                                    
+                                    if (Hls.isSupported()) {
+                                        hlsPlayerNested = new Hls();
+                                        hlsPlayerNested.loadSource(url);
+                                        hlsPlayerNested.attachMedia(video);
+                                        
+                                        hlsPlayerNested.on(Hls.Events.MANIFEST_PARSED, function() {
+                                            video.play();
+                                        });
+                                        
+                                        // Initialize Plyr for HLS video
+                                        new Plyr(video, {
+                                            controls: [
+                                                'play-large', 'play', 'progress', 'current-time', 'mute', 
+                                                'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
+                                            ]
+                                        });
+                                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                                        // Native HLS support (Safari)
+                                        video.src = url;
+                                        
+                                        // Initialize Plyr for HLS video
+                                        new Plyr(video, {
+                                            controls: [
+                                                'play-large', 'play', 'progress', 'current-time', 'mute', 
+                                                'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
+                                            ]
+                                        });
+                                    }
+                                }
+                                
+                                // Set up iframe player
+                                function setupIframePlayerNested(url) {
+                                    const iframe = document.getElementById('iframe-player-nested');
+                                    
+                                    // Make sure the URL is properly formatted for embedding
+                                    if (url.includes('mega.nz') && !url.includes('embed')) {
+                                        url = url.replace('mega.nz/', 'mega.nz/embed/');
+                                    }
+                                    
+                                    // Handle pixeldrain URLs
+                                    if (url.includes('pixeldrain.com/api/file/')) {
+                                        const fileId = url.split('/').pop();
+                                        url = `https://pixeldrain.com/u/${fileId}`;
+                                    }
+                                    
+                                    // Handle filedon.co URLs
+                                    if (url.includes('filedon.co') && !url.includes('embed')) {
+                                        url = url.replace('filedon.co/', 'filedon.co/embed/');
+                                    }
+                                    
+                                    // Set the iframe source
+                                    iframe.src = url;
+                                }
+                                
+                                // Detect video type and set up appropriate player
+                                function setupVideoPlayerNested(url, serverName) {
+                                    // Hide all player wrappers first
+                                    playerWrapperNested.style.display = 'none';
+                                    hlsPlayerWrapperNested.style.display = 'none';
+                                    iframePlayerWrapperNested.style.display = 'none';
+                                    
+                                    // Check if it's a pixeldrain direct API URL
+                                    if (url.includes('pixeldrain.com/api/file/')) {
+                                        const fileId = url.split('/').pop();
+                                        const embedUrl = `https://pixeldrain.com/u/${fileId}`;
+                                        
+                                        iframePlayerWrapperNested.style.display = 'block';
+                                        setupIframePlayerNested(embedUrl);
+                                        return;
+                                    }
+                                    
+                                    // Check if it's an iframe embed URL or needs special handling
+                                    if (url.includes('embed') || 
+                                        url.includes('mega.nz') || 
+                                        url.includes('krakenfiles.com') || 
+                                        url.includes('abysscdn.com') || 
+                                        url.includes('vidhide') || 
+                                        url.includes('filedon.co') ||
+                                        url.includes('pixeldrain.com/u/') ||
+                                        url.includes('wibufile.com/embed') ||
+                                        serverName.toLowerCase().includes('iframe') ||
+                                        serverName.toLowerCase().includes('pucuk')) {
+                                        
+                                        iframePlayerWrapperNested.style.display = 'block';
+                                        setupIframePlayerNested(url);
+                                        return;
+                                    }
+                                    
+                                    // Check if it's an HLS stream (.m3u8)
+                                    if (url.includes('.m3u8')) {
+                                        hlsPlayerWrapperNested.style.display = 'block';
+                                        initHlsPlayerNested(url);
+                                        return;
+                                    }
+                                    
+                                    // Check if it's a direct MP4 URL
+                                    if (url.includes('.mp4')) {
+                                        playerWrapperNested.style.display = 'block';
+                                        videoSourceNested.src = url;
+                                        const videoPlayer = document.getElementById('player-nested');
+                                        videoPlayer.load();
+                                        initPlyrNested();
+                                        return;
+                                    }
+                                    
+                                    // For any other URL, try to use it with the standard player
+                                    playerWrapperNested.style.display = 'block';
+                                    videoSourceNested.src = url;
+                                    const videoPlayer = document.getElementById('player-nested');
+                                    videoPlayer.load();
+                                    initPlyrNested();
+                                }
+                                
+                                // Setup the first server by default
+                                if (serverButtonsNested.length > 0) {
+                                    const firstServer = serverButtonsNested[0];
+                                    setupVideoPlayerNested(firstServer.dataset.url, firstServer.dataset.serverName);
+                                }
+                            });
                         </script>
                     </div>
                     
@@ -902,3 +1261,11 @@
         </div>
     </div>
 {% endblock content %}
+
+{% block extra_js %}
+    <!-- Plyr.js -->
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    
+    <!-- HLS.js for HLS support -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+{% endblock extra_js %}

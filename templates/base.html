@@ -324,19 +324,32 @@
         {% block extra_head %}
         {% endblock extra_head %}
     </head>
-    <body class="bg-white dark:bg-korteks-black text-gray-900 dark:text-gray-100 transition-colors duration-200">
-        <!-- Theme Toggle Button -->
-        <div class="fixed top-4 right-4 z-50">
-            <button id="theme-toggle" class="p-2 rounded-full bg-gray-100 dark:bg-korteks-gray text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-korteks-darkgray transition-colors">
-                <!-- Sun icon for dark mode -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    <body class="bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:bg-gradient-to-br dark:from-korteks-black dark:via-korteks-darkgray dark:to-korteks-gray text-gray-900 dark:text-gray-100 transition-all duration-500 ease-in-out page-transition min-h-screen">
+        <!-- Enhanced Theme Toggle Button -->
+        <div class="fixed top-6 right-6 z-50">
+            <button id="theme-toggle" class="group relative p-3 rounded-full bg-white/80 dark:bg-korteks-gray/80 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-korteks-darkgray shadow-lg hover:shadow-xl transition-all duration-300 ease-out hover:scale-110">
+                <!-- Enhanced Sun icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden dark:block transition-all duration-300 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
-                <!-- Moon icon for light mode -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                <!-- Enhanced Moon icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 block dark:hidden transition-all duration-300 group-hover:-rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
+                <!-- Tooltip -->
+                <div class="absolute -bottom-12 right-0 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 pointer-events-none whitespace-nowrap">
+                    Switch Theme
+                    <div class="absolute -top-1 right-4 w-2 h-2 bg-gray-900 dark:bg-white transform rotate-45"></div>
+                </div>
             </button>
+        </div>
+
+        <!-- Enhanced Background Pattern -->
+        <div class="fixed inset-0 -z-10 overflow-hidden">
+            <!-- Animated background shapes -->
+            <div class="absolute -top-40 -right-32 w-80 h-80 bg-gradient-to-br from-gold-200/20 to-gold-400/10 dark:from-korteks-red/10 dark:to-korteks-darkred/5 rounded-full blur-3xl animate-float"></div>
+            <div class="absolute -bottom-40 -left-32 w-96 h-96 bg-gradient-to-tr from-gold-300/15 to-gold-500/5 dark:from-korteks-red/5 dark:to-korteks-darkred/10 rounded-full blur-3xl animate-float" style="animation-delay: -3s;"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-gold-100/10 via-transparent to-gold-200/10 dark:from-korteks-red/5 dark:via-transparent dark:to-korteks-darkred/5 rounded-full blur-3xl animate-pulse opacity-50"></div>
         </div>
         
         {% block content %}

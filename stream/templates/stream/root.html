@@ -128,16 +128,34 @@
         <!-- Main Content -->
         <div id="content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-            <!-- Category Selection -->
-            <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-md p-6 mb-8 border border-gold-100 dark:border-korteks-gray">
-                <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">Browse by Category</h2>
-                <div class="flex flex-wrap gap-2">
-                    {% for cat in categories %}
-                        <a href="{% url 'stream:index' category=cat %}" 
-                           class="category-btn px-4 py-2 rounded-full text-sm font-medium border {% if cat == category %}active{% else %}bg-white dark:bg-korteks-darkgray text-gray-700 dark:text-gray-300 border-gray-300 dark:border-korteks-gray{% endif %}">
-                            {{ cat|title }}
-                        </a>
-                    {% endfor %}
+            <!-- Enhanced Category Selection -->
+            <div class="stagger-item mb-16">
+                <div class="modern-card p-8">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-4">
+                            Explore Categories
+                        </h2>
+                        <p class="text-gray-600 dark:text-gray-300 text-lg">
+                            Discover content tailored to your preferences
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {% for cat in categories %}
+                            <a href="{% url 'stream:index' category=cat %}"
+                               class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white to-gray-50 dark:from-korteks-darkgray dark:to-korteks-gray p-6 border border-gray-200/50 dark:border-gray-700/50 hover:border-gold-300 dark:hover:border-korteks-red transition-all duration-300 hover:scale-105 hover:shadow-xl {% if cat == category %}ring-2 ring-gold-400 dark:ring-korteks-red bg-gradient-to-br from-gold-50 to-gold-100 dark:from-korteks-red/20 dark:to-korteks-darkred/10{% endif %}">
+                                <div class="text-center">
+                                    <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 dark:from-korteks-red dark:to-korteks-darkred flex items-center justify-center text-white text-xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                        {{ cat|first|upper }}
+                                    </div>
+                                    <h3 class="font-semibold text-gray-800 dark:text-white capitalize group-hover:text-gold-600 dark:group-hover:text-korteks-red transition-colors duration-300">
+                                        {{ cat }}
+                                    </h3>
+                                </div>
+                                <!-- Hover Effect -->
+                                <div class="absolute inset-0 bg-gradient-to-br from-gold-500/10 to-gold-600/5 dark:from-korteks-red/10 dark:to-korteks-darkred/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
+                            </a>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
             

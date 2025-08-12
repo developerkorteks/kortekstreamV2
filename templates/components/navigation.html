@@ -1,46 +1,46 @@
-<!-- Navigation -->
-<nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+<!-- Modern Glass Navigation -->
+<nav class="sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border-b border-gray-200/20 dark:border-gray-700/20 shadow-lg transition-all duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-20">
             <!-- Enhanced Logo Section -->
             <div class="flex items-center">
                 <a href="/" class="group flex items-center space-x-3 transition-all duration-300 hover:scale-105">
-                    <!-- Animated Logo Icon -->
+                    <!-- Modern Logo Icon -->
                     <div class="relative">
-                        <div class="w-12 h-12 bg-gradient-to-br from-gold-400 to-gold-600 dark:from-korteks-red dark:to-korteks-darkred rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-glow dark:group-hover:shadow-glow-red transition-all duration-300 group-hover:rotate-12">
-                            <span class="text-2xl filter drop-shadow-sm">🎬</span>
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 rounded-2xl flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-500 group-hover:rotate-12 group-hover:scale-110">
+                            <span class="text-2xl">🎬</span>
                         </div>
-                        <!-- Floating particles effect -->
-                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-gold-400 dark:bg-korteks-red rounded-full opacity-0 group-hover:opacity-100 animate-ping transition-all duration-300"></div>
+                        <!-- Animated ring -->
+                        <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 rounded-2xl blur opacity-0 group-hover:opacity-30 transition duration-500"></div>
                     </div>
                     <!-- Logo Text -->
                     <div class="hidden sm:block">
-                        <h1 class="text-2xl font-bold bg-gradient-to-r from-gold-600 to-gold-500 dark:from-korteks-red dark:to-korteks-darkred bg-clip-text text-transparent">
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-red-500 dark:to-pink-500 bg-clip-text text-transparent">
                             KortekStream
                         </h1>
                         <p class="text-xs text-gray-500 dark:text-gray-400 -mt-1">Ultimate Streaming</p>
                     </div>
                 </a>
 
-                <!-- Enhanced Navigation Menu -->
+                <!-- Modern Navigation Menu -->
                 <div class="ml-12 hidden lg:flex items-center space-x-2">
-                    <a href="/" class="nav-item group relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/50 dark:hover:bg-korteks-gray/50 {% if active_page == 'home' %}bg-gradient-to-r from-gold-100 to-gold-50 dark:from-korteks-red/20 dark:to-korteks-darkred/10 text-gold-700 dark:text-korteks-red{% else %}text-gray-600 dark:text-gray-300{% endif %}">
-                        <span class="relative z-10">🏠 Home</span>
-                        {% if active_page == 'home' %}
-                        <div class="absolute inset-0 bg-gradient-to-r from-gold-200/20 to-gold-100/20 dark:from-korteks-red/20 dark:to-korteks-darkred/10 rounded-xl animate-pulse"></div>
-                        {% endif %}
+                    <a href="/" class="nav-item group relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white/60 dark:hover:bg-gray-800/60 {% if active_page == 'home' %}bg-gradient-to-r from-blue-100 to-purple-100 dark:from-red-900/30 dark:to-pink-900/30 text-blue-700 dark:text-red-400{% else %}text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-red-400{% endif %}">
+                        <span class="relative z-10 flex items-center space-x-2">
+                            <span>🏠</span>
+                            <span>Home</span>
+                        </span>
                     </a>
-                    <a href="{% url 'stream:latest' %}" class="nav-item group relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/50 dark:hover:bg-korteks-gray/50 {% if active_page == 'latest' %}bg-gradient-to-r from-gold-100 to-gold-50 dark:from-korteks-red/20 dark:to-korteks-darkred/10 text-gold-700 dark:text-korteks-red{% else %}text-gray-600 dark:text-gray-300{% endif %}">
-                        <span class="relative z-10">⚡ Latest</span>
-                        {% if active_page == 'latest' %}
-                        <div class="absolute inset-0 bg-gradient-to-r from-gold-200/20 to-gold-100/20 dark:from-korteks-red/20 dark:to-korteks-darkred/10 rounded-xl animate-pulse"></div>
-                        {% endif %}
+                    <a href="{% url 'stream:latest' %}" class="nav-item group relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white/60 dark:hover:bg-gray-800/60 {% if active_page == 'latest' %}bg-gradient-to-r from-blue-100 to-purple-100 dark:from-red-900/30 dark:to-pink-900/30 text-blue-700 dark:text-red-400{% else %}text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-red-400{% endif %}">
+                        <span class="relative z-10 flex items-center space-x-2">
+                            <span>⚡</span>
+                            <span>Latest</span>
+                        </span>
                     </a>
-                    <a href="{% url 'stream:schedule' %}" class="nav-item group relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/50 dark:hover:bg-korteks-gray/50 {% if active_page == 'schedule' %}bg-gradient-to-r from-gold-100 to-gold-50 dark:from-korteks-red/20 dark:to-korteks-darkred/10 text-gold-700 dark:text-korteks-red{% else %}text-gray-600 dark:text-gray-300{% endif %}">
-                        <span class="relative z-10">📅 Schedule</span>
-                        {% if active_page == 'schedule' %}
-                        <div class="absolute inset-0 bg-gradient-to-r from-gold-200/20 to-gold-100/20 dark:from-korteks-red/20 dark:to-korteks-darkred/10 rounded-xl animate-pulse"></div>
-                        {% endif %}
+                    <a href="{% url 'stream:schedule' %}" class="nav-item group relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white/60 dark:hover:bg-gray-800/60 {% if active_page == 'schedule' %}bg-gradient-to-r from-blue-100 to-purple-100 dark:from-red-900/30 dark:to-pink-900/30 text-blue-700 dark:text-red-400{% else %}text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-red-400{% endif %}">
+                        <span class="relative z-10 flex items-center space-x-2">
+                            <span>📅</span>
+                            <span>Schedule</span>
+                        </span>
                     </a>
                 </div>
             </div>

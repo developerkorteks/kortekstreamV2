@@ -129,12 +129,74 @@
                 </div>
             </div>
         </div>
-        
-        <div class="mt-8 pt-8 border-t border-gold-100 dark:border-korteks-gray text-center">
-            <p class="text-gray-600 dark:text-gray-400">&copy; 2025 KortekStream - Your Ultimate Streaming Destination</p>
-            <div class="mt-4 flex justify-center space-x-6">
-                <span class="text-gray-500 dark:text-gray-400 text-sm">Made with <span class="text-gold-500 dark:text-korteks-red">❤️</span> for anime lovers</span>
+
+        <!-- Enhanced Footer Bottom -->
+        <div class="mt-16 pt-8 border-t border-gray-200/30 dark:border-gray-700/30">
+            <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+                <!-- Copyright -->
+                <div class="text-center md:text-left">
+                    <p class="text-gray-600 dark:text-gray-400 flex items-center space-x-2">
+                        <span>&copy; 2025 KortekStream</span>
+                        <span class="hidden md:inline">•</span>
+                        <span class="text-sm">Your Ultimate Streaming Destination</span>
+                    </p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                        Made with <span class="text-gold-500 dark:text-korteks-red animate-pulse">❤️</span> for anime lovers worldwide
+                    </p>
+                </div>
+
+                <!-- Enhanced Stats/Features -->
+                <div class="flex items-center space-x-8 text-sm text-gray-500 dark:text-gray-400">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span>Live Streaming</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style="animation-delay: 0.5s;"></div>
+                        <span>HD Quality</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style="animation-delay: 1s;"></div>
+                        <span>24/7 Updates</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back to Top Button -->
+            <div class="mt-8 text-center">
+                <button id="back-to-top" class="group inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-gold-500 to-gold-600 dark:from-korteks-red dark:to-korteks-darkred text-white rounded-2xl hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl opacity-0 translate-y-4 invisible">
+                    <span>Back to Top</span>
+                    <svg class="h-4 w-4 transform group-hover:-translate-y-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
+
+    <!-- JavaScript for Back to Top -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const backToTopButton = document.getElementById('back-to-top');
+
+            // Show/hide back to top button
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    backToTopButton.classList.remove('opacity-0', 'translate-y-4', 'invisible');
+                    backToTopButton.classList.add('opacity-100', 'translate-y-0', 'visible');
+                } else {
+                    backToTopButton.classList.add('opacity-0', 'translate-y-4', 'invisible');
+                    backToTopButton.classList.remove('opacity-100', 'translate-y-0', 'visible');
+                }
+            });
+
+            // Smooth scroll to top
+            backToTopButton.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
 </footer>

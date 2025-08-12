@@ -44,35 +44,43 @@
                     </a>
                 </div>
             </div>
-            <div class="hidden md:flex items-center space-x-4">
-                <!-- Search Form -->
-                <form action="{% url 'stream:search' %}" method="GET" class="relative">
-                    <input 
-                        type="text" 
-                        name="q" 
-                        placeholder="Search..." 
-                        class="w-64 px-4 py-2 rounded-full border focus:outline-none focus:ring-2 transition-all
-                               border-gold-200 focus:border-gold-400 focus:ring-gold-200 bg-white text-gray-800
-                               dark:border-korteks-gray dark:focus:border-korteks-red dark:focus:ring-korteks-darkgray dark:bg-korteks-darkgray dark:text-white"
-                    >
+            <!-- Enhanced Right Section -->
+            <div class="hidden lg:flex items-center space-x-6">
+                <!-- Enhanced Search Form -->
+                <form action="{% url 'stream:search' %}" method="GET" class="relative group">
+                    <div class="relative">
+                        <input
+                            type="text"
+                            name="q"
+                            placeholder="Search anime, movies..."
+                            class="w-80 pl-12 pr-4 py-3 rounded-2xl bg-white/50 dark:bg-korteks-gray/50 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-gold-400/50 dark:focus:ring-korteks-red/50 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-300 focus:w-96 focus:bg-white dark:focus:bg-korteks-darkgray focus:shadow-xl"
+                        >
+                        <!-- Search Icon -->
+                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-gold-500 dark:group-focus-within:text-korteks-red transition-colors duration-300">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <!-- Search Button -->
+                        <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-gold-500 to-gold-600 dark:from-korteks-red dark:to-korteks-darkred text-white p-2 rounded-xl hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </button>
+                    </div>
                     <input type="hidden" name="category" value="{{ category|default:'anime' }}">
-                    <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gold-500 dark:text-korteks-red">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </button>
                 </form>
-                
-                <!-- Category Selector (if categories are available) -->
+
+                <!-- Enhanced Category Selector -->
                 {% if categories %}
-                <div class="relative">
-                    <select id="categorySelector" class="appearance-none px-4 py-2 pr-8 rounded-lg border border-gold-200 dark:border-korteks-gray bg-white dark:bg-korteks-darkgray text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-gold-200 dark:focus:ring-korteks-darkgray cursor-pointer">
+                <div class="relative group">
+                    <select id="categorySelector" class="appearance-none pl-4 pr-10 py-3 rounded-2xl bg-white/50 dark:bg-korteks-gray/50 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-gold-400/50 dark:focus:ring-korteks-red/50 cursor-pointer transition-all duration-300 hover:bg-white dark:hover:bg-korteks-darkgray font-medium">
                         {% for cat in categories %}
                             <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>{{ cat|title }}</option>
                         {% endfor %}
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gold-500 dark:text-korteks-red">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 group-hover:text-gold-500 dark:group-hover:text-korteks-red transition-colors duration-300">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </div>

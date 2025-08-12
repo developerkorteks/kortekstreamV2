@@ -355,25 +355,117 @@
         {% block content %}
         {% endblock content %}
         
-        <!-- Theme Toggle Script -->
+        <!-- Enhanced Theme Toggle Script -->
         <script>
-            // Check for saved theme preference or use the system preference
-            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-            
-            // Toggle theme
-            document.getElementById('theme-toggle').addEventListener('click', function() {
-                if (document.documentElement.classList.contains('dark')) {
-                    document.documentElement.classList.remove('dark');
-                    localStorage.theme = 'light';
-                } else {
+            // Enhanced theme management with animations
+            const initTheme = () => {
+                // Check for saved theme preference or use system preference
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                     document.documentElement.classList.add('dark');
-                    localStorage.theme = 'dark';
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            };
+
+            // Initialize theme immediately
+            initTheme();
+
+            // Enhanced theme toggle with smooth transitions
+            document.addEventListener('DOMContentLoaded', function() {
+                const themeToggle = document.getElementById('theme-toggle');
+
+                if (themeToggle) {
+                    themeToggle.addEventListener('click', function(e) {
+                        e.preventDefault();
+
+                        // Add loading state
+                        this.style.pointerEvents = 'none';
+                        this.style.transform = 'scale(0.95)';
+
+                        // Theme transition with animation
+                        document.documentElement.style.transition = 'all 0.3s ease-in-out';
+
+                        setTimeout(() => {
+                            if (document.documentElement.classList.contains('dark')) {
+                                document.documentElement.classList.remove('dark');
+                                localStorage.theme = 'light';
+                            } else {
+                                document.documentElement.classList.add('dark');
+                                localStorage.theme = 'dark';
+                            }
+
+                            // Reset button state
+                            this.style.pointerEvents = '';
+                            this.style.transform = '';
+
+                            // Remove transition after theme change
+                            setTimeout(() => {
+                                document.documentElement.style.transition = '';
+                            }, 300);
+                        }, 50);
+                    });
                 }
             });
+
+            // Page load animation
+            window.addEventListener('load', function() {
+                document.body.classList.add('loaded');
+
+                // Animate elements with stagger
+                const animateElements = document.querySelectorAll('.stagger-item');
+                animateElements.forEach((el, index) => {
+                    el.style.animationDelay = `${index * 0.1}s`;
+                });
+            });
+
+            // Smooth scroll behavior
+            document.addEventListener('DOMContentLoaded', function() {
+                const links = document.querySelectorAll('a[href^="#"]');
+                links.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const target = document.querySelector(this.getAttribute('href'));
+                        if (target) {
+                            target.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    });
+                });
+            });
+
+            // Performance optimization
+            const optimizeScroll = () => {
+                let ticking = false;
+
+                const updateScrollEffects = () => {
+                    const scrollY = window.scrollY;
+                    const cards = document.querySelectorAll('.modern-card');
+
+                    cards.forEach((card, index) => {
+                        const rect = card.getBoundingClientRect();
+                        const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+
+                        if (isVisible && !card.classList.contains('animated')) {
+                            card.classList.add('animated');
+                            card.style.animationDelay = `${index * 0.1}s`;
+                        }
+                    });
+
+                    ticking = false;
+                };
+
+                window.addEventListener('scroll', () => {
+                    if (!ticking) {
+                        requestAnimationFrame(updateScrollEffects);
+                        ticking = true;
+                    }
+                });
+            };
+
+            // Initialize scroll optimization
+            document.addEventListener('DOMContentLoaded', optimizeScroll);
         </script>
         
         {% block extra_js %}

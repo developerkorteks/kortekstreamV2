@@ -387,68 +387,83 @@
                         </div>
                     {% endif %}
                     
-                    <!-- Episode List Section (Alternative Format) -->
+                    <!-- Enhanced Episode List Section (Alternative Format) -->
                     {% if detail.data.data.episode_list %}
-                        <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden mb-8 p-6 border border-transparent hover:border-gold-200 dark:hover:border-korteks-red transition-colors">
-                            <div class="flex items-center mb-6">
-                                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Episode List</h2>
-                                <div class="ml-4 flex-1 section-divider"></div>
+                        <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden mb-12 p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
+                            <div class="flex items-center justify-between mb-8">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 dark:from-orange-600 dark:to-red-700 rounded-2xl flex items-center justify-center mr-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">📺 Episode List</h2>
+                                        <p class="text-gray-600 dark:text-gray-400">Complete episode collection for this series</p>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400 bg-orange-100 dark:bg-gray-700 px-4 py-2 rounded-full">
+                                    {{ detail.data.data.episode_list|length }} Episode{{ detail.data.data.episode_list|length|pluralize }}
+                                </div>
                             </div>
                             <div class="max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                                     {% for episode in detail.data.data.episode_list %}
                                         {% if episode.url %}
                                         {% with episode_data=episode.url|make_dict:"episode_url" %}
-                                        <a href="{% url 'stream:episode_detail' encoded_id=episode_data|encode_episode_id:category|default:'' %}" class="block">
-                                            <div class="bg-gold-50 dark:bg-korteks-gray rounded-lg overflow-hidden shadow-sm episode-card">
-                                                <div class="p-4">
-                                                    <div class="flex justify-between items-center mb-2">
-                                                        <h3 class="font-semibold text-gray-800 dark:text-white">Episode {{ episode.episode }}</h3>
+                                        <a href="{% url 'stream:episode_detail' encoded_id=episode_data|encode_episode_id:category|default:'' %}" class="block group">
+                                            <div class="modern-card bg-gradient-to-br from-orange-50 to-red-50 dark:from-gray-700 dark:to-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 border border-orange-200/50 dark:border-gray-600/50">
+                                                <div class="p-6">
+                                                    <div class="flex items-center justify-between mb-4">
+                                                        <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-600 dark:from-orange-600 dark:to-red-700 rounded-xl flex items-center justify-center">
+                                                            <span class="text-white font-bold text-sm">{{ episode.episode }}</span>
+                                                        </div>
                                                         {% if episode.release_date %}
-                                                            <span class="text-xs text-gray-500 dark:text-gray-400">{{ episode.release_date }}</span>
+                                                            <span class="text-xs text-gray-500 dark:text-gray-400 bg-white/60 dark:bg-gray-800/60 px-2 py-1 rounded-full">{{ episode.release_date }}</span>
                                                         {% endif %}
                                                     </div>
-                                                    
+
+                                                    <h3 class="font-bold text-gray-800 dark:text-white text-lg mb-3 group-hover:text-orange-600 dark:group-hover:text-red-400 transition-colors duration-300">Episode {{ episode.episode }}</h3>
+
                                                     {% if episode.title %}
-                                                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2" title="{{ episode.title }}">{{ episode.title }}</p>
+                                                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2" title="{{ episode.title }}">{{ episode.title }}</p>
                                                     {% endif %}
-                                                    
-                                                    <div class="mt-2 text-gold-600 dark:text-korteks-red text-sm">
-                                                        Watch Episode
+
+                                                    <div class="opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                                                        <button class="w-full bg-gradient-to-r from-orange-500 to-red-600 dark:from-orange-600 dark:to-red-700 text-white py-3 px-4 rounded-xl font-semibold hover:scale-105 transition-transform duration-200 shadow-lg flex items-center justify-center space-x-2">
+                                                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M8 5v14l11-7z"/>
+                                                            </svg>
+                                                            <span>Watch Episode</span>
+                                                        </button>
                                                     </div>
-                                                    
-                                                    {% if episode.episode_slug %}
-                                                    <div class="mt-2 pt-2 border-t border-gray-200 dark:border-korteks-gray">
-                                                        <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                            <span class="font-medium">Slug:</span> {{ episode.episode_slug }}
-                                                        </p>
-                                                    </div>
-                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </a>
                                         {% endwith %}
                                         {% else %}
-                                        <div class="bg-gold-50 dark:bg-korteks-gray rounded-lg overflow-hidden shadow-sm episode-card">
-                                            <div class="p-4">
-                                                <div class="flex justify-between items-center mb-2">
-                                                    <h3 class="font-semibold text-gray-800 dark:text-white">Episode {{ episode.episode }}</h3>
-                                                    {% if episode.release_date %}
-                                                        <span class="text-xs text-gray-500 dark:text-gray-400">{{ episode.release_date }}</span>
+                                        <div class="group">
+                                            <div class="modern-card bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-md border border-gray-200/50 dark:border-gray-700/50 opacity-60">
+                                                <div class="p-6">
+                                                    <div class="flex items-center justify-between mb-4">
+                                                        <div class="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-xl flex items-center justify-center">
+                                                            <span class="text-gray-600 dark:text-gray-400 font-bold text-sm">{{ episode.episode }}</span>
+                                                        </div>
+                                                        {% if episode.release_date %}
+                                                            <span class="text-xs text-gray-400 dark:text-gray-600 bg-white/60 dark:bg-gray-800/60 px-2 py-1 rounded-full">{{ episode.release_date }}</span>
+                                                        {% endif %}
+                                                    </div>
+
+                                                    <h3 class="font-bold text-gray-600 dark:text-gray-400 text-lg mb-3">Episode {{ episode.episode }}</h3>
+
+                                                    {% if episode.title %}
+                                                        <p class="text-sm text-gray-500 dark:text-gray-500 mb-4 line-clamp-2" title="{{ episode.title }}">{{ episode.title }}</p>
                                                     {% endif %}
+
+                                                    <div class="text-center text-xs text-gray-500 dark:text-gray-500">
+                                                        Coming Soon
+                                                    </div>
                                                 </div>
-                                                
-                                                {% if episode.title %}
-                                                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2" title="{{ episode.title }}">{{ episode.title }}</p>
-                                                {% endif %}
-                                                
-                                                {% if episode.episode_slug %}
-                                                <div class="mt-2 pt-2 border-t border-gray-200 dark:border-korteks-gray">
-                                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                        <span class="font-medium">Slug:</span> {{ episode.episode_slug }}
-                                                    </p>
-                                                </div>
-                                                {% endif %}
                                             </div>
                                         </div>
                                         {% endif %}

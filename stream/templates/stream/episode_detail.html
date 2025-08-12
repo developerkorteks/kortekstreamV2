@@ -192,9 +192,11 @@
                     </div>
                     {% endif %}
                     
-                    <!-- Episode Header Section -->
-                    <div class="bg-white dark:bg-korteks-darkgray rounded-xl shadow-lg overflow-hidden mb-8 border border-transparent hover:border-gold-200 dark:hover:border-korteks-red transition-colors">
-                        <div class="p-6">
+                    <!-- Enhanced Episode Header Section -->
+                    <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden mb-12 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700 group">
+                        <div class="p-8 relative">
+                            <!-- Background animation -->
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-500/10 to-purple-500/10 dark:from-red-500/10 dark:to-pink-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                             <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-4">
                                 {% if episode_data.data.data.title %}
                                     {{ episode_data.data.data.title }}

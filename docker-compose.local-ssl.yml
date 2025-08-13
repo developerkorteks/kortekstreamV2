@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    restart: always
+    volumes:
+      - ./logs:/app/logs
+      - ./static:/app/static
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+    env_file:
+      - .env.local
+    expose:
+      - "9326"
+    depends_on:
+      - redis
+      - db
+    networks:
+      - kortekstream_network
+
+  db:
+    image: postgres:14
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=kortekstream
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - kortekstream_network
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --port 7453
+    volumes:
+      - redis_data:/data
+    networks:
+      - kortekstream_network
+
+  nginx:
+    image: nginx:1.23-alpine
+    restart: always
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./static:/app/static
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+      - ./nginx/ssl:/etc/nginx/ssl
+    ports:
+      - "2443:443"  # Use port 2443 externally for HTTPS
+      - "2020:80"   # Use port 2020 externally for HTTP
+    depends_on:
+      - web
+    networks:
+      - kortekstream_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  kortekstream_network:
+    driver: bridge

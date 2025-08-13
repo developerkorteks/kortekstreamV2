@@ -42,6 +42,20 @@ def get_seo_context(request, page_type, **kwargs):
     # Build breadcrumbs based on page type
     breadcrumbs = []
     
+    # Get icon based on category
+    def get_category_icon(category_name):
+        # Default icon mapping - can be extended for more categories
+        icon_map = {
+            'anime': 'tv',
+            'movie': 'play',
+            'drama': 'tv',
+            'cartoon': 'tv',
+            'series': 'tv',
+            'documentary': 'tv',
+            # Add more category-to-icon mappings as needed
+        }
+        return icon_map.get(category_name.lower(), 'tv')
+    
     if page_type == 'home':
         breadcrumbs = [
             {'name': 'Home', 'url': '/', 'icon': 'home'},
@@ -50,7 +64,7 @@ def get_seo_context(request, page_type, **kwargs):
             breadcrumbs.append({
                 'name': category.title(),
                 'url': f'/{category}/',
-                'icon': 'tv',
+                'icon': get_category_icon(category),
                 'active': True
             })
         else:
@@ -59,16 +73,45 @@ def get_seo_context(request, page_type, **kwargs):
     elif page_type == 'anime_detail':
         breadcrumbs = [
             {'name': 'Home', 'url': '/', 'icon': 'home'},
-            {'name': 'Anime', 'url': '/anime/', 'icon': 'tv'},
-            {'name': anime_title or 'Detail', 'active': True}
         ]
+        
+        # Add category if available
+        if category and category != 'all':
+            breadcrumbs.append({
+                'name': category.title(),
+                'url': f'/{category}/',
+                'icon': get_category_icon(category)
+            })
+        
+        # Add title
+        breadcrumbs.append({
+            'name': anime_title or 'Detail', 
+            'active': True
+        })
         
     elif page_type == 'episode_detail':
         breadcrumbs = [
             {'name': 'Home', 'url': '/', 'icon': 'home'},
-            {'name': 'Episode', 'url': '/episode/', 'icon': 'play'},
-            {'name': episode_title or 'Watch', 'active': True}
         ]
+        
+        # Add category if available
+        if category and category != 'all':
+            breadcrumbs.append({
+                'name': category.title(),
+                'url': f'/{category}/',
+                'icon': get_category_icon(category)
+            })
+            
+        breadcrumbs.append({
+            'name': 'Episode', 
+            'url': '/episode/', 
+            'icon': 'play'
+        })
+        
+        breadcrumbs.append({
+            'name': episode_title or 'Watch', 
+            'active': True
+        })
         
     elif page_type == 'search':
         breadcrumbs = [
@@ -86,19 +129,47 @@ def get_seo_context(request, page_type, **kwargs):
     elif page_type == 'latest':
         breadcrumbs = [
             {'name': 'Home', 'url': '/', 'icon': 'home'},
-            {'name': 'Latest Episodes', 'url': '/latest/', 'icon': 'star', 'active': True}
         ]
+        
+        # Add category if available
+        if category and category != 'all':
+            breadcrumbs.append({
+                'name': category.title(),
+                'url': f'/{category}/',
+                'icon': get_category_icon(category)
+            })
+            
+        breadcrumbs.append({
+            'name': 'Latest Episodes', 
+            'url': '/latest/', 
+            'icon': 'star', 
+            'active': True
+        })
         
     elif page_type == 'schedule':
         breadcrumbs = [
             {'name': 'Home', 'url': '/', 'icon': 'home'},
-            {'name': 'Schedule', 'url': '/schedule/', 'icon': 'calendar', 'active': True}
         ]
+        
+        # Add category if available
+        if category and category != 'all':
+            breadcrumbs.append({
+                'name': category.title(),
+                'url': f'/{category}/',
+                'icon': get_category_icon(category)
+            })
+            
+        breadcrumbs.append({
+            'name': 'Schedule', 
+            'url': '/schedule/', 
+            'icon': 'calendar', 
+            'active': True
+        })
 
     elif page_type == 'history':
         breadcrumbs = [
             {'name': 'Home', 'url': '/', 'icon': 'home'},
-            {'name': 'History', 'url': '/history/', 'icon': 'clock', 'active': True}
+            {'name': 'History', 'url': '/history/', 'icon': 'history', 'active': True}
         ]
 
     elif page_type == 'watchlist':

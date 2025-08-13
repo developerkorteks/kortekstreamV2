@@ -7,7 +7,7 @@ import multiprocessing
 import os
 
 # Server socket
-bind = "0.0.0.0:8000"
+bind = "0.0.0.0:9326"
 backlog = 2048
 
 # Worker processes
@@ -25,8 +25,8 @@ max_requests = 1000
 max_requests_jitter = 100
 
 # Logging
-accesslog = "/home/korteks/Documents/project/fekortekstream/kortekstreamV2/logs/gunicorn_access.log"
-errorlog = "/home/korteks/Documents/project/fekortekstream/kortekstreamV2/logs/gunicorn_error.log"
+accesslog = "/app/logs/gunicorn_access.log"
+errorlog = "/app/logs/gunicorn_error.log"
 loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 

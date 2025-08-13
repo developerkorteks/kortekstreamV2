@@ -6,8 +6,11 @@
 
 # File-file environment (Sangat Penting!)
 # Mengandung secret keys, kredensial database, dll.
-.env
-.env.*
+# Untuk deployment, kita sertakan file .env dan .env.local
+# .env
+# .env.*
+!.env
+!.env.local
 !.env.example
 
 # Direktori virtual environment Python
@@ -100,8 +103,18 @@ backup/
 
 # Production specific
 gunicorn.pid
-nginx.conf
 supervisor.conf
+
+# Jangan abaikan file konfigurasi Nginx yang kita buat
+!nginx/conf.d/default.conf
+!nginx/conf.d/production.conf
+!nginx/nginx.conf
+
+# Sertifikat SSL untuk pengembangan lokal
+nginx/ssl/
+
+# Certbot
+certbot/
 
 # Test files
 test_setup.py

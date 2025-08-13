@@ -190,6 +190,9 @@ EOF
 echo "Me-restart Nginx..."
 docker-compose restart nginx
 
+echo "Memperbarui dependensi Python..."
+docker-compose exec web pip install django-htmlmin==0.11.0
+
 echo "Menjalankan migrasi database..."
 docker-compose exec web python manage.py migrate
 

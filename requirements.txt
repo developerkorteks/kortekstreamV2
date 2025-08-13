@@ -19,3 +19,6 @@ psutil==5.9.6
 # Optional for better performance
 hiredis==2.2.3
 ujson==5.8.0
+
+# HTML minification
+django-htmlmin==0.11.0

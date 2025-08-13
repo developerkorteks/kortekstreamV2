@@ -96,13 +96,16 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
         # Content Security Policy (basic)
         if not settings.DEBUG:
             response['Content-Security-Policy'] = (
-                "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-                "font-src 'self' https://fonts.gstatic.com; "
-                "img-src 'self' data: https:; "
-                "connect-src 'self' https:; "
-                "frame-src 'self';"
+                "default-src 'self' https: http: data: blob:; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.plyr.io https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.plyr.io https://cdnjs.cloudflare.com; "
+                "font-src 'self' https://fonts.gstatic.com data:; "
+                "img-src 'self' data: https: http: blob:; "
+                "media-src 'self' https: http: data: blob: *.wibufile.com *.samehadaku.how *.animeku.org *.otakudesu.lol *.kusonime.com *.anitube.site; "
+                "connect-src 'self' https: http: ws: wss:; "
+                "frame-src 'self' https: http: *.wibufile.com *.samehadaku.how *.animeku.org *.otakudesu.lol *.kusonime.com *.anitube.site *.youtube.com *.dailymotion.com *.vimeo.com; "
+                "object-src 'none'; "
+                "base-uri 'self';"
             )
         
         return response

@@ -1416,6 +1416,10 @@
     <!-- HLS.js for HLS support -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
+    <!-- User activity tracking -->
+    <script src="{% static 'js/user_activity.js' %}"></script>
+    <script src="{% static 'js/video_tracking.js' %}"></script>
+
     <!-- Episode Data for JS -->
     <script type="application/json" id="episode-data-json">
         {
@@ -1423,7 +1427,7 @@
             "title": "{{ episode_data.data.title|default:episode_data.data.data.title|escapejs }}",
             "animeTitle": "{{ episode_data.data.anime_info.title|default:episode_data.data.data.anime_info.title|escapejs }}",
             "coverUrl": "{{ episode_data.data.anime_info.thumbnail_url|default:episode_data.data.data.anime_info.thumbnail_url }}",
-            "url": "{% url 'stream:episode_detail' encoded_id=encoded_id|default:episode_identifier %}",
+            "url": "{{ request.build_absolute_uri }}",
             "category": "{{ category }}"
         }
     </script>

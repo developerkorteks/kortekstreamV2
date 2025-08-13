@@ -22,6 +22,14 @@
                 <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Watch History</h1>
                 <p class="text-gray-600 dark:text-gray-400 mt-1">Episodes you've recently watched.</p>
             </div>
+            <div class="flex space-x-4">
+                <button id="clear-history-btn" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-300 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    Clear All
+                </button>
+            </div>
         </div>
 
         <div id="history-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
@@ -37,38 +45,86 @@
 {% endblock content %}
 
 {% block extra_js %}
+<script src="{% static 'js/user_activity.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const grid = document.getElementById('history-grid');
         const emptyMessage = document.getElementById('empty-history-message');
-        const history = getHistory();
+        const clearBtn = document.getElementById('clear-history-btn');
+        
+        function renderHistory() {
+            const history = getHistory();
 
-        if (!history || history.length === 0) {
-            emptyMessage.classList.remove('hidden');
-            return;
+            if (!history || history.length === 0) {
+                grid.innerHTML = '';
+                emptyMessage.classList.remove('hidden');
+                return;
+            }
+            
+            emptyMessage.classList.add('hidden');
+            
+            let historyHtml = '';
+            history.forEach(item => {
+                historyHtml += `
+                    <div class="group relative" data-id="${item.id}" data-type="${item.type}">
+                        <a href="${item.url}" class="block">
+                            <div class="modern-card bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group-hover:scale-105 group-hover:-translate-y-2">
+                                <div class="relative aspect-[3/4] overflow-hidden">
+                                    <img src="${item.image}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="${item.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400/1f1f1f/ffffff?text=No+Image';this.onerror='';" />
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    <div class="absolute top-2 right-2 bg-gray-900/50 text-white text-xs px-2 py-1 rounded-full">${item.category ? item.category.toUpperCase() : 'ANIME'}</div>
+                                </div>
+                                <div class="p-4">
+                                    <h3 class="font-bold text-gray-800 dark:text-white text-sm line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-red-400 transition-colors duration-300" title="${item.title}">${item.title}</h3>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                        <span class="inline-flex items-center">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            ${new Date(item.timestamp).toLocaleDateString()}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                        <button class="delete-history-item absolute top-2 left-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-red-600" title="Remove from history">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+            });
+            grid.innerHTML = historyHtml;
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-history-item').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const container = this.closest('[data-id]');
+                    const id = container.dataset.id;
+                    const type = container.dataset.type;
+                    
+                    removeFromHistory(id, type);
+                    renderHistory();
+                });
+            });
         }
-
-        let historyHtml = '';
-        history.forEach(item => {
-            historyHtml += `
-                <div class="group">
-                    <a href="${item.url}" class="block">
-                        <div class="modern-card bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group-hover:scale-105 group-hover:-translate-y-2">
-                            <div class="relative aspect-[3/4] overflow-hidden">
-                                <img src="${item.coverUrl}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="${item.animeTitle}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400/1f1f1f/ffffff?text=No+Image';this.onerror='';" />
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                <div class="absolute top-2 right-2 bg-gray-900/50 text-white text-xs px-2 py-1 rounded-full">${item.category.toUpperCase()}</div>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-bold text-gray-800 dark:text-white text-sm line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-red-400 transition-colors duration-300" title="${item.animeTitle}">${item.animeTitle}</h3>
-                                <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2" title="${item.title}">${item.title}</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            `;
+        
+        // Initial render
+        renderHistory();
+        
+        // Clear all history
+        clearBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear your entire watch history?')) {
+                clearHistory();
+                renderHistory();
+            }
         });
-        grid.innerHTML = historyHtml;
+        
+        // Listen for history updates
+        document.addEventListener('historyUpdated', renderHistory);
     });
 </script>
 {% endblock extra_js %}

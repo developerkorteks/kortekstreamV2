@@ -43,7 +43,8 @@ services:
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-this}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password123}@db:5432/${POSTGRES_DB:-kortekstream}
       - REDIS_URL=redis://redis:7363/0
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,128.199.109.211,kortekstream.online}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://localhost:9111,http://127.0.0.1:9111,http://128.199.109.211,https://kortekstream.online}
     depends_on:
       db:
         condition: service_healthy

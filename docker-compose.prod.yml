@@ -51,6 +51,7 @@ services:
       - ./staticfiles:/app/staticfiles
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
+      - ./nginx/ssl:/etc/nginx/ssl
     ports:
       - "2443:443"  # Use port 2443 externally for HTTPS
       - "2020:80"   # Use port 2020 externally for HTTP

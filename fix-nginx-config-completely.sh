@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script untuk memperbaiki port mapping di docker-compose.yml
+# Script untuk memperbaiki konfigurasi Nginx secara menyeluruh
 # Pastikan script ini dijalankan dari direktori proyek
 cd "$(dirname "$0")"
 
@@ -21,12 +21,12 @@ if [ -f docker-compose.prod.yml ]; then
     sed -i 's/"2020:80"/"2020:2020"/g' docker-compose.prod.yml
 fi
 
-echo "Membuat konfigurasi Nginx tanpa SSL dan tanpa port 80/443..."
+echo "Membuat konfigurasi Nginx baru..."
+mkdir -p nginx/conf.d
 cat > nginx/conf.d/default.conf << 'EOF'
 # Konfigurasi untuk port 2020 (HTTP)
 server {
     listen 2020;
-    server_name kortekstream.online www.kortekstream.online;
     
     # Logs
     access_log /var/log/nginx/access.log;
@@ -67,6 +67,42 @@ server {
 }
 EOF
 
+echo "Membuat konfigurasi Nginx global..."
+cat > nginx/nginx.conf << 'EOF'
+user  nginx;
+worker_processes  auto;
+
+error_log  /var/log/nginx/error.log notice;
+pid        /var/run/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+    include /etc/nginx/conf.d/*.conf;
+}
+EOF
+
+echo "Membuat direktori untuk sertifikat dummy..."
+mkdir -p nginx/ssl
+
 echo "Memulai container..."
 docker-compose up -d
 
@@ -76,6 +112,14 @@ sleep 10
 echo "Status container:"
 docker-compose ps
 
+echo "Memeriksa log Nginx..."
+docker-compose logs --tail=20 nginx
+
 echo "Proses selesai!"
 echo "Aplikasi seharusnya tersedia di:"
 echo "- http://128.199.109.211:2020"
+
+echo ""
+echo "Jika masih ada masalah, coba periksa firewall dengan perintah:"
+echo "sudo ufw status"
+echo "sudo iptables -L -n"

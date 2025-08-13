@@ -119,8 +119,8 @@ if IS_PRODUCTION:
             'PORT': os.environ.get('DB_PORT', '5432'),
             'CONN_MAX_AGE': 600,  # Connection pooling
             'OPTIONS': {
-                'MAX_CONNS': 20,
-                'MIN_CONNS': 5,
+                # PostgreSQL specific options
+                'connect_timeout': 10,
             }
         }
     }

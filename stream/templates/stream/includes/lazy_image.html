@@ -1,0 +1,5 @@
+{% comment %}
+Lazy loading image component
+Usage: {% include 'stream/includes/lazy_image.html' with src=image_url alt=image_alt class=image_class %}
+{% endcomment %}
+<img loading="lazy" src="{{ src }}" alt="{{ alt|default:'' }}" class="{{ class|default:'w-full h-auto' }}">

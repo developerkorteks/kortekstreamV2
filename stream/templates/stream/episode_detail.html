@@ -76,88 +76,15 @@
 {% endblock video_meta %}
 
 {% block extra_css %}
-    <!-- Plyr.io CSS -->
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <!-- Plyr.io CSS - load asynchronously -->
+    <link rel="preload" href="https://cdn.plyr.io/3.7.8/plyr.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css"></noscript>
     
     <style>
-        .card-img-top {
-            height: 250px;
-            object-fit: cover;
-        }
-        .anime-cover {
-            height: 400px;
-            object-fit: cover;
-        }
-        .episode-card {
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
-        }
-        .light .episode-card:hover {
-            transform: translateY(-4px);
-            border-color: #FFBF00;
-            box-shadow: 0 10px 20px rgba(255, 191, 0, 0.15);
-        }
-        .dark .episode-card:hover {
-            transform: translateY(-4px);
-            border-color: #E50914;
-            box-shadow: 0 10px 20px rgba(229, 9, 20, 0.15);
-        }
-        .badge {
-            @apply px-2 py-1 rounded-full text-xs font-semibold;
-        }
-        .light .badge-primary {
-            @apply bg-gold-100 text-gold-800;
-        }
-        .dark .badge-primary {
-            @apply bg-korteks-darkgray text-korteks-red;
-        }
-        .section-divider {
-            @apply h-px;
-        }
-        .light .section-divider {
-            @apply bg-gradient-to-r from-gold-400 to-transparent;
-        }
-        .dark .section-divider {
-            @apply bg-gradient-to-r from-korteks-red to-transparent;
-        }
-        .server-button {
-            @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center;
-        }
-        .light .server-button {
-            @apply bg-gold-50 text-gold-800 hover:bg-gold-100 border border-gold-200;
-        }
-        .dark .server-button {
-            @apply bg-korteks-darkgray text-white hover:bg-korteks-gray border border-korteks-gray;
-        }
-        .light .server-button.active {
-            @apply bg-gold-500 text-white border-gold-600;
-        }
-        .dark .server-button.active {
-            @apply bg-korteks-red text-white border-korteks-red;
-        }
-        .download-button {
-            @apply px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center;
-        }
-        .light .download-button {
-            @apply bg-gold-50 text-gold-800 hover:bg-gold-100 border border-gold-200;
-        }
-        .dark .download-button {
-            @apply bg-korteks-darkgray text-white hover:bg-korteks-gray border border-korteks-gray;
-        }
-        .synopsis-text {
-            transition: all 0.3s ease;
-        }
-        .synopsis-collapsed {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        @media (min-width: 768px) {
-            .synopsis-collapsed {
-                -webkit-line-clamp: none;
-                overflow: visible;
-            }
+        /* Critical CSS for initial render */
+        .player-container {
+            position: relative;
+            padding-top: 56.25%;
         }
         
         /* Mobile Video Player Full Width */
@@ -168,53 +95,191 @@
                 width: calc(100% + 2rem);
             }
             
-            /* Make video player container full width on mobile */
-            .mobile-full-width {
-                margin-left: -1rem;
-                margin-right: -1rem;
-                width: calc(100% + 2rem);
-                border-radius: 0;
-            }
-            
-            /* Adjust padding for mobile */
-            .mobile-full-width .player-container {
-                margin: 0;
-                width: 100%;
-            }
-            
             /* Portrait mode optimization */
             @media (orientation: portrait) {
                 .player-container {
-                    padding-top: 75%; /* Increase height for better viewing in portrait */
-                }
-            }
-            
-            /* Landscape mode optimization */
-            @media (orientation: landscape) and (max-height: 500px) {
-                .player-container {
-                    padding-top: 90vh; /* Use most of viewport height in landscape */
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    z-index: 9999;
-                    background: black;
-                }
-                
-                .player-fullscreen-mobile {
-                    position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    right: 0 !important;
-                    bottom: 0 !important;
-                    width: 100vw !important;
-                    height: 100vh !important;
-                    z-index: 9999 !important;
-                    background: black !important;
+                    padding-top: 75%;
                 }
             }
         }
+        
+        /* Non-critical CSS loaded asynchronously */
+        .load-styles {
+            display: none;
+        }
     </style>
+    
+    <!-- Non-critical CSS loaded asynchronously -->
+    <script>
+        // Inject non-critical CSS after page load
+        window.addEventListener('load', function() {
+            var style = document.createElement('style');
+            style.textContent = `
+                .card-img-top {
+                    height: 250px;
+                    object-fit: cover;
+                }
+                .anime-cover {
+                    height: 400px;
+                    object-fit: cover;
+                }
+                .episode-card {
+                    transition: all 0.2s ease;
+                    border: 2px solid transparent;
+                }
+                .light .episode-card:hover {
+                    transform: translateY(-4px);
+                    border-color: #FFBF00;
+                    box-shadow: 0 10px 20px rgba(255, 191, 0, 0.15);
+                }
+                .dark .episode-card:hover {
+                    transform: translateY(-4px);
+                    border-color: #E50914;
+                    box-shadow: 0 10px 20px rgba(229, 9, 20, 0.15);
+                }
+                .badge {
+                    padding: 0.25rem 0.5rem;
+                    border-radius: 9999px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                }
+                .light .badge-primary {
+                    background-color: #FFF4D6;
+                    color: #8B6000;
+                }
+                .dark .badge-primary {
+                    background-color: #1F1F1F;
+                    color: #E50914;
+                }
+                .section-divider {
+                    height: 1px;
+                }
+                .light .section-divider {
+                    background-image: linear-gradient(to right, #FFBF00, transparent);
+                }
+                .dark .section-divider {
+                    background-image: linear-gradient(to right, #E50914, transparent);
+                }
+                .server-button {
+                    padding: 0.5rem 1rem;
+                    border-radius: 0.5rem;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .light .server-button {
+                    background-color: #FFF8E6;
+                    color: #8B6000;
+                    border: 1px solid #FFE7A3;
+                }
+                .light .server-button:hover {
+                    background-color: #FFF4D6;
+                }
+                .dark .server-button {
+                    background-color: #1F1F1F;
+                    color: #FFFFFF;
+                    border: 1px solid #2D2D2D;
+                }
+                .dark .server-button:hover {
+                    background-color: #2D2D2D;
+                }
+                .light .server-button.active {
+                    background-color: #FFBF00;
+                    color: white;
+                    border-color: #E6AC00;
+                }
+                .dark .server-button.active {
+                    background-color: #E50914;
+                    color: white;
+                    border-color: #E50914;
+                }
+                .download-button {
+                    padding: 0.5rem 0.75rem;
+                    border-radius: 0.5rem;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                }
+                .light .download-button {
+                    background-color: #FFF8E6;
+                    color: #8B6000;
+                    border: 1px solid #FFE7A3;
+                }
+                .light .download-button:hover {
+                    background-color: #FFF4D6;
+                }
+                .dark .download-button {
+                    background-color: #1F1F1F;
+                    color: #FFFFFF;
+                    border: 1px solid #2D2D2D;
+                }
+                .dark .download-button:hover {
+                    background-color: #2D2D2D;
+                }
+                .synopsis-text {
+                    transition: all 0.3s ease;
+                }
+                .synopsis-collapsed {
+                    display: -webkit-box;
+                    -webkit-line-clamp: 3;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+                @media (min-width: 768px) {
+                    .synopsis-collapsed {
+                        -webkit-line-clamp: none;
+                        overflow: visible;
+                    }
+                }
+                
+                /* Mobile Video Player Full Width - Additional styles */
+                @media (max-width: 768px) {
+                    /* Make video player container full width on mobile */
+                    .mobile-full-width {
+                        margin-left: -1rem;
+                        margin-right: -1rem;
+                        width: calc(100% + 2rem);
+                        border-radius: 0;
+                    }
+                    
+                    /* Adjust padding for mobile */
+                    .mobile-full-width .player-container {
+                        margin: 0;
+                        width: 100%;
+                    }
+                    
+                    /* Landscape mode optimization */
+                    @media (orientation: landscape) and (max-height: 500px) {
+                        .player-container {
+                            padding-top: 90vh;
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            z-index: 9999;
+                            background: black;
+                        }
+                        
+                        .player-fullscreen-mobile {
+                            position: fixed !important;
+                            top: 0 !important;
+                            left: 0 !important;
+                            right: 0 !important;
+                            bottom: 0 !important;
+                            width: 100vw !important;
+                            height: 100vh !important;
+                            z-index: 9999 !important;
+                            background: black !important;
+                        }
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
 {% endblock extra_css %}
 
 {% block content %}
@@ -341,23 +406,60 @@
                             <!-- Background animation -->
                             <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-500/10 to-purple-500/10 dark:from-red-500/10 dark:to-pink-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                             <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-4">
-                                {% if episode_data.data.data.title %}
+                                {% if episode_data.error %}
+                                    Error Loading Episode
+                                {% elif episode_data.data.data.title %}
                                     {{ episode_data.data.data.title }}
-                                {% else %}
+                                {% elif episode_data.data.title %}
                                     {{ episode_data.data.title }}
+                                {% else %}
+                                    Episode Details
                                 {% endif %}
                             </h1>
                             
+                            <!-- Error Message Section -->
+                            {% if episode_data.error %}
+                            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-lg p-4 mb-6">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Error Loading Episode</h3>
+                                        <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                                            <p>{{ episode_data.message|default:"We're having trouble loading this episode. Please try again later." }}</p>
+                                            {% if episode_data.error %}
+                                            <p class="mt-2 text-xs text-red-600 dark:text-red-400">Error details: {{ episode_data.error }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="mt-4">
+                                            <a href="{% url 'stream:home' %}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 dark:text-white dark:bg-red-800 dark:hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                                Return to Home
+                                            </a>
+                                            <button onclick="window.location.reload()" class="ml-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 dark:text-white dark:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                                Try Again
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
                             <!-- Anime Info Section -->
-                            {% if episode_data.data.anime_info or episode_data.data.data.anime_info %}
+                            {% if not episode_data.error %}
+    {% if episode_data.data.anime_info or episode_data.data.data.anime_info %}
                             {% with anime_info=episode_data.data.anime_info|default:episode_data.data.data.anime_info %}
                             <div class="md:flex mb-6">
                                 <!-- Thumbnail -->
                                 <div class="md:w-1/3 lg:w-1/4 mb-4 md:mb-0">
-                                    <img src="{{ anime_info.thumbnail_url }}" 
+                                    <img loading="lazy" 
+                                         src="{{ anime_info.thumbnail_url }}" 
                                          alt="{{ anime_info.title }}" 
                                          class="w-full rounded-lg shadow-md"
-                                         onerror="this.src='https://via.placeholder.com/300x450?text=No+Image';this.onerror='';">
+                                         onerror="this.src='https://via.placeholder.com/300x450?text=No+Image';this.onerror='';"
+                                    >
                                 </div>
                                 
                                 <!-- Anime Details -->
@@ -402,7 +504,8 @@
                             <div class="md:flex mb-6">
                                 <!-- Thumbnail -->
                                 <div class="md:w-1/3 lg:w-1/4 mb-4 md:mb-0">
-                                    <img src="{{ episode_data.data.data.anime_info.thumbnail_url }}" 
+                                    <img loading="lazy" 
+                                         src="{{ episode_data.data.data.anime_info.thumbnail_url }}" 
                                          alt="{{ episode_data.data.data.anime_info.title }}" 
                                          class="w-full rounded-lg shadow-md"
                                          onerror="this.src='https://via.placeholder.com/300x450?text=No+Image';this.onerror='';">
@@ -502,11 +605,13 @@
                             </div>
                             {% endwith %}
                             {% endif %}
+                        {% endif %}
                         </div>
                     </div>
                     
                     <!-- Enhanced Video Player Section -->
-                    {% if episode_data.data.embed_url %}
+                    {% if not episode_data.error %}
+    {% if episode_data.data.embed_url %}
                     <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden mb-8 sm:mb-12 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
                         <div class="p-4 sm:p-6 border-b border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-800">
                             <div class="flex items-center justify-between">
@@ -822,7 +927,7 @@
                                 <a href="{% url 'stream:episode_detail_legacy' %}?episode_url={{ episode.url|urlencode }}&category={{ category }}" class="block group">
                                     <div class="bg-gray-50 dark:bg-korteks-gray rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                                         <div class="relative pb-[56.25%]">
-                                            <img src="{{ episode.thumbnail_url }}" 
+                                            <img loading="lazy" src="{{ episode.thumbnail_url }}" 
                                                  alt="{{ episode.title }}" 
                                                  class="absolute top-0 left-0 w-full h-full object-cover group-hover:opacity-90 transition-opacity"
                                                  onerror="this.src='https://via.placeholder.com/300x169?text=No+Image';this.onerror='';">
@@ -1120,7 +1225,7 @@
                                 <a href="{% url 'stream:episode_detail_legacy' %}?episode_url={{ episode.url|urlencode }}&category={{ category }}" class="block group">
                                     <div class="bg-gray-50 dark:bg-korteks-gray rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                                         <div class="relative pb-[56.25%]">
-                                            <img src="{{ episode.thumbnail_url }}" 
+                                            <img loading="lazy" src="{{ episode.thumbnail_url }}" 
                                                  alt="{{ episode.title }}" 
                                                  class="absolute top-0 left-0 w-full h-full object-cover group-hover:opacity-90 transition-opacity"
                                                  onerror="this.src='https://via.placeholder.com/300x169?text=No+Image';this.onerror='';">
@@ -1201,9 +1306,11 @@
                         </div>
                     </div>
                     {% endif %}
+                    {% endif %}
                     
                     <!-- Enhanced Streaming Servers Section with Dropdown -->
-                    {% if episode_data.data.streaming_servers or episode_data.data.data.streaming_servers %}
+                    {% if not episode_data.error %}
+                        {% if episode_data.data.streaming_servers or episode_data.data.data.streaming_servers %}
                     <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden mb-8 sm:mb-12 p-4 sm:p-6 md:p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8">
                             <div class="flex items-center mb-4 sm:mb-0">
@@ -1248,9 +1355,11 @@
                         </div>
                     </div>
                     {% endif %}
+                        {% endif %}
 
                     <!-- Enhanced Download Links Section with Dropdown -->
-                    {% if episode_data.data.download_links or episode_data.data.data.download_links %}
+                    {% if not episode_data.error %}
+                        {% if episode_data.data.download_links or episode_data.data.data.download_links %}
                     <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden mb-8 sm:mb-12 p-4 sm:p-6 md:p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8">
                             <div class="flex items-center mb-4 sm:mb-0">
@@ -1273,6 +1382,20 @@
                         </div>
 
                         <div id="downloadContent" class="space-y-6 sm:space-y-8 hidden">
+                            {% if episode_data.error %}
+                            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-red-700 dark:text-red-300">Download links are not available due to an error.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
                             {% with download_links=episode_data.data.download_links|default:episode_data.data.data.download_links %}
                             {% for format_type, resolutions in download_links.items %}
                             <div class="modern-card bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-gray-700 dark:to-gray-800 p-6 rounded-2xl border border-indigo-200/50 dark:border-gray-600/50">
@@ -1317,9 +1440,11 @@
                         </div>
                     </div>
                     {% endif %}
+                        {% endif %}
                     
                     <!-- Enhanced Other Episodes Section -->
-                    {% if episode_data.data.other_episodes or episode_data.data.data.other_episodes %}
+                    {% if not episode_data.error %}
+                        {% if episode_data.data.other_episodes or episode_data.data.data.other_episodes %}
                     <div class="modern-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden mb-12 p-8 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-3xl transition-all duration-700">
                         <div class="flex items-center justify-between mb-8">
                             <div class="flex items-center">
@@ -1343,38 +1468,12 @@
                             {% for episode in other_episodes %}
                                 {% if episode.encoded_id %}
                                 <a href="{% url 'stream:episode_detail' encoded_id=episode.encoded_id %}" class="block">
-                                    <div class="bg-gold-50 dark:bg-korteks-gray/20 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow episode-card">
-                                        {% if episode.thumbnail_url %}
-                                        <img src="{{ episode.thumbnail_url }}" alt="{{ episode.title }}" class="w-full h-32 object-cover">
-                                        {% endif %}
-                                        <div class="p-3">
-                                            <h3 class="font-medium text-gray-800 dark:text-white text-sm mb-1 line-clamp-2">{{ episode.title }}</h3>
-                                            {% if episode.release_date %}
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ episode.release_date }}</p>
-                                            {% endif %}
-                                            <div class="mt-2 text-gold-600 dark:text-korteks-red text-xs">
-                                                Watch Episode
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {% include 'stream/includes/episode_card.html' with episode=episode %}
                                 </a>
                                 {% else %}
                                 {% with episode_data=episode.url|make_dict:"episode_url" %}
                                 <a href="{% url 'stream:episode_detail' encoded_id=episode_data|encode_episode_id:category|default:'' %}" class="block">
-                                    <div class="bg-gold-50 dark:bg-korteks-gray/20 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow episode-card">
-                                        {% if episode.thumbnail_url %}
-                                        <img src="{{ episode.thumbnail_url }}" alt="{{ episode.title }}" class="w-full h-32 object-cover">
-                                        {% endif %}
-                                        <div class="p-3">
-                                            <h3 class="font-medium text-gray-800 dark:text-white text-sm mb-1 line-clamp-2">{{ episode.title }}</h3>
-                                            {% if episode.release_date %}
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ episode.release_date }}</p>
-                                            {% endif %}
-                                            <div class="mt-2 text-gold-600 dark:text-korteks-red text-xs">
-                                                Watch Episode
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {% include 'stream/includes/episode_card.html' with episode=episode %}
                                 </a>
                                 {% endwith %}
                                 {% endif %}
@@ -1383,6 +1482,8 @@
                             {% endwith %}
                         </div>
                     </div>
+                    {% endif %}
+                        {% endif %}
                     {% endif %}
                     
                 {% else %}
@@ -1410,23 +1511,22 @@
 
 {% block extra_js %}
 {% if not error_occurred %}
-    <!-- Plyr.io -->
-    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-
-    <!-- HLS.js for HLS support -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
-    <!-- User activity tracking -->
-    <script src="{% static 'js/user_activity.js' %}"></script>
-    <script src="{% static 'js/video_tracking.js' %}"></script>
+    <!-- Optimized player loading with lazy loading -->
+    <script defer src="{% static 'js/episode_player_lazy.js' %}"></script>
 
     <!-- Episode Data for JS -->
     <script type="application/json" id="episode-data-json">
         {
             "id": "{{ encoded_id|default:episode_identifier }}",
-            "title": "{{ episode_data.data.title|default:episode_data.data.data.title|escapejs }}",
-            "animeTitle": "{{ episode_data.data.anime_info.title|default:episode_data.data.data.anime_info.title|escapejs }}",
-            "coverUrl": "{{ episode_data.data.anime_info.thumbnail_url|default:episode_data.data.data.anime_info.thumbnail_url }}",
+            {% if episode_data.error %}
+            "title": "Error loading episode",
+            "animeTitle": "Unknown anime",
+            "coverUrl": "",
+            {% else %}
+            "title": "{{ episode_data.data.title|default:episode_data.data.data.title|default:'Episode'|escapejs }}",
+            "animeTitle": "{{ episode_data.data.anime_info.title|default:episode_data.data.data.anime_info.title|default:'Anime'|escapejs }}",
+            "coverUrl": "{{ episode_data.data.anime_info.thumbnail_url|default:episode_data.data.data.anime_info.thumbnail_url|default:'' }}",
+            {% endif %}
             "url": "{{ request.build_absolute_uri }}",
             "category": "{{ category }}"
         }

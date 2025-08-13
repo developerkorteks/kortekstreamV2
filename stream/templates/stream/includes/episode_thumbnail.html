@@ -1,0 +1,10 @@
+{% comment %}
+Lazy loading episode thumbnail component
+{% endcomment %}
+<div class="relative pb-[56.25%]">
+    <img loading="lazy" 
+         src="{{ thumbnail_url }}" 
+         alt="{{ title|default:'Episode thumbnail' }}" 
+         class="absolute top-0 left-0 w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+         onerror="this.src='https://via.placeholder.com/300x169?text=No+Image';this.onerror='';">
+</div>

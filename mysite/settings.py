@@ -76,6 +76,7 @@ try:
         'stream.middleware.RateLimitMiddleware',  # Custom rate limiting
         'stream.middleware.APIHealthMiddleware',  # Custom API health monitoring
         'stream.middleware.CacheControlMiddleware',  # Smart cache control
+        'stream.middleware.CacheOptimizationMiddleware',  # Optimized cache headers
     ])
 except ImportError:
     # Custom middleware not available, continue without it

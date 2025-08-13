@@ -1,0 +1,18 @@
+{% comment %}
+Reusable episode card component with lazy loading images
+Usage: {% include 'stream/includes/episode_card.html' with episode=episode encoded_id=encoded_id %}
+{% endcomment %}
+<div class="bg-gold-50 dark:bg-korteks-gray/20 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow episode-card">
+    {% if episode.thumbnail_url %}
+    <img loading="lazy" src="{{ episode.thumbnail_url }}" alt="{{ episode.title }}" class="w-full h-32 object-cover" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image';this.onerror='';">
+    {% endif %}
+    <div class="p-3">
+        <h3 class="font-medium text-gray-800 dark:text-white text-sm mb-1 line-clamp-2">{{ episode.title }}</h3>
+        {% if episode.release_date %}
+        <p class="text-xs text-gray-500 dark:text-gray-400">{{ episode.release_date }}</p>
+        {% endif %}
+        <div class="mt-2 text-gold-600 dark:text-korteks-red text-xs">
+            Watch Episode
+        </div>
+    </div>
+</div>

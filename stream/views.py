@@ -788,8 +788,13 @@ def episode_detail(request, encoded_id=None):
     """
     start_time = time.time()
     
-    # Get available categories
-    categories = get_categories()
+    # Get available categories - use fast cache for this common operation
+    cache_key = "categories_list"
+    categories = cache.get(cache_key)
+    if not categories:
+        categories = get_categories()
+        cache.set(cache_key, categories, 3600)  # Cache for 1 hour
+    
     default_category = categories[0] if categories else 'all'
     
     # Initialize parameters
@@ -800,8 +805,13 @@ def episode_detail(request, encoded_id=None):
     
     # Check if we have an encoded ID in the URL path
     if encoded_id:
-        # Decode the ID to get the parameters
-        decoded_data = decode_episode_id(encoded_id)
+        # Use a cache for decoded IDs to avoid repeated decoding
+        decode_cache_key = f"decoded_id:{encoded_id}"
+        decoded_data = cache.get(decode_cache_key)
+        if not decoded_data:
+            decoded_data = decode_episode_id(encoded_id)
+            cache.set(decode_cache_key, decoded_data, 86400)  # Cache for 24 hours
+            
         episode_id = decoded_data.get('id')
         episode_url = decoded_data.get('episode_url')
         episode_slug = decoded_data.get('episode_slug', decoded_data.get('slug'))
@@ -827,27 +837,33 @@ def episode_detail(request, encoded_id=None):
     error_details = None
     
     try:
-        # Prepare parameters for API request
+        # Prepare parameters for API request - only include necessary parameters
         params = {}
         if episode_id:
             params['id'] = episode_id
-        if episode_url:
+        elif episode_url:
             params['episode_url'] = episode_url
-        if episode_slug:
+        elif episode_slug:
             params['episode_slug'] = episode_slug
-        if category:
-            params['category'] = category
+        
+        # Always include category
+        params['category'] = category
+        
+        # Increase cache timeout for episode details
+        cache_timeout = getattr(settings, 'CACHE_TIMEOUT_LONG', 900)
+        if not settings.DEBUG:
+            cache_timeout = 1800  # 30 minutes in production
         
         # Make API request using robust client
         response = make_api_request(
             'api/v1/episode-detail',
             params=params,
-            cache_timeout=getattr(settings, 'CACHE_TIMEOUT_LONG', 900)  # 15 minutes
+            cache_timeout=cache_timeout
         )
         
         data = response.data
         
-        # Add response metadata
+        # Add response metadata - only if needed
         if response.cached or response.stale:
             data['_response_meta'] = {
                 'cached': response.cached,
@@ -876,21 +892,19 @@ def episode_detail(request, encoded_id=None):
     if '_metadata' in data:
         data['metadata'] = data.pop('_metadata')
     
-    # Normalize the data structure for the template
-    # Some APIs return data.data (nested), others return data directly
-    normalized_data = data.copy()
+    # Normalize the data structure for the template - optimize this process
+    normalized_data = data
     
-    # Check if we have a nested data structure (data.data)
-    if 'data' in data and isinstance(data['data'], dict) and 'data' in data['data'] and isinstance(data['data']['data'], dict):
-        # We have a nested structure, keep it as is
-        pass
-    elif 'data' in data and isinstance(data['data'], dict):
-        # We have a flat structure, create a nested one for consistency
-        normalized_data['data'] = {
-            'data': data['data']
-        }
+    # Check if we have a nested data structure (data.data) - simplified logic
+    if 'data' in data and isinstance(data['data'], dict):
+        if not ('data' in data['data'] and isinstance(data['data']['data'], dict)):
+            # We have a flat structure, create a nested one for consistency
+            normalized_data = data.copy()
+            normalized_data['data'] = {
+                'data': data['data']
+            }
     
-    # Process data to add encoded IDs regardless of whether we have an encoded_id already
+    # Process data to add encoded IDs - only if needed
     if normalized_data and not normalized_data.get('error'):
         # Create a clean encoded ID for this episode if we don't have one
         if not encoded_id:
@@ -901,48 +915,60 @@ def episode_detail(request, encoded_id=None):
             }
             encoded_id = encode_episode_id(episode_data, category)
         
-        # Process other episodes to add encoded IDs
+        # Process other episodes to add encoded IDs - use batch processing
         if 'data' in normalized_data and 'other_episodes' in normalized_data['data']:
-            for episode in normalized_data['data']['other_episodes']:
-                if 'url' in episode:
-                    try:
-                        other_episode_data = {
-                            'episode_slug': episode['url'],
-                            'episode_url': episode['url']
-                        }
-                        episode['encoded_id'] = encode_episode_id(other_episode_data, category)
-                    except Exception as e:
-                        logger.error(f"Error encoding episode ID for {episode.get('title', 'unknown')}: {str(e)}")
-                        # Ensure there's at least an empty string to avoid template errors
-                        episode['encoded_id'] = ''
+            other_episodes = normalized_data['data']['other_episodes']
+            
+            # Batch process encoded IDs
+            for episode in other_episodes:
+                if 'url' in episode and not episode.get('encoded_id'):
+                    # Check cache first
+                    cache_key = f"encoded_id:{category}:{episode['url']}"
+                    cached_id = cache.get(cache_key)
+                    
+                    if cached_id:
+                        episode['encoded_id'] = cached_id
+                    else:
+                        try:
+                            other_episode_data = {
+                                'episode_slug': episode['url'],
+                                'episode_url': episode['url']
+                            }
+                            episode['encoded_id'] = encode_episode_id(other_episode_data, category)
+                            # Cache the encoded ID
+                            cache.set(cache_key, episode['encoded_id'], 86400)  # 24 hours
+                        except Exception as e:
+                            logger.error(f"Error encoding episode ID: {str(e)}")
+                            episode['encoded_id'] = ''
         
-        # Add encoded IDs for navigation links
+        # Add encoded IDs for navigation links - optimize with caching
         if 'data' in normalized_data and 'navigation' in normalized_data['data']:
             nav = normalized_data['data']['navigation']
             
-            # Previous episode
-            if nav.get('previous_episode_url'):
-                try:
-                    prev_data = {
-                        'episode_url': nav['previous_episode_url'],
-                        'episode_slug': nav['previous_episode_url']
-                    }
-                    nav['previous_episode_encoded_id'] = encode_episode_id(prev_data, category)
-                except Exception as e:
-                    logger.error(f"Error encoding previous episode ID: {str(e)}")
-                    nav['previous_episode_encoded_id'] = ''
-            
-            # Next episode
-            if nav.get('next_episode_url'):
-                try:
-                    next_data = {
-                        'episode_url': nav['next_episode_url'],
-                        'episode_slug': nav['next_episode_url']
-                    }
-                    nav['next_episode_encoded_id'] = encode_episode_id(next_data, category)
-                except Exception as e:
-                    logger.error(f"Error encoding next episode ID: {str(e)}")
-                    nav['next_episode_encoded_id'] = ''
+            # Process navigation links in parallel
+            for nav_type, url_key, encoded_key in [
+                ('previous', 'previous_episode_url', 'previous_episode_encoded_id'),
+                ('next', 'next_episode_url', 'next_episode_encoded_id')
+            ]:
+                if nav.get(url_key):
+                    # Check cache first
+                    cache_key = f"encoded_id:{category}:{nav[url_key]}"
+                    cached_id = cache.get(cache_key)
+                    
+                    if cached_id:
+                        nav[encoded_key] = cached_id
+                    else:
+                        try:
+                            nav_data = {
+                                'episode_url': nav[url_key],
+                                'episode_slug': nav[url_key]
+                            }
+                            nav[encoded_key] = encode_episode_id(nav_data, category)
+                            # Cache the encoded ID
+                            cache.set(cache_key, nav[encoded_key], 86400)  # 24 hours
+                        except Exception as e:
+                            logger.error(f"Error encoding {nav_type} episode ID: {str(e)}")
+                            nav[encoded_key] = ''
     
     # Log performance
     response_time = time.time() - start_time
@@ -956,11 +982,11 @@ def episode_detail(request, encoded_id=None):
         'stale': normalized_data.get('_response_meta', {}).get('stale', False)
     }))
     
-    # Add debug information
+    # Add debug information only in debug mode
     if settings.DEBUG:
         logger.info(f"Episode data structure: {json.dumps(normalized_data, indent=2, default=str)}")
     
-    # Extract episode title for SEO context
+    # Extract episode title for SEO context - simplified logic
     episode_title = ''
     try:
         if 'data' in normalized_data:
@@ -970,6 +996,13 @@ def episode_detail(request, encoded_id=None):
                 episode_title = normalized_data['data'].get('title', '')
     except:
         episode_title = 'Episode'
+    
+    # Get SEO context with caching
+    seo_cache_key = f"seo_context:episode_detail:{category}:{episode_title}"
+    seo_context = cache.get(seo_cache_key)
+    if not seo_context:
+        seo_context = get_seo_context(request, 'episode_detail', episode_title=episode_title, category=category)
+        cache.set(seo_cache_key, seo_context, 3600)  # Cache for 1 hour
         
     context = {
         "episode_data": normalized_data,
@@ -980,7 +1013,7 @@ def episode_detail(request, encoded_id=None):
         "error_details": error_details,
         "debug": settings.DEBUG,
         "active_page": "episode_detail",
-        "seo_context": get_seo_context(request, 'episode_detail', episode_title=episode_title, category=category)
+        "seo_context": seo_context
     }
     
     return render(request, 'stream/episode_detail.html', context)

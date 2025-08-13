@@ -94,6 +94,18 @@ def get_seo_context(request, page_type, **kwargs):
             {'name': 'Home', 'url': '/', 'icon': 'home'},
             {'name': 'Schedule', 'url': '/schedule/', 'icon': 'calendar', 'active': True}
         ]
+
+    elif page_type == 'history':
+        breadcrumbs = [
+            {'name': 'Home', 'url': '/', 'icon': 'home'},
+            {'name': 'History', 'url': '/history/', 'icon': 'clock', 'active': True}
+        ]
+
+    elif page_type == 'watchlist':
+        breadcrumbs = [
+            {'name': 'Home', 'url': '/', 'icon': 'home'},
+            {'name': 'Watchlist', 'url': '/watchlist/', 'icon': 'bookmark', 'active': True}
+        ]
     
     return {
         'breadcrumbs': breadcrumbs,
@@ -1069,4 +1081,22 @@ def reset_circuit_breaker(request):
             'message': f'Failed to reset circuit breaker: {str(e)}',
             'timestamp': time.time()
         }, status=500)
+
+def history_page(request):
+    """Renders the watch history page."""
+    context = {
+        "categories": get_categories(),
+        "active_page": "history",
+        "seo_context": get_seo_context(request, 'history')
+    }
+    return render(request, 'stream/history.html', context)
+
+def watchlist_page(request):
+    """Renders the watch list page."""
+    context = {
+        "categories": get_categories(),
+        "active_page": "watchlist",
+        "seo_context": get_seo_context(request, 'watchlist')
+    }
+    return render(request, 'stream/watchlist.html', context)
 

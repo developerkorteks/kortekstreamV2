@@ -1,0 +1,12 @@
+/* TEAM */
+	Developer: KortekStream Team
+	Contact: info@kortekstream.com
+	Twitter: @kortekstream
+	From: Indonesia
+
+/* SITE */
+	Last update: 2024
+	Language: Indonesian
+	Doctype: HTML5
+	IDE: Visual Studio Code, PyCharm
+	Technology: Django, TailwindCSS, JavaScript

@@ -43,7 +43,7 @@ db.sqlite3-journal
 
 # File statis yang dikumpulkan oleh collectstatic
 # File-file ini digenerasi ulang setiap kali deployment.
-/static/
+
 /staticfiles/
 /static_root/
 

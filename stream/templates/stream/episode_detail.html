@@ -231,50 +231,8 @@
 
         <!-- Main Content -->
         <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-            {% if error or episode_data.error %}
-                <div class="bg-white dark:bg-korteks-darkgray border-l-4 border-gold-500 dark:border-korteks-red p-6 rounded-lg shadow-md">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-gold-500 dark:text-korteks-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-lg font-medium text-gray-800 dark:text-white">Something went wrong</h3>
-                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                We're experiencing some issues. Please try again later.
-                            </p>
-                            
-                            <!-- Only show detailed errors in debug mode for developers -->
-                            {% if error_details and debug %}
-                                <details class="mt-3">
-                                    <summary class="cursor-pointer text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
-                                        Show technical details (debug mode)
-                                    </summary>
-                                    <div class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 rounded text-sm text-red-800 dark:text-red-300 font-mono">
-                                        {{ error_details }}
-                                    </div>
-                                </details>
-                            {% endif %}
-                            
-                            <!-- Always show retry options -->
-                            <div class="mt-4 flex flex-col sm:flex-row gap-2">
-                                <button onclick="retryWithReset()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 flex items-center justify-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                    </svg>
-                                    Try Again
-                                </button>
-                                <button onclick="window.location.reload()" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 flex items-center justify-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                    </svg>
-                                    Refresh Page
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            {% if error_occurred %}
+                {% include 'components/error_display.html' %}
             {% else %}
                 {% if episode_data.is_stale %}
                     <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-500 p-4 mb-6 rounded-lg">
@@ -1451,15 +1409,54 @@
 {% endblock content %}
 
 {% block extra_js %}
-    <!-- Plyr.js -->
+{% if not error_occurred %}
+    <!-- Plyr.io -->
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 
     <!-- HLS.js for HLS support -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-    <!-- Dropdown Toggle and Synopsis Script -->
+    <!-- Episode Data for JS -->
+    <script type="application/json" id="episode-data-json">
+        {
+            "id": "{{ encoded_id|default:episode_identifier }}",
+            "title": "{{ episode_data.data.title|default:episode_data.data.data.title|escapejs }}",
+            "animeTitle": "{{ episode_data.data.anime_info.title|default:episode_data.data.data.anime_info.title|escapejs }}",
+            "coverUrl": "{{ episode_data.data.anime_info.thumbnail_url|default:episode_data.data.data.anime_info.thumbnail_url }}",
+            "url": "{% url 'stream:episode_detail' encoded_id=encoded_id|default:episode_identifier %}",
+            "category": "{{ category }}"
+        }
+    </script>
+
+    <!-- Main Page Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // --- History Tracking Logic ---
+            const episodeDataElement = document.getElementById('episode-data-json');
+            const episodeData = JSON.parse(episodeDataElement.textContent);
+            let hasBeenAddedToHistory = false;
+
+            function trackPlayerForHistory(player) {
+                if (!player) return;
+                player.on('timeupdate', () => {
+                    if (!hasBeenAddedToHistory && player.currentTime > 30) {
+                        addToHistory(episodeData);
+                        hasBeenAddedToHistory = true;
+                        player.off('timeupdate'); // Remove listener after adding
+                    }
+                });
+            }
+
+            function addIframeToHistory() {
+                if (!hasBeenAddedToHistory) {
+                    console.log('Adding to history for iframe player.');
+                    addToHistory(episodeData);
+                    hasBeenAddedToHistory = true;
+                }
+            }
+
+            // --- Existing Page Logic ---
+
             // Download section toggle
             const downloadToggle = document.getElementById('downloadToggle');
             const downloadContent = document.getElementById('downloadContent');
@@ -1490,310 +1487,110 @@
                 const synopsisToggle = document.getElementById(toggleId);
 
                 if (synopsisText && synopsisToggle) {
-                    // Initially collapse on mobile
                     if (window.innerWidth < 768) {
                         synopsisText.classList.add('synopsis-collapsed');
                     }
-
                     synopsisToggle.addEventListener('click', function() {
-                        if (synopsisText.classList.contains('synopsis-collapsed')) {
-                            synopsisText.classList.remove('synopsis-collapsed');
-                            synopsisToggle.textContent = 'Show less';
-                        } else {
-                            synopsisText.classList.add('synopsis-collapsed');
-                            synopsisToggle.textContent = 'Show more';
-                        }
-                    });
-
-                    // Handle window resize
-                    window.addEventListener('resize', function() {
-                        if (window.innerWidth >= 768) {
-                            synopsisText.classList.remove('synopsis-collapsed');
-                            synopsisToggle.textContent = 'Show more';
-                        } else if (synopsisToggle.textContent === 'Show more') {
-                            synopsisText.classList.add('synopsis-collapsed');
-                        }
+                        synopsisText.classList.toggle('synopsis-collapsed');
+                        this.textContent = synopsisText.classList.contains('synopsis-collapsed') ? 'Show more' : 'Show less';
                     });
                 }
             }
 
-            // Setup synopsis toggles for both structures
             setupSynopsisToggle('synopsisTextEpisode', 'synopsisToggleEpisode');
             setupSynopsisToggle('synopsisTextEpisodeNested', 'synopsisToggleEpisodeNested');
-            
-            // Auto-retry mechanism for failed API calls
-            {% if error or episode_data.error %}
-            let retryCount = 0;
-            const maxRetries = 3;
-            const retryDelay = 5000; // 5 seconds
-            
-            function showRetryNotification(attempt) {
-                const errorDiv = document.querySelector('.bg-white.dark\\:bg-gray-800.border-l-4');
-                if (errorDiv) {
-                    const messageP = errorDiv.querySelector('p');
-                    if (messageP) {
-                        messageP.innerHTML = `We're trying to fix this automatically. Attempt ${attempt}/${maxRetries}... <br><small>Please wait a moment.</small>`;
+
+            // --- Player Setup Logic (with history tracking hooks) ---
+
+            // Function for the flat structure player
+            function setupVideoPlayerFlat(url, serverName) {
+                const playerWrapper = document.getElementById('player-wrapper-flat');
+                const hlsWrapper = document.getElementById('hls-player-wrapper-flat');
+                const iframeWrapper = document.getElementById('iframe-player-wrapper-flat');
+                
+                [playerWrapper, hlsWrapper, iframeWrapper].forEach(w => w.style.display = 'none');
+
+                if (url.includes('.m3u8')) {
+                    hlsWrapper.style.display = 'block';
+                    const video = document.getElementById('hls-player-flat');
+                    if (Hls.isSupported()) {
+                        const hls = new Hls();
+                        hls.loadSource(url);
+                        hls.attachMedia(video);
+                        const player = new Plyr(video);
+                        trackPlayerForHistory(player);
                     }
-                }
-            }
-            
-            function autoRetry() {
-                if (retryCount < maxRetries) {
-                    retryCount++;
-                    showRetryNotification(retryCount);
-                    
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, retryDelay);
+                } else if (url.includes('.mp4')) {
+                    playerWrapper.style.display = 'block';
+                    const video = document.getElementById('player-flat');
+                    video.src = url;
+                    const player = new Plyr(video);
+                    trackPlayerForHistory(player);
                 } else {
-                    // Max retries reached, show manual refresh option
-                    const errorDiv = document.querySelector('.bg-white.dark\\:bg-gray-800.border-l-4');
-                    if (errorDiv) {
-                        const messageP = errorDiv.querySelector('p');
-                        if (messageP) {
-                            messageP.innerHTML = `Something went wrong. Please try again. <br><button onclick="retryWithReset()" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Try Again</button>`;
-                        }
-                    }
+                    iframeWrapper.style.display = 'block';
+                    const iframe = document.getElementById('iframe-player-flat');
+                    iframe.src = url;
+                    addIframeToHistory(); // Fallback for iframes
                 }
             }
-            
-            // Start auto-retry after 3 seconds
-            setTimeout(autoRetry, 3000);
-            {% endif %}
+
+            // Function for the nested structure player
+            function setupVideoPlayerNested(url, serverName) {
+                const playerWrapper = document.getElementById('player-wrapper-nested');
+                const hlsWrapper = document.getElementById('hls-player-wrapper-nested');
+                const iframeWrapper = document.getElementById('iframe-player-wrapper-nested');
+
+                [playerWrapper, hlsWrapper, iframeWrapper].forEach(w => w.style.display = 'none');
+
+                if (url.includes('.m3u8')) {
+                    hlsWrapper.style.display = 'block';
+                    const video = document.getElementById('hls-player-nested');
+                    if (Hls.isSupported()) {
+                        const hls = new Hls();
+                        hls.loadSource(url);
+                        hls.attachMedia(video);
+                        const player = new Plyr(video);
+                        trackPlayerForHistory(player);
+                    }
+                } else if (url.includes('.mp4')) {
+                    playerWrapper.style.display = 'block';
+                    const video = document.getElementById('player-nested');
+                    video.src = url;
+                    const player = new Plyr(video);
+                    trackPlayerForHistory(player);
+                } else {
+                    iframeWrapper.style.display = 'block';
+                    const iframe = document.getElementById('iframe-player-nested');
+                    iframe.src = url;
+                    addIframeToHistory(); // Fallback for iframes
+                }
+            }
+
+            // Event listeners for server dropdowns
+            const serverDropdownFlat = document.getElementById('server-dropdown-flat');
+            if (serverDropdownFlat) {
+                serverDropdownFlat.addEventListener('change', function() {
+                    const selected = this.options[this.selectedIndex];
+                    setupVideoPlayerFlat(selected.value, selected.dataset.serverName);
+                });
+                if (serverDropdownFlat.options.length > 0) {
+                    const first = serverDropdownFlat.options[0];
+                    setupVideoPlayerFlat(first.value, first.dataset.serverName);
+                }
+            }
+
+            const serverDropdownNested = document.getElementById('server-dropdown-nested');
+            if (serverDropdownNested) {
+                serverDropdownNested.addEventListener('change', function() {
+                    const selected = this.options[this.selectedIndex];
+                    setupVideoPlayerNested(selected.value, selected.dataset.serverName);
+                });
+                if (serverDropdownNested.options.length > 0) {
+                    const first = serverDropdownNested.options[0];
+                    setupVideoPlayerNested(first.value, first.dataset.serverName);
+                }
+            }
         });
-        
-        // Mobile video player optimization
-        function optimizeVideoForMobile() {
-            const playerContainers = document.querySelectorAll('.player-container');
-            const isMobile = window.innerWidth <= 768;
-            
-            if (isMobile) {
-                playerContainers.forEach(container => {
-                    // Add mobile optimization classes
-                    container.classList.add('mobile-optimized');
-                    
-                    // Handle orientation change
-                    const handleOrientationChange = () => {
-                        setTimeout(() => {
-                            if (window.orientation === 90 || window.orientation === -90) {
-                                // Landscape mode
-                                container.style.paddingTop = '100vh';
-                                container.style.position = 'fixed';
-                                container.style.top = '0';
-                                container.style.left = '0';
-                                container.style.right = '0';
-                                container.style.zIndex = '9999';
-                                container.style.background = 'black';
-                            } else {
-                                // Portrait mode
-                                container.style.paddingTop = '75%';
-                                container.style.position = 'relative';
-                                container.style.top = 'auto';
-                                container.style.left = 'auto';
-                                container.style.right = 'auto';
-                                container.style.zIndex = 'auto';
-                                container.style.background = 'transparent';
-                            }
-                        }, 100);
-                    };
-                    
-                    // Listen for orientation changes
-                    window.addEventListener('orientationchange', handleOrientationChange);
-                    window.addEventListener('resize', handleOrientationChange);
-                });
-            }
-        }
-        
-        // Initialize mobile optimization
-        document.addEventListener('DOMContentLoaded', optimizeVideoForMobile);
-        
-        // Function to retry with reset (smart retry)
-        function retryWithReset() {
-            const button = event.target.closest('button');
-            const originalText = button.innerHTML;
-            
-            // Show loading state
-            button.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Trying again...';
-            button.disabled = true;
-            
-            // First, try to reset circuit breaker silently
-            fetch('/api/reset-circuit-breaker/')
-                .then(response => response.json())
-                .then(data => {
-                    // Whether reset succeeds or fails, try to reload the page
-                    button.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Retrying...';
-                    
-                    // Reload page after a short delay
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                })
-                .catch(error => {
-                    // Even if reset fails, still try to reload
-                    console.log('Reset attempt completed, reloading page...');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                });
-        }
     </script>
-
-    <!-- Episode Structured Data -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": ["TVEpisode", "VideoObject"],
-        "name": "{% if episode_data.data.title or episode_data.data.data.title %}{{ episode_data.data.title|default:episode_data.data.data.title|escapejs }}{% else %}Episode{% endif %}",
-        "description": "{% if episode_data.data.title or episode_data.data.data.title %}Nonton {{ episode_data.data.title|default:episode_data.data.data.title|escapejs }} subtitle Indonesia gratis di KortekStream{% else %}Nonton episode anime subtitle Indonesia gratis{% endif %}",
-        "url": "{{ request.build_absolute_uri }}",
-        {% if episode_data.data.thumb or episode_data.data.data.thumb %}
-        "image": {
-            "@type": "ImageObject",
-            "url": "{{ episode_data.data.thumb|default:episode_data.data.data.thumb }}",
-            "width": "1280",
-            "height": "720"
-        },
-        "thumbnailUrl": "{{ episode_data.data.thumb|default:episode_data.data.data.thumb }}",
-        {% endif %}
-        "uploadDate": "{% now 'c' %}",
-        "datePublished": "{% now 'c' %}",
-        "dateCreated": "{% now 'c' %}",
-        "duration": "PT24M",
-        "inLanguage": "ja",
-        "subtitleLanguage": ["id", "en"],
-        "contentRating": "PG-13",
-        {% if episode_data.data.anime_info or episode_data.data.data.anime_info %}
-        {% with anime_info=episode_data.data.anime_info|default:episode_data.data.data.anime_info %}
-        "partOfSeries": {
-            "@type": "TVSeries",
-            "name": "{{ anime_info.title|escapejs }}",
-            {% if anime_info.synopsis %}
-            "description": "{{ anime_info.synopsis|truncatewords:30|escapejs }}",
-            {% endif %}
-            {% if anime_info.thumbnail_url %}
-            "image": "{{ anime_info.thumbnail_url }}",
-            {% endif %}
-            {% if anime_info.genres %}
-            "genre": [{% for genre in anime_info.genres %}"{{ genre }}"{% if not forloop.last %},{% endif %}{% endfor %}],
-            {% endif %}
-            "inLanguage": "ja",
-            "subtitleLanguage": "id"
-        },
-        {% endwith %}
-        {% endif %}
-        "publisher": {
-            "@type": "Organization",
-            "name": "KortekStream",
-            "url": "{{ request.scheme }}://{{ request.get_host }}",
-            "logo": {
-                "@type": "ImageObject",
-                "url": "{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}"
-            }
-        },
-        "provider": {
-            "@type": "Organization",
-            "name": "KortekStream"
-        },
-        "isAccessibleForFree": true,
-        "potentialAction": [
-            {
-                "@type": "WatchAction",
-                "target": {
-                    "@type": "EntryPoint",
-                    "urlTemplate": "{{ request.build_absolute_uri }}",
-                    "inLanguage": "id",
-                    "actionPlatform": [
-                        "http://schema.org/DesktopWebPlatform",
-                        "http://schema.org/MobileWebPlatform"
-                    ]
-                },
-                "expectsAcceptanceOf": {
-                    "@type": "Offer",
-                    "price": "0",
-                    "priceCurrency": "IDR",
-                    "eligibleRegion": {
-                        "@type": "Country",
-                        "name": "Indonesia"
-                    }
-                }
-            }
-        ],
-        "interactionStatistic": [
-            {
-                "@type": "InteractionCounter",
-                "interactionType": "http://schema.org/WatchAction",
-                "userInteractionCount": "{{ episode_data.data.views|default:800 }}"
-            }
-        ],
-        "encodingFormat": [
-            "video/mp4",
-            "video/webm"
-        ],
-        "videoQuality": ["HD", "SD"],
-        "embedUrl": "{{ request.build_absolute_uri }}",
-        "keywords": "{% if episode_data.data.title %}{{ episode_data.data.title|escapejs }}{% elif episode_data.data.data.title %}{{ episode_data.data.data.title|escapejs }}{% endif %}, anime episode, streaming, subtitle indonesia, nonton episode"
-    }
-    </script>
-
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-            {
-                "@type": "ListItem",
-                "position": 1,
-                "name": "Home",
-                "item": "{{ request.scheme }}://{{ request.get_host }}/"
-            },
-            {
-                "@type": "ListItem",
-                "position": 2,
-                "name": "Episode",
-                "item": "{{ request.scheme }}://{{ request.get_host }}/episode/"
-            },
-            {
-                "@type": "ListItem",
-                "position": 3,
-                "name": "{% if episode_data.data.title %}{{ episode_data.data.title|escapejs }}{% elif episode_data.data.data.title %}{{ episode_data.data.data.title|escapejs }}{% else %}Current Episode{% endif %}",
-                "item": "{{ request.build_absolute_uri }}"
-            }
-        ]
-    }
-    </script>
-
-    {% if episode_data.data.navigation or episode_data.data.data.navigation %}
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "ItemList",
-        "name": "Episode Navigation",
-        "itemListElement": [
-            {% with navigation=episode_data.data.navigation|default:episode_data.data.data.navigation %}
-            {% if navigation.previous_episode_url %}
-            {
-                "@type": "ListItem",
-                "position": 1,
-                "name": "Previous Episode",
-                "item": "{{ request.scheme }}://{{ request.get_host }}{{ navigation.previous_episode_url }}"
-            },
-            {% endif %}
-            {
-                "@type": "ListItem",
-                "position": {% if navigation.previous_episode_url %}2{% else %}1{% endif %},
-                "name": "Current Episode",
-                "item": "{{ request.build_absolute_uri }}"
-            }{% if navigation.next_episode_url %},
-            {
-                "@type": "ListItem",
-                "position": {% if navigation.previous_episode_url %}3{% else %}2{% endif %},
-                "name": "Next Episode",
-                "item": "{{ request.scheme }}://{{ request.get_host }}{{ navigation.next_episode_url }}"
-            }
-            {% endif %}
-            {% endwith %}
-        ]
-    }
-    </script>
-    {% endif %}
+{% endif %}
 {% endblock extra_js %}

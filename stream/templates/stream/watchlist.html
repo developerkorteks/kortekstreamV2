@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Watch List | KortekStream{% endblock title %}
+
+{% block content %}
+<div class="min-h-screen">
+    <!-- Navigation -->
+    {% include 'components/navigation.html' %}
+
+    <!-- Breadcrumbs -->
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+        {% if seo_context.breadcrumbs %}
+            {% include 'components/breadcrumb.html' with breadcrumbs=seo_context.breadcrumbs %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-white">My Watch List</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">Anime you've saved for later.</p>
+            </div>
+        </div>
+
+        <div id="watchlist-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <!-- Watchlist items will be injected here by JavaScript -->
+        </div>
+
+        <div id="empty-watchlist-message" class="hidden text-center py-16">
+            <p class="text-lg text-gray-600 dark:text-gray-400">Your watch list is empty.</p>
+            <a href="{% url 'stream:root' %}" class="mt-4 inline-block px-6 py-3 bg-gold-500 text-white font-semibold rounded-lg shadow-md hover:bg-gold-600">Find Anime to Watch</a>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const grid = document.getElementById('watchlist-grid');
+        const emptyMessage = document.getElementById('empty-watchlist-message');
+        const watchlist = getWatchlist();
+
+        if (!watchlist || watchlist.length === 0) {
+            emptyMessage.classList.remove('hidden');
+            return;
+        }
+
+        let watchlistHtml = '';
+        watchlist.forEach(item => {
+            watchlistHtml += `
+                <div class="group">
+                    <a href="${item.url}" class="block">
+                        <div class="modern-card bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group-hover:scale-105 group-hover:-translate-y-2">
+                            <div class="relative aspect-[3/4] overflow-hidden">
+                                <img src="${item.coverUrl}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="${item.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400/1f1f1f/ffffff?text=No+Image';this.onerror='';" />
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div class="absolute top-2 right-2 bg-gray-900/50 text-white text-xs px-2 py-1 rounded-full">${item.category.toUpperCase()}</div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-bold text-gray-800 dark:text-white text-sm line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-red-400 transition-colors duration-300" title="${item.title}">${item.title}</h3>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            `;
+        });
+        grid.innerHTML = watchlistHtml;
+    });
+</script>
+{% endblock extra_js %}

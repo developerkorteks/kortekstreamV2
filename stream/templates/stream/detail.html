@@ -402,6 +402,61 @@
                                         </div>
                                     {% endif %}
                                 </div>
+
+                                <!-- Watchlist Button -->
+                                <div class="my-6">
+                                    <button id="watchlist-button" class="flex items-center justify-center w-full sm:w-auto px-6 py-3 rounded-lg font-semibold transition-all duration-300">
+                                        <!-- SVG icon and text will be set by JavaScript -->
+                                    </button>
+                                </div>
+
+                                <!-- JSON data for Watchlist -->
+                                <script type="application/json" id="anime-data-json">
+                                    {
+                                        "id": "{{ anime_slug }}",
+                                        "title": "{{ detail.data.data.judul|escapejs }}",
+                                        "coverUrl": "{{ detail.data.data.cover }}",
+                                        "url": "{% url 'stream:anime_detail' %}?anime_slug={{ anime_slug }}&category={{ category }}",
+                                        "category": "{{ category }}"
+                                    }
+                                </script>
+
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const animeData = JSON.parse(document.getElementById('anime-data-json').textContent);
+                                        const button = document.getElementById('watchlist-button');
+
+                                        function updateButtonState() {
+                                            if (isInWatchlist(animeData.id)) {
+                                                button.innerHTML = `
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    <span>In Watchlist</span>`;
+                                                button.className = 'flex items-center justify-center w-full sm:w-auto px-6 py-3 rounded-lg font-semibold transition-all duration-300 bg-green-500 dark:bg-green-600 text-white';
+                                            } else {
+                                                button.innerHTML = `
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-3.125L5 18V4z" />
+                                                    </svg>
+                                                    <span>Add to Watchlist</span>`;
+                                                button.className = 'flex items-center justify-center w-full sm:w-auto px-6 py-3 rounded-lg font-semibold transition-all duration-300 bg-gold-500 dark:bg-korteks-red text-white hover:bg-gold-600 dark:hover:bg-korteks-darkred';
+                                            }
+                                        }
+
+                                        button.addEventListener('click', () => {
+                                            if (isInWatchlist(animeData.id)) {
+                                                removeFromWatchlist(animeData.id);
+                                            } else {
+                                                addToWatchlist(animeData);
+                                            }
+                                            updateButtonState();
+                                        });
+
+                                        // Initial state
+                                        updateButtonState();
+                                    });
+                                </script>
                                 
                                 <!-- Genres -->
                                 {% if detail.data.data.genre %}

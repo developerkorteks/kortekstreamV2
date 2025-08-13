@@ -113,6 +113,9 @@
         <!-- Main Content -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="content">
 
+            <!-- Watch History Section (Dynamically Loaded) -->
+            <div id="watch-history-container"></div>
+
             <!-- Enhanced Category Selection -->
             <div class="stagger-item mb-16">
                 <div class="modern-card p-8">
@@ -413,3 +416,62 @@
         {% include 'components/footer.html' %}
     </div>
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const historyContainer = document.getElementById('watch-history-container');
+        const history = getHistory();
+
+        if (history && history.length > 0) {
+            const recentHistory = history.slice(0, 6);
+            let historyHtml = `
+                <div class="mb-16 stagger-item">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">🕰️ Recently Watched</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Continue where you left off</p>
+                        </div>
+                        <a href="/history/" class="group flex items-center space-x-2 text-gold-600 dark:text-korteks-red hover:text-gold-700 dark:hover:text-korteks-darkred transition-colors duration-300">
+                            <span class="font-medium">View All</span>
+                            <svg class="h-5 w-5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+            `;
+
+            recentHistory.forEach(item => {
+                historyHtml += `
+                    <div class="group">
+                        <a href="${item.url}" class="block">
+                            <div class="modern-card bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group-hover:scale-105 group-hover:-translate-y-2">
+                                <div class="relative aspect-[3/4] overflow-hidden">
+                                    <img src="${item.coverUrl}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="${item.animeTitle}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400/1f1f1f/ffffff?text=No+Image';this.onerror='';" />
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    <div class="absolute top-4 left-4 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-red-500 dark:to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                        ${item.category.toUpperCase()}
+                                    </div>
+                                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                        <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 hover:scale-110 transition-transform duration-200">
+                                            <svg class="h-8 w-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-6">
+                                    <h3 class="font-bold text-gray-800 dark:text-white text-lg mb-3 line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-red-400 transition-colors duration-300" title="${item.animeTitle}">${item.animeTitle}</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2" title="${item.title}">${item.title}</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                `;
+            });
+
+            historyHtml += `</div></div>`;
+            historyContainer.innerHTML = historyHtml;
+        }
+    });
+</script>
+{% endblock extra_js %}

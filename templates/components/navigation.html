@@ -42,6 +42,18 @@
                             <span>Schedule</span>
                         </span>
                     </a>
+                    <a href="{% url 'stream:history' %}" class="nav-item group relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white/60 dark:hover:bg-gray-800/60 {% if active_page == 'history' %}bg-gradient-to-r from-blue-100 to-purple-100 dark:from-red-900/30 dark:to-pink-900/30 text-blue-700 dark:text-red-400{% else %}text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-red-400{% endif %}">
+                        <span class="relative z-10 flex items-center space-x-2">
+                            <span>🕰️</span>
+                            <span>History</span>
+                        </span>
+                    </a>
+                    <a href="{% url 'stream:watchlist' %}" class="nav-item group relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white/60 dark:hover:bg-gray-800/60 {% if active_page == 'watchlist' %}bg-gradient-to-r from-blue-100 to-purple-100 dark:from-red-900/30 dark:to-pink-900/30 text-blue-700 dark:text-red-400{% else %}text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-red-400{% endif %}">
+                        <span class="relative z-10 flex items-center space-x-2">
+                            <span>❤️</span>
+                            <span>Watchlist</span>
+                        </span>
+                    </a>
                 </div>
             </div>
             <!-- Tablet Search Bar (md screens) -->
@@ -146,6 +158,20 @@
                 <a href="{% url 'stream:schedule' %}" class="group flex items-center space-x-3 px-4 py-3 rounded-2xl text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gold-100 hover:to-gold-50 dark:hover:from-korteks-red/20 dark:hover:to-korteks-darkred/10 hover:text-gold-700 dark:hover:text-korteks-red transition-all duration-300 {% if active_page == 'schedule' %}bg-gradient-to-r from-gold-100 to-gold-50 dark:from-korteks-red/20 dark:to-korteks-darkred/10 text-gold-700 dark:text-korteks-red{% endif %}">
                     <span class="text-xl">📅</span>
                     <span>Schedule</span>
+                    <svg class="ml-auto h-5 w-5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+                <a href="{% url 'stream:history' %}" class="group flex items-center space-x-3 px-4 py-3 rounded-2xl text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gold-100 hover:to-gold-50 dark:hover:from-korteks-red/20 dark:hover:to-korteks-darkred/10 hover:text-gold-700 dark:hover:text-korteks-red transition-all duration-300 {% if active_page == 'history' %}bg-gradient-to-r from-gold-100 to-gold-50 dark:from-korteks-red/20 dark:to-korteks-darkred/10 text-gold-700 dark:text-korteks-red{% endif %}">
+                    <span class="text-xl">🕰️</span>
+                    <span>History</span>
+                    <svg class="ml-auto h-5 w-5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+                <a href="{% url 'stream:watchlist' %}" class="group flex items-center space-x-3 px-4 py-3 rounded-2xl text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gold-100 hover:to-gold-50 dark:hover:from-korteks-red/20 dark:hover:to-korteks-darkred/10 hover:text-gold-700 dark:hover:text-korteks-red transition-all duration-300 {% if active_page == 'watchlist' %}bg-gradient-to-r from-gold-100 to-gold-50 dark:from-korteks-red/20 dark:to-korteks-darkred/10 text-gold-700 dark:text-korteks-red{% endif %}">
+                    <span class="text-xl">❤️</span>
+                    <span>Watchlist</span>
                     <svg class="ml-auto h-5 w-5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>

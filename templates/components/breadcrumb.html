@@ -12,14 +12,12 @@ Expected breadcrumbs format:
 {% endcomment %}
 
 {% if breadcrumbs %}
-<!-- Breadcrumb Navigation with Schema.org markup -->
-<nav aria-label="Breadcrumb" class="py-4 px-6 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl mb-6 border border-gray-200/20 dark:border-gray-700/20">
+<nav aria-label="Breadcrumb" class="hidden md:block py-4 px-6 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl mb-6 border border-gray-200/20 dark:border-gray-700/20">
     <ol class="flex items-center space-x-2 text-sm" itemscope itemtype="https://schema.org/BreadcrumbList">
         {% for breadcrumb in breadcrumbs %}
         <li class="flex items-center" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
             {% if not breadcrumb.active and breadcrumb.url %}
-                <!-- Clickable breadcrumb -->
-                <a href="{{ breadcrumb.url }}" 
+                <a href="{{ breadcrumb.url }}"
                    class="flex items-center text-gray-600 dark:text-gray-300 hover:text-gold-600 dark:hover:text-korteks-red transition-colors duration-200"
                    itemprop="item">
                     {% if breadcrumb.icon %}
@@ -47,14 +45,21 @@ Expected breadcrumbs format:
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                         </svg>
+                        {% elif breadcrumb.icon == 'history' %}
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {% elif breadcrumb.icon == 'bookmark' %}
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
                         {% endif %}
                     {% endif %}
                     <span itemprop="name">{{ breadcrumb.name }}</span>
                     <meta itemprop="position" content="{{ forloop.counter }}" />
                 </a>
             {% else %}
-                <!-- Current/Active breadcrumb -->
-                <span class="flex items-center font-medium text-gold-600 dark:text-korteks-red" 
+                <span class="flex items-center font-medium text-gold-600 dark:text-korteks-red"
                       itemprop="item">
                     {% if breadcrumb.icon %}
                         {% if breadcrumb.icon == 'home' %}
@@ -69,14 +74,33 @@ Expected breadcrumbs format:
                         <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M8 5v14l11-7z"/>
                         </svg>
+                        {% elif breadcrumb.icon == 'search' %}
+                        <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                        {% elif breadcrumb.icon == 'calendar' %}
+                        <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                        </svg>
+                        {% elif breadcrumb.icon == 'star' %}
+                        <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        {% elif breadcrumb.icon == 'history' %}
+                        <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                        </svg>
+                        {% elif breadcrumb.icon == 'bookmark' %}
+                        <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                           <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                        </svg>
                         {% endif %}
                     {% endif %}
                     <span itemprop="name">{{ breadcrumb.name }}</span>
                     <meta itemprop="position" content="{{ forloop.counter }}" />
                 </span>
             {% endif %}
-            
-            <!-- Separator (except for last item) -->
+
             {% if not forloop.last %}
             <span class="mx-2 text-gray-400 dark:text-gray-500" aria-hidden="true">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -89,7 +113,6 @@ Expected breadcrumbs format:
     </ol>
 </nav>
 
-<!-- Rich Breadcrumb Structured Data -->
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
@@ -112,15 +135,13 @@ Expected breadcrumbs format:
 </script>
 {% endif %}
 
-<!-- Mobile-friendly breadcrumb for small screens -->
-{% if breadcrumbs and breadcrumbs|length > 2 %}
+{% if breadcrumbs and breadcrumbs|length > 1 %}
 <div class="md:hidden">
     <nav class="flex items-center space-x-2 text-sm px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg mb-4">
-        <!-- Back button for mobile -->
         {% if breadcrumbs|length > 1 %}
             {% for breadcrumb in breadcrumbs reversed %}
                 {% if forloop.counter0 == 1 %}
-                <a href="{{ breadcrumb.url|default:'/' }}" 
+                <a href="{{ breadcrumb.url|default:'/' }}"
                    class="flex items-center text-gray-600 dark:text-gray-300 hover:text-gold-600 dark:hover:text-korteks-red">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -130,8 +151,7 @@ Expected breadcrumbs format:
                 {% endif %}
             {% endfor %}
         {% endif %}
-        
-        <!-- Current page only on mobile -->
+
         {% with last_breadcrumb=breadcrumbs|last %}
         <span class="font-medium text-gray-900 dark:text-white truncate">
             {{ last_breadcrumb.name }}

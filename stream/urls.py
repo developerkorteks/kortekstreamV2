@@ -1,8 +1,10 @@
 from django.urls import path
-from .views import root, home, anime_detail, latest, schedule, search, episode_detail, api_health_check, reset_circuit_breaker
+from .views import root, home, anime_detail, latest, schedule, search, episode_detail, api_health_check, reset_circuit_breaker, history_page, watchlist_page
 app_name = 'stream'
 urlpatterns = [
         path('', root, name='root'),
+        path('history/', history_page, name='history'),
+        path('watchlist/', watchlist_page, name='watchlist'),
         path('detail/', anime_detail, name='anime_detail'),
         path('episode/<str:encoded_id>/', episode_detail, name='episode_detail'),
         path('episode/', episode_detail, name='episode_detail_legacy'),  # Keep for backward compatibility

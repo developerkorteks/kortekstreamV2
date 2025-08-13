@@ -9,9 +9,12 @@
             <div class="relative aspect-[2/3] sm:aspect-[3/4] overflow-hidden">
                 <img src="{{ item.cover }}" 
                      class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                     alt="{{ item.judul }}"
+                     alt="{{ item.judul }} - Nonton anime subtitle Indonesia"
                      loading="lazy"
-                     onerror="this.src='https://via.placeholder.com/300x400/1f1f1f/ffffff?text=No+Image';this.onerror='';" />
+                     decoding="async"
+                     width="300"
+                     height="400"
+                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDMwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjMUYxRjFGIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMjAwIiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K';this.onerror='';" />
                 
                 <!-- Gradient Overlay -->
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

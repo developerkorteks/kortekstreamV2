@@ -16,17 +16,55 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path,include,re_path
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
-from django.conf import settings
 from django.views.static import serve
-from stream.views import favicon_view
+from django.contrib.sitemaps.views import sitemap
+from stream.sitemaps import sitemaps
+
+# Import views with error handling
+try:
+    from stream.views import favicon_view
+    FAVICON_VIEW_AVAILABLE = True
+except ImportError:
+    FAVICON_VIEW_AVAILABLE = False
+
+# Import SEO views with error handling
+try:
+    from stream.seo_views import (
+        robots_txt, manifest_json, security_txt, 
+        ads_txt, humans_txt, opensearch_xml
+    )
+    SEO_VIEWS_AVAILABLE = True
+except ImportError:
+    SEO_VIEWS_AVAILABLE = False
 
 
 urlpatterns = [
-    re_path(r'^media/(?P<path>.*)$',serve,{'document_root':settings.MEDIA_ROOT}),
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     path('admin/', admin.site.urls),
-    path('favicon.ico', favicon_view),  # Add favicon route
+    
+    # SEO URLs
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    
+    # Main app URLs
     path('', include('stream.urls', namespace='stream')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# Add favicon if view is available
+if FAVICON_VIEW_AVAILABLE:
+    urlpatterns.append(path('favicon.ico', favicon_view, name='favicon'))
+
+# Add SEO URLs if views are available
+if SEO_VIEWS_AVAILABLE:
+    urlpatterns.extend([
+        path('robots.txt', robots_txt, name='robots_txt'),
+        path('manifest.json', manifest_json, name='manifest_json'),
+        path('.well-known/security.txt', security_txt, name='security_txt'),
+        path('ads.txt', ads_txt, name='ads_txt'),
+        path('humans.txt', humans_txt, name='humans_txt'),
+        path('opensearch.xml', opensearch_xml, name='opensearch_xml'),
+    ])
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

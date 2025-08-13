@@ -1,0 +1,25 @@
+{
+    "name": "{{ manifest.name }}",
+    "short_name": "{{ manifest.short_name }}",
+    "description": "{{ manifest.description }}",
+    "start_url": "{{ manifest.start_url }}",
+    "display": "{{ manifest.display }}",
+    "background_color": "{{ manifest.background_color }}",
+    "theme_color": "{{ manifest.theme_color }}",
+    "icons": [
+        {% for icon in manifest.icons %}
+        {
+            "src": "{{ icon.src }}",
+            "sizes": "{{ icon.sizes }}",
+            "type": "{{ icon.type }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ],
+    "categories": [
+        {% for category in manifest.categories %}
+        "{{ category }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ],
+    "lang": "{{ manifest.lang }}",
+    "orientation": "{{ manifest.orientation }}"
+}

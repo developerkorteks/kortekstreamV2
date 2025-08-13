@@ -4,11 +4,76 @@
 
 {% block title %}
     {% if episode_data.data.title or episode_data.data.data.title %}
-        {{ episode_data.data.title|default:episode_data.data.data.title }} | KortekStream
+        {{ episode_data.data.title|default:episode_data.data.data.title }} - Nonton Episode Subtitle Indonesia | KortekStream
     {% else %}
-        Episode Detail | KortekStream
+        Episode Detail - Streaming Anime Subtitle Indonesia | KortekStream
     {% endif %}
 {% endblock title %}
+
+{% block description %}
+    {% if episode_data.data.title or episode_data.data.data.title %}
+        Nonton {{ episode_data.data.title|default:episode_data.data.data.title }} subtitle Indonesia gratis di KortekStream. Streaming anime dengan kualitas HD dan subtitle Indonesia terbaru.
+    {% else %}
+        Nonton episode anime subtitle Indonesia gratis dengan kualitas HD di KortekStream. Update episode terbaru setiap hari.
+    {% endif %}
+{% endblock description %}
+
+{% block keywords %}
+    {% if episode_data.data.title %}
+        {{ episode_data.data.title }}, nonton {{ episode_data.data.title }}, {{ episode_data.data.title }} subtitle indonesia, episode anime, streaming episode, anime gratis, episode HD
+    {% elif episode_data.data.data.title %}
+        {{ episode_data.data.data.title }}, nonton {{ episode_data.data.data.title }}, {{ episode_data.data.data.title }} subtitle indonesia, episode anime, streaming episode, anime gratis, episode HD
+    {% else %}
+        episode anime, streaming episode, subtitle indonesia, episode gratis, nonton episode, episode HD
+    {% endif %}
+{% endblock keywords %}
+
+{% block og_type %}video.episode{% endblock og_type %}
+
+{% block og_title %}
+    {% if episode_data.data.title or episode_data.data.data.title %}
+        {{ episode_data.data.title|default:episode_data.data.data.title }} - Episode Subtitle Indonesia
+    {% else %}
+        Episode Detail - Streaming Anime Gratis
+    {% endif %}
+{% endblock og_title %}
+
+{% block og_description %}
+    {% if episode_data.data.title or episode_data.data.data.title %}
+        Nonton {{ episode_data.data.title|default:episode_data.data.data.title }} subtitle Indonesia gratis di KortekStream.
+    {% else %}
+        Nonton episode anime subtitle Indonesia gratis dengan kualitas HD di KortekStream.
+    {% endif %}
+{% endblock og_description %}
+
+{% block og_image %}
+    {% if episode_data.data.thumb or episode_data.data.data.thumb %}
+        {{ episode_data.data.thumb|default:episode_data.data.data.thumb }}
+    {% else %}
+        {% load static %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-image.jpg' %}
+    {% endif %}
+{% endblock og_image %}
+
+{% block video_meta %}
+    <!-- Video specific Open Graph -->
+    <meta property="og:video" content="{{ request.build_absolute_uri }}" />
+    <meta property="og:video:type" content="text/html" />
+    <meta property="og:video:width" content="1280" />
+    <meta property="og:video:height" content="720" />
+    <meta property="video:duration" content="1440" />
+    <meta property="video:release_date" content="{% now 'c' %}" />
+    
+    <!-- Episode specific meta -->
+    <meta property="video:series" content="{% if episode_data.data.anime_title %}{{ episode_data.data.anime_title }}{% endif %}" />
+    <meta property="video:tag" content="anime, episode, subtitle indonesia, streaming" />
+    
+    <!-- Article meta for episode -->
+    <meta property="article:author" content="KortekStream" />
+    <meta property="article:published_time" content="{% now 'c' %}" />
+    <meta property="article:modified_time" content="{% now 'c' %}" />
+    <meta property="article:section" content="Episode" />
+    <meta property="article:tag" content="anime episode, streaming, subtitle indonesia" />
+{% endblock video_meta %}
 
 {% block extra_css %}
     <!-- Plyr.io CSS -->
@@ -156,6 +221,13 @@
     <div class="min-h-screen">
         <!-- Include Navigation -->
         {% include 'components/navigation.html' %}
+        
+        <!-- Include Breadcrumbs -->
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+            {% if seo_context.breadcrumbs %}
+                {% include 'components/breadcrumb.html' with breadcrumbs=seo_context.breadcrumbs %}
+            {% endif %}
+        </div>
 
         <!-- Main Content -->
         <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
@@ -1565,4 +1637,163 @@
                 });
         }
     </script>
+
+    <!-- Episode Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": ["TVEpisode", "VideoObject"],
+        "name": "{% if episode_data.data.title or episode_data.data.data.title %}{{ episode_data.data.title|default:episode_data.data.data.title|escapejs }}{% else %}Episode{% endif %}",
+        "description": "{% if episode_data.data.title or episode_data.data.data.title %}Nonton {{ episode_data.data.title|default:episode_data.data.data.title|escapejs }} subtitle Indonesia gratis di KortekStream{% else %}Nonton episode anime subtitle Indonesia gratis{% endif %}",
+        "url": "{{ request.build_absolute_uri }}",
+        {% if episode_data.data.thumb or episode_data.data.data.thumb %}
+        "image": {
+            "@type": "ImageObject",
+            "url": "{{ episode_data.data.thumb|default:episode_data.data.data.thumb }}",
+            "width": "1280",
+            "height": "720"
+        },
+        "thumbnailUrl": "{{ episode_data.data.thumb|default:episode_data.data.data.thumb }}",
+        {% endif %}
+        "uploadDate": "{% now 'c' %}",
+        "datePublished": "{% now 'c' %}",
+        "dateCreated": "{% now 'c' %}",
+        "duration": "PT24M",
+        "inLanguage": "ja",
+        "subtitleLanguage": ["id", "en"],
+        "contentRating": "PG-13",
+        {% if episode_data.data.anime_info or episode_data.data.data.anime_info %}
+        {% with anime_info=episode_data.data.anime_info|default:episode_data.data.data.anime_info %}
+        "partOfSeries": {
+            "@type": "TVSeries",
+            "name": "{{ anime_info.title|escapejs }}",
+            {% if anime_info.synopsis %}
+            "description": "{{ anime_info.synopsis|truncatewords:30|escapejs }}",
+            {% endif %}
+            {% if anime_info.thumbnail_url %}
+            "image": "{{ anime_info.thumbnail_url }}",
+            {% endif %}
+            {% if anime_info.genres %}
+            "genre": [{% for genre in anime_info.genres %}"{{ genre }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+            {% endif %}
+            "inLanguage": "ja",
+            "subtitleLanguage": "id"
+        },
+        {% endwith %}
+        {% endif %}
+        "publisher": {
+            "@type": "Organization",
+            "name": "KortekStream",
+            "url": "{{ request.scheme }}://{{ request.get_host }}",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}"
+            }
+        },
+        "provider": {
+            "@type": "Organization",
+            "name": "KortekStream"
+        },
+        "isAccessibleForFree": true,
+        "potentialAction": [
+            {
+                "@type": "WatchAction",
+                "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "{{ request.build_absolute_uri }}",
+                    "inLanguage": "id",
+                    "actionPlatform": [
+                        "http://schema.org/DesktopWebPlatform",
+                        "http://schema.org/MobileWebPlatform"
+                    ]
+                },
+                "expectsAcceptanceOf": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "IDR",
+                    "eligibleRegion": {
+                        "@type": "Country",
+                        "name": "Indonesia"
+                    }
+                }
+            }
+        ],
+        "interactionStatistic": [
+            {
+                "@type": "InteractionCounter",
+                "interactionType": "http://schema.org/WatchAction",
+                "userInteractionCount": "{{ episode_data.data.views|default:800 }}"
+            }
+        ],
+        "encodingFormat": [
+            "video/mp4",
+            "video/webm"
+        ],
+        "videoQuality": ["HD", "SD"],
+        "embedUrl": "{{ request.build_absolute_uri }}",
+        "keywords": "{% if episode_data.data.title %}{{ episode_data.data.title|escapejs }}{% elif episode_data.data.data.title %}{{ episode_data.data.data.title|escapejs }}{% endif %}, anime episode, streaming, subtitle indonesia, nonton episode"
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "{{ request.scheme }}://{{ request.get_host }}/"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Episode",
+                "item": "{{ request.scheme }}://{{ request.get_host }}/episode/"
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "{% if episode_data.data.title %}{{ episode_data.data.title|escapejs }}{% elif episode_data.data.data.title %}{{ episode_data.data.data.title|escapejs }}{% else %}Current Episode{% endif %}",
+                "item": "{{ request.build_absolute_uri }}"
+            }
+        ]
+    }
+    </script>
+
+    {% if episode_data.data.navigation or episode_data.data.data.navigation %}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "Episode Navigation",
+        "itemListElement": [
+            {% with navigation=episode_data.data.navigation|default:episode_data.data.data.navigation %}
+            {% if navigation.previous_episode_url %}
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Previous Episode",
+                "item": "{{ request.scheme }}://{{ request.get_host }}{{ navigation.previous_episode_url }}"
+            },
+            {% endif %}
+            {
+                "@type": "ListItem",
+                "position": {% if navigation.previous_episode_url %}2{% else %}1{% endif %},
+                "name": "Current Episode",
+                "item": "{{ request.build_absolute_uri }}"
+            }{% if navigation.next_episode_url %},
+            {
+                "@type": "ListItem",
+                "position": {% if navigation.previous_episode_url %}3{% else %}2{% endif %},
+                "name": "Next Episode",
+                "item": "{{ request.scheme }}://{{ request.get_host }}{{ navigation.next_episode_url }}"
+            }
+            {% endif %}
+            {% endwith %}
+        ]
+    }
+    </script>
+    {% endif %}
 {% endblock extra_js %}

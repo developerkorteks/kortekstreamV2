@@ -62,6 +62,13 @@
     <div class="min-h-screen">
         <!-- Include Navigation -->
         {% include 'components/navigation.html' %}
+        
+        <!-- Include Breadcrumbs -->
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+            {% if seo_context.breadcrumbs %}
+                {% include 'components/breadcrumb.html' with breadcrumbs=seo_context.breadcrumbs %}
+            {% endif %}
+        </div>
 
         <!-- Main Content -->
         <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">

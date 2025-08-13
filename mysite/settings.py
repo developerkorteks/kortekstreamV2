@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',  # For SEO sitemaps
     'stream',
     # Performance and monitoring
     'django.contrib.humanize',  # For better number formatting
@@ -67,9 +68,12 @@ MIDDLEWARE = [
 try:
     import stream.middleware
     MIDDLEWARE.extend([
+        'stream.middleware.SEOMiddleware',        # SEO optimizations
+        'stream.middleware.PerformanceMiddleware', # Performance monitoring
+        'stream.middleware.CompressionMiddleware', # Response compression
+        'stream.middleware.SecurityHeadersMiddleware', # Security headers
         'stream.middleware.RateLimitMiddleware',  # Custom rate limiting
         'stream.middleware.APIHealthMiddleware',  # Custom API health monitoring
-        'stream.middleware.SecurityMiddleware',   # Additional security headers
         'stream.middleware.CacheControlMiddleware',  # Smart cache control
     ])
 except ImportError:
@@ -89,6 +93,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'stream.context_processors.seo_context',
+                'stream.context_processors.performance_context',
             ],
         },
     },
@@ -429,3 +435,42 @@ CACHE_TIMEOUT_SHORT = 60      # 1 minute
 CACHE_TIMEOUT_MEDIUM = 300    # 5 minutes  
 CACHE_TIMEOUT_LONG = 3600     # 1 hour
 CACHE_TIMEOUT_VERY_LONG = 86400  # 24 hours
+
+# SEO Settings
+SITE_ID = 1
+SITE_NAME = 'KortekStream'
+SITE_DESCRIPTION = 'Platform streaming anime terbaik di Indonesia'
+SITE_KEYWORDS = 'anime, streaming, subtitle indonesia, anime gratis, nonton anime, anime HD'
+
+# Meta tags defaults
+DEFAULT_META_DESCRIPTION = 'KortekStream - Platform streaming anime terbaik di Indonesia. Nonton anime subtitle Indonesia gratis dengan kualitas HD.'
+DEFAULT_META_KEYWORDS = 'anime, streaming, subtitle indonesia, anime gratis, nonton anime, anime HD, anime terbaru, anime ongoing'
+
+# Open Graph defaults
+DEFAULT_OG_IMAGE = '/static/images/og-image.jpg'
+DEFAULT_OG_TYPE = 'website'
+
+# Structured data settings
+ENABLE_STRUCTURED_DATA = True
+ORGANIZATION_NAME = 'KortekStream'
+ORGANIZATION_URL = 'https://kortekstream.com'
+
+# Performance optimizations for SEO
+PREPEND_WWW = False
+APPEND_SLASH = True
+
+# Compression for better loading speeds
+if IS_PRODUCTION:
+    # Enable GZip compression
+    MIDDLEWARE.insert(1, 'django.middleware.gzip.GZipMiddleware')
+    
+    # Enable HTML minification in production
+    MIDDLEWARE.append('htmlmin.middleware.HtmlMinifyMiddleware')
+    
+    # HTML minification settings
+    HTML_MINIFY = True
+    EXCLUDE_FROM_MINIFYING = ('^admin/', '^api/')
+
+# Additional security headers for SEO
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'

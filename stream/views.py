@@ -35,6 +35,83 @@ CIRCUIT_BREAKER_KEY = 'api_circuit_breaker'
 CIRCUIT_BREAKER_FAILURE_THRESHOLD = 10  # Increased from 5 to be less sensitive
 CIRCUIT_BREAKER_TIMEOUT = 60  # Reduced from 5 minutes to 1 minute
 
+
+def get_seo_context(request, page_type, **kwargs):
+    """Generate SEO context including breadcrumbs and meta data"""
+    category = kwargs.get('category', '')
+    anime_title = kwargs.get('anime_title', '')
+    episode_title = kwargs.get('episode_title', '')
+    search_query = kwargs.get('search_query', '')
+    
+    # Build breadcrumbs based on page type
+    breadcrumbs = []
+    
+    if page_type == 'home':
+        breadcrumbs = [
+            {'name': 'Home', 'url': '/', 'icon': 'home'},
+        ]
+        if category and category != 'all':
+            breadcrumbs.append({
+                'name': category.title(),
+                'url': f'/{category}/',
+                'icon': 'tv',
+                'active': True
+            })
+        else:
+            breadcrumbs[0]['active'] = True
+            
+    elif page_type == 'anime_detail':
+        breadcrumbs = [
+            {'name': 'Home', 'url': '/', 'icon': 'home'},
+            {'name': 'Anime', 'url': '/anime/', 'icon': 'tv'},
+            {'name': anime_title or 'Detail', 'active': True}
+        ]
+        
+    elif page_type == 'episode_detail':
+        breadcrumbs = [
+            {'name': 'Home', 'url': '/', 'icon': 'home'},
+            {'name': 'Episode', 'url': '/episode/', 'icon': 'play'},
+            {'name': episode_title or 'Watch', 'active': True}
+        ]
+        
+    elif page_type == 'search':
+        breadcrumbs = [
+            {'name': 'Home', 'url': '/', 'icon': 'home'},
+            {'name': 'Search', 'url': '/search/', 'icon': 'search'},
+        ]
+        if search_query:
+            breadcrumbs.append({
+                'name': f'"{search_query}"',
+                'active': True
+            })
+        else:
+            breadcrumbs[-1]['active'] = True
+            
+    elif page_type == 'latest':
+        breadcrumbs = [
+            {'name': 'Home', 'url': '/', 'icon': 'home'},
+            {'name': 'Latest Episodes', 'url': '/latest/', 'icon': 'star', 'active': True}
+        ]
+        
+    elif page_type == 'schedule':
+        breadcrumbs = [
+            {'name': 'Home', 'url': '/', 'icon': 'home'},
+            {'name': 'Schedule', 'url': '/schedule/', 'icon': 'calendar', 'active': True}
+        ]
+    
+    return {
+        'breadcrumbs': breadcrumbs,
+        'page_type': page_type,
+        'canonical_url': request.build_absolute_uri(request.path),
+        'meta': {
+            'robots': 'index, follow',
+            'author': 'KortekStream Team',
+            'language': 'id-ID',
+            'category': category,
+        }
+    }
+
+
 def is_circuit_breaker_open():
     """Check if circuit breaker is open (API is considered down)"""
     breaker_data = cache.get(CIRCUIT_BREAKER_KEY, {'failures': 0, 'last_failure': 0})
@@ -238,7 +315,8 @@ def root(request):
         "datas": content_data,
         "category": default_category,
         "is_root": True,
-        "active_page": "home"
+        "active_page": "home",
+        "seo_context": get_seo_context(request, 'home', category='all')
     }
     
     return render(request, 'stream/root.html', context)
@@ -316,7 +394,8 @@ def home(request, category):
         "categories": categories,
         "error_details": error_details,
         "debug": settings.DEBUG,
-        "active_page": "category"
+        "active_page": "category",
+        "seo_context": get_seo_context(request, 'home', category=category)
     }
     return render(request, 'stream/index.html', context)
 
@@ -386,12 +465,20 @@ def anime_detail(request):
     if '_metadata' in normalized_data:
         normalized_data['metadata'] = normalized_data.pop('_metadata')
     
+    # Extract anime title for SEO context
+    anime_title = ''
+    if 'data' in normalized_data and 'data' in normalized_data['data']:
+        anime_title = normalized_data['data']['data'].get('judul', '')
+    elif 'data' in normalized_data:
+        anime_title = normalized_data['data'].get('judul', '')
+    
     context = {
         "detail": normalized_data,
         "category": category,
         "anime_slug": identifier,
         "categories": categories,
-        "active_page": "detail"  # For navigation active state
+        "active_page": "detail",  # For navigation active state
+        "seo_context": get_seo_context(request, 'anime_detail', anime_title=anime_title, category=category)
     }
     
     return render(request, 'stream/detail.html', context)
@@ -466,7 +553,8 @@ def latest(request):
         "category": category,
         "page": int(page),
         "categories": categories,
-        "active_page": "latest"  # For navigation active state
+        "active_page": "latest",  # For navigation active state
+        "seo_context": get_seo_context(request, 'latest', category=category)
     }
     
     return render(request, 'stream/latest.html', context)
@@ -519,7 +607,8 @@ def schedule(request):
         "categories": categories,
         "selected_day": day,
         "days": days,
-        "active_page": "schedule"  # For navigation active state
+        "active_page": "schedule",  # For navigation active state
+        "seo_context": get_seo_context(request, 'schedule', category=category)
     }
     
     return render(request, 'stream/schedule.html', context)
@@ -623,7 +712,8 @@ def search(request):
         "query": query,
         "error_details": error_details,
         "debug": settings.DEBUG,  # Pass DEBUG setting to template
-        "active_page": "search"   # For navigation active state
+        "active_page": "search",   # For navigation active state
+        "seo_context": get_seo_context(request, 'search', search_query=query, category=category)
     }
     
     return render(request, 'stream/search_results.html', context)
@@ -808,6 +898,17 @@ def episode_detail(request, encoded_id=None):
     # Add debug information
     if settings.DEBUG:
         logger.info(f"Episode data structure: {json.dumps(normalized_data, indent=2, default=str)}")
+    
+    # Extract episode title for SEO context
+    episode_title = ''
+    try:
+        if 'data' in normalized_data:
+            if 'data' in normalized_data['data']:
+                episode_title = normalized_data['data']['data'].get('title', '')
+            else:
+                episode_title = normalized_data['data'].get('title', '')
+    except:
+        episode_title = 'Episode'
         
     context = {
         "episode_data": normalized_data,
@@ -817,7 +918,8 @@ def episode_detail(request, encoded_id=None):
         "categories": categories,
         "error_details": error_details,
         "debug": settings.DEBUG,
-        "active_page": "episode_detail"
+        "active_page": "episode_detail",
+        "seo_context": get_seo_context(request, 'episode_detail', episode_title=episode_title, category=category)
     }
     
     return render(request, 'stream/episode_detail.html', context)

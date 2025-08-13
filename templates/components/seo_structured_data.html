@@ -1,0 +1,220 @@
+{% load static %}
+<!-- Reusable SEO Structured Data Component -->
+<!-- Usage: {% include 'components/seo_structured_data.html' with content_type='anime' data=anime_data %} -->
+
+{% if content_type == 'anime' %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": ["TVSeries", "VideoObject"],
+    "name": "{{ data.title|escapejs }}",
+    "alternateName": "{{ data.alternative_title|default:data.title|escapejs }}",
+    "description": "{{ data.synopsis|truncatewords:50|escapejs }}",
+    "url": "{{ request.build_absolute_uri }}",
+    {% if data.image %}
+    "image": {
+        "@type": "ImageObject",
+        "url": "{{ data.image }}",
+        "width": "300",
+        "height": "400"
+    },
+    {% endif %}
+    "genre": [{% for genre in data.genres %}"{{ genre }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+    "inLanguage": "ja",
+    "subtitleLanguage": ["id", "en"],
+    "datePublished": "{{ data.release_date|default:'2024-01-01' }}",
+    "contentRating": "{{ data.rating|default:'PG-13' }}",
+    "numberOfEpisodes": "{{ data.episode_count|default:'12' }}",
+    "numberOfSeasons": "1",
+    "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "{{ data.score|default:'4.5' }}",
+        "reviewCount": "{{ data.review_count|default:'100' }}",
+        "bestRating": "5",
+        "worstRating": "1"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "KortekStream",
+        "url": "{{ request.scheme }}://{{ request.get_host }}"
+    }
+}
+</script>
+{% endif %}
+
+{% if content_type == 'episode' %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": ["TVEpisode", "VideoObject"],
+    "name": "{{ data.title|escapejs }}",
+    "episodeNumber": "{{ data.episode_number|default:'1' }}",
+    "seasonNumber": "1",
+    "description": "{{ data.description|default:data.title|escapejs }}",
+    "url": "{{ request.build_absolute_uri }}",
+    {% if data.thumbnail %}
+    "image": "{{ data.thumbnail }}",
+    {% endif %}
+    "duration": "PT{{ data.duration|default:'24' }}M",
+    "uploadDate": "{% now 'c' %}",
+    "inLanguage": "ja",
+    "subtitleLanguage": ["id", "en"],
+    {% if data.anime_title %}
+    "partOfSeries": {
+        "@type": "TVSeries",
+        "name": "{{ data.anime_title|escapejs }}"
+    },
+    {% endif %}
+    "publisher": {
+        "@type": "Organization",
+        "name": "KortekStream"
+    }
+}
+</script>
+{% endif %}
+
+{% if content_type == 'search_results' %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "SearchResultsPage",
+    "name": "Search Results for '{{ search_query|escapejs }}'",
+    "description": "Search results for anime on KortekStream",
+    "url": "{{ request.build_absolute_uri }}",
+    "mainEntity": {
+        "@type": "ItemList",
+        "numberOfItems": "{{ results_count|default:'0' }}",
+        "itemListElement": [
+            {% for result in search_results|slice:":10" %}
+            {
+                "@type": "ListItem",
+                "position": {{ forloop.counter }},
+                "item": {
+                    "@type": "TVSeries",
+                    "name": "{{ result.title|escapejs }}",
+                    "url": "{{ result.url }}"
+                }
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }
+}
+</script>
+{% endif %}
+
+{% if content_type == 'category' %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "{{ category_name|title }} Anime - KortekStream",
+    "description": "Browse {{ category_name }} anime collection on KortekStream",
+    "url": "{{ request.build_absolute_uri }}",
+    "mainEntity": {
+        "@type": "ItemList",
+        "name": "{{ category_name|title }} Anime List",
+        "numberOfItems": "{{ anime_count|default:'50' }}",
+        "itemListElement": [
+            {% for anime in anime_list|slice:":10" %}
+            {
+                "@type": "ListItem",
+                "position": {{ forloop.counter }},
+                "item": {
+                    "@type": "TVSeries",
+                    "name": "{{ anime.title|escapejs }}",
+                    "url": "{{ anime.url }}"
+                }
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }
+}
+</script>
+{% endif %}
+
+{% if content_type == 'homepage' %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "KortekStream - Streaming Anime Terbaik Indonesia",
+    "description": "Platform streaming anime terbaik di Indonesia dengan subtitle Indonesia gratis",
+    "url": "{{ request.scheme }}://{{ request.get_host }}/",
+    "mainEntity": {
+        "@type": "ItemList",
+        "name": "Featured Anime",
+        "itemListElement": [
+            {% for anime in featured_anime|slice:":5" %}
+            {
+                "@type": "ListItem",
+                "position": {{ forloop.counter }},
+                "item": {
+                    "@type": "TVSeries",
+                    "name": "{{ anime.title|escapejs }}",
+                    "url": "{{ anime.url }}"
+                }
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    },
+    "significantLink": [
+        "{{ request.scheme }}://{{ request.get_host }}/latest/",
+        "{{ request.scheme }}://{{ request.get_host }}/schedule/",
+        "{{ request.scheme }}://{{ request.get_host }}/search/"
+    ]
+}
+</script>
+{% endif %}
+
+<!-- FAQ Structured Data (reusable) -->
+{% if faq_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+        {% for faq in faq_data %}
+        {
+            "@type": "Question",
+            "name": "{{ faq.question|escapejs }}",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "{{ faq.answer|escapejs }}"
+            }
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ]
+}
+</script>
+{% endif %}
+
+<!-- Review/Rating Structured Data -->
+{% if reviews %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "ReviewPage",
+    "about": {
+        "@type": "{{ content_type|default:'TVSeries' }}",
+        "name": "{{ data.title|escapejs }}"
+    },
+    "review": [
+        {% for review in reviews %}
+        {
+            "@type": "Review",
+            "author": {
+                "@type": "Person",
+                "name": "{{ review.author|default:'Anonymous' }}"
+            },
+            "reviewRating": {
+                "@type": "Rating",
+                "ratingValue": "{{ review.rating }}",
+                "bestRating": "5"
+            },
+            "reviewBody": "{{ review.text|truncatewords:20|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ]
+}
+</script>
+{% endif %}

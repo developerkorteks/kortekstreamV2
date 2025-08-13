@@ -1,21 +1,164 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="id" class="light">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        
+        <!-- SEO Meta Tags -->
         <title>
             {% block title %}
-                {{ title }} | KortekStream
+                {{ title }} | KortekStream - Streaming Anime Terbaik Indonesia
             {% endblock title %}
         </title>
+        
+        <meta name="description" content="{% block description %}KortekStream - Platform streaming anime terbaik di Indonesia. Nonton anime subtitle Indonesia gratis dengan kualitas HD. Update episode terbaru setiap hari.{% endblock description %}" />
+        <meta name="keywords" content="{% block keywords %}anime, streaming, subtitle indonesia, anime gratis, nonton anime, anime HD, anime terbaru, anime ongoing{% endblock keywords %}" />
+        <meta name="author" content="KortekStream" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="{% block og_type %}website{% endblock og_type %}" />
+        <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock og_url %}" />
+        <meta property="og:title" content="{% block og_title %}{{ title }} | KortekStream{% endblock og_title %}" />
+        <meta property="og:description" content="{% block og_description %}KortekStream - Platform streaming anime terbaik di Indonesia{% endblock og_description %}" />
+        <meta property="og:image" content="{% block og_image %}{% load static %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-image.jpg' %}{% endblock og_image %}" />
+        <meta property="og:site_name" content="KortekStream" />
+        <meta property="og:locale" content="id_ID" />
+        
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="{% block twitter_url %}{{ request.build_absolute_uri }}{% endblock twitter_url %}" />
+        <meta property="twitter:title" content="{% block twitter_title %}{{ title }} | KortekStream{% endblock twitter_title %}" />
+        <meta property="twitter:description" content="{% block twitter_description %}KortekStream - Platform streaming anime terbaik di Indonesia{% endblock twitter_description %}" />
+        <meta property="twitter:image" content="{% block twitter_image %}{% load static %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/twitter-image.jpg' %}{% endblock twitter_image %}" />
+        
+        <!-- Canonical URL -->
+        <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock canonical_url %}" />
+        
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}" />
+        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}" />
+        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}" />
+        <link rel="manifest" href="{% static 'site.webmanifest' %}" />
+        
+        <!-- Search Integration -->
+        <link rel="search" type="application/opensearchdescription+xml" title="KortekStream Search" href="/opensearch.xml" />
+        
+        <!-- Advanced SEO Meta Tags -->
+        <meta name="referrer" content="no-referrer-when-downgrade" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="KortekStream" />
+        <meta name="msapplication-TileColor" content="#F59E0B" />
+        <meta name="msapplication-config" content="{% static 'browserconfig.xml' %}" />
+        
+        <!-- Performance Hints -->
+        <meta name="google" content="notranslate" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="pinterest" content="nopin" />
+        
+        <!-- Theme Color -->
+        <meta name="theme-color" content="#F59E0B" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#E50914" media="(prefers-color-scheme: dark)" />
+        
+        <!-- DNS Prefetch for Performance -->
+        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="//cdnjs.cloudflare.com" />
+        <link rel="dns-prefetch" href="//unpkg.com" />
+        <link rel="dns-prefetch" href="//apigatway.humanmade.my.id" />
+        
+        <!-- Preconnect for Critical Third-party Resources -->
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        
+        <!-- Geo and Language Tags -->
+        <meta name="geo.region" content="ID" />
+        <meta name="geo.country" content="Indonesia" />
+        <meta name="geo.placename" content="Jakarta" />
+        
+        <!-- Language and Locale -->
+        <meta http-equiv="content-language" content="id-ID" />
+        <meta name="language" content="Indonesian" />
+        
+        <!-- Content Classification -->
+        <meta name="rating" content="general" />
+        <meta name="distribution" content="global" />
+        <meta name="copyright" content="KortekStream © {% now 'Y' %}" />
+        
+        <!-- Advanced SEO -->
+        <meta name="robots" content="{% block meta_robots %}index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1{% endblock %}" />
+        <meta name="googlebot" content="index, follow" />
+        <meta name="bingbot" content="index, follow" />
+        
+        <!-- Social Media Optimization -->
+        <meta name="twitter:creator" content="@KortekStream" />
+        <meta name="twitter:site" content="@KortekStream" />
+        
+        <!-- Additional Open Graph -->
+        <meta property="og:locale" content="id_ID" />
+        <meta property="og:locale:alternate" content="en_US" />
+        
+        <!-- Additional Open Graph Image Properties -->
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="{% block og_image_alt %}KortekStream - Platform Streaming Anime Terbaik{% endblock og_image_alt %}" />
+        
+        <!-- Hreflang for Multi-language SEO -->
+        <link rel="alternate" hreflang="id" href="{{ request.build_absolute_uri }}" />
+        <link rel="alternate" hreflang="en" href="{{ request.build_absolute_uri }}" />
+        <link rel="alternate" hreflang="x-default" href="{{ request.build_absolute_uri }}" />
+        <meta property="article:publisher" content="https://facebook.com/kortekstream" />
+        
+        <!-- Twitter Enhanced -->
+        <meta name="twitter:image:alt" content="{% block twitter_image_alt %}KortekStream - Streaming Anime Indonesia{% endblock twitter_image_alt %}" />
+        
+        <!-- Article/Content specific (for blog posts, news) -->
+        {% block article_meta %}{% endblock article_meta %}
+        
+        <!-- Video specific meta -->
+        {% block video_meta %}{% endblock video_meta %}
+        
+        <!-- Prevent Theme Flicker -->
+        <script>
+            (function() {
+                const theme = localStorage.getItem('theme');
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const shouldBeDark = theme === 'dark' || (!theme && systemDark);
+                
+                if (shouldBeDark) {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('light');
+                } else {
+                    document.documentElement.classList.add('light');
+                    document.documentElement.classList.remove('dark');
+                }
+            })();
+        </script>
 
         <!-- Performance Optimizations -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"></noscript>
 
-        <!-- Tailwind CSS CDN -->
-        <script src="https://cdn.tailwindcss.com"></script>
+        <!-- Critical CSS (inlined for performance) -->
+        {% if performance.enable_critical_css %}
+        <style>
+            {% load static %}
+            /* Critical CSS inlined for performance */
+            html { background-color: #ffffff; color: #111827; }
+            html.dark { background-color: #0f0f0f; color: #f9fafb; }
+            body { font-family: 'Poppins', 'Inter', system-ui, -apple-system, sans-serif; line-height: 1.6; margin: 0; padding: 0; min-height: 100vh; transition: background-color 0.3s ease, color 0.3s ease; }
+            nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background-color: rgba(255, 255, 255, 0.8); border-bottom: 1px solid rgba(229, 231, 235, 0.2); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
+            .dark nav { background-color: rgba(17, 24, 39, 0.8); border-bottom-color: rgba(75, 85, 99, 0.2); }
+        </style>
+        {% endif %}
+        
+        <!-- Main CSS -->
+        <link rel="stylesheet" href="{% static 'css/output.css' %}" media="print" onload="this.media='all'; this.onload=null;">
+        <noscript><link rel="stylesheet" href="{% static 'css/output.css' %}"></noscript>
         <script>
             tailwind.config = {
                 darkMode: 'class',
@@ -386,12 +529,86 @@
             }
         </style>
 
+
+
+        <!-- Performance Hints -->
+        <link rel="dns-prefetch" href="//fonts.googleapis.com">
+        <link rel="dns-prefetch" href="//fonts.gstatic.com">
+        <link rel="preload" as="script" href="https://cdn.tailwindcss.com">
+        
         {% block extra_css %}
         {% endblock extra_css %}
         {% block extra_head %}
         {% endblock extra_head %}
     </head>
     <body class="bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-all duration-300 overflow-x-hidden">
+        
+        <!-- Advanced Structured Data (Organization) -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "KortekStream",
+            "alternateName": "Kortek Stream",
+            "url": "{{ request.scheme }}://{{ request.get_host }}",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}"
+            },
+            "description": "Platform streaming anime terbaik di Indonesia dengan subtitle Indonesia gratis",
+            "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "ID",
+                "addressRegion": "DKI Jakarta",
+                "addressLocality": "Jakarta"
+            },
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer service",
+                "email": "admin@kortekstream.com"
+            },
+            "sameAs": [
+                "https://facebook.com/kortekstream",
+                "https://twitter.com/kortekstream",
+                "https://instagram.com/kortekstream"
+            ],
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": "{{ request.scheme }}://{{ request.get_host }}/search/?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+            }
+        }
+        </script>
+        
+        <!-- Website Structured Data -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "KortekStream",
+            "alternateName": "Kortek Stream Indonesia",
+            "url": "{{ request.scheme }}://{{ request.get_host }}",
+            "description": "Platform streaming anime terbaik di Indonesia dengan subtitle Indonesia gratis. Nonton anime terbaru dan terpopuler dengan kualitas HD.",
+            "inLanguage": "id-ID",
+            "isAccessibleForFree": true,
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "{{ request.scheme }}://{{ request.get_host }}/search/?q={search_term_string}"
+                },
+                "query-input": "required name=search_term_string"
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "KortekStream"
+            }
+        }
+        </script>
+        
+        <!-- Page-specific Structured Data Block -->
+        {% block page_structured_data %}{% endblock %}
+        
         <!-- Enhanced Theme Toggle Button -->
         <div class="fixed top-6 right-6 z-50">
             <button id="theme-toggle" class="group relative p-3 rounded-full bg-white/80 dark:bg-korteks-gray/80 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-korteks-darkgray shadow-lg hover:shadow-xl transition-all duration-300 ease-out hover:scale-110">
@@ -424,18 +641,23 @@
         
         <!-- Enhanced Theme Toggle Script -->
         <script>
-            // Enhanced theme management with animations
-            const initTheme = () => {
-                // Check for saved theme preference or use system preference
-                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            // Enhanced theme management with flicker prevention
+            const initializeTheme = () => {
+                const theme = localStorage.getItem('theme');
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const shouldBeDark = theme === 'dark' || (!theme && systemDark);
+                
+                if (shouldBeDark) {
                     document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('light');
                 } else {
+                    document.documentElement.classList.add('light');
                     document.documentElement.classList.remove('dark');
                 }
             };
 
-            // Initialize theme immediately
-            initTheme();
+            // Initialize theme immediately to prevent flicker
+            initializeTheme();
 
             // Enhanced theme toggle with smooth transitions
             document.addEventListener('DOMContentLoaded', function() {
@@ -450,28 +672,36 @@
                         this.style.transform = 'scale(0.95)';
 
                         // Theme transition with animation
-                        document.documentElement.style.transition = 'all 0.3s ease-in-out';
+                        document.documentElement.style.transition = 'background-color 0.3s ease, color 0.3s ease';
 
-                        setTimeout(() => {
+                        // Use requestAnimationFrame for smoother transition
+                        requestAnimationFrame(() => {
                             if (document.documentElement.classList.contains('dark')) {
                                 document.documentElement.classList.remove('dark');
-                                localStorage.theme = 'light';
+                                document.documentElement.classList.add('light');
+                                localStorage.setItem('theme', 'light');
                             } else {
+                                document.documentElement.classList.remove('light');
                                 document.documentElement.classList.add('dark');
-                                localStorage.theme = 'dark';
+                                localStorage.setItem('theme', 'dark');
                             }
 
-                            // Reset button state
-                            this.style.pointerEvents = '';
-                            this.style.transform = '';
-
-                            // Remove transition after theme change
+                            // Reset button state after transition
                             setTimeout(() => {
+                                this.style.pointerEvents = '';
+                                this.style.transform = '';
                                 document.documentElement.style.transition = '';
                             }, 300);
-                        }, 50);
+                        });
                     });
                 }
+
+                // Listen for system theme changes
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                    if (!localStorage.getItem('theme')) {
+                        initializeTheme();
+                    }
+                });
             });
 
             // Page load animation
@@ -537,5 +767,232 @@
         
         {% block extra_js %}
         {% endblock extra_js %}
+
+        <!-- Global Structured Data -->
+        {% block structured_data %}
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "KortekStream",
+            "alternateName": "Kortek Stream",
+            "url": "{{ request.scheme }}://{{ request.get_host }}",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}",
+                "width": "300",
+                "height": "100"
+            },
+            "description": "Platform streaming anime terbaik di Indonesia dengan subtitle Indonesia. Nonton anime gratis dengan kualitas HD.",
+            "sameAs": [
+                "https://facebook.com/kortekstream",
+                "https://twitter.com/kortekstream",
+                "https://instagram.com/kortekstream",
+                "https://youtube.com/c/kortekstream"
+            ],
+            "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "ID",
+                "addressRegion": "Indonesia"
+            },
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "telephone": "+62-xxx-xxxx-xxxx",
+                "contactType": "customer service",
+                "availableLanguage": ["Indonesian", "English"]
+            },
+            "founder": {
+                "@type": "Person",
+                "name": "KortekStream Team"
+            },
+            "foundingDate": "2020",
+            "areaServed": {
+                "@type": "Country",
+                "name": "Indonesia"
+            },
+            "serviceType": [
+                "Anime Streaming",
+                "Entertainment",
+                "Video on Demand"
+            ]
+        }
+        </script>
+
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "url": "{{ request.scheme }}://{{ request.get_host }}",
+            "name": "KortekStream",
+            "description": "Platform streaming anime terbaik di Indonesia",
+            "inLanguage": "id-ID",
+            "copyrightYear": "2024",
+            "copyrightHolder": {
+                "@type": "Organization",
+                "name": "KortekStream"
+            },
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "{{ request.scheme }}://{{ request.get_host }}/search/?q={search_term_string}"
+                },
+                "query-input": "required name=search_term_string"
+            }
+        }
+        </script>
+        {% endblock structured_data %}
+
+        <!-- Performance Monitoring -->
+        <script>
+            // Core Web Vitals monitoring
+            function getCLS(onPerfEntry) {
+                if ('web-vital' in window) {
+                    import('web-vitals').then(({getCLS}) => {
+                        getCLS(onPerfEntry);
+                    });
+                }
+            }
+
+            function getFID(onPerfEntry) {
+                if ('web-vital' in window) {
+                    import('web-vitals').then(({getFID}) => {
+                        getFID(onPerfEntry);
+                    });
+                }
+            }
+
+            function getLCP(onPerfEntry) {
+                if ('web-vital' in window) {
+                    import('web-vitals').then(({getLCP}) => {
+                        getLCP(onPerfEntry);
+                    });
+                }
+            }
+
+            // Send vitals to analytics
+            function sendToAnalytics(metric) {
+                // Replace with your analytics endpoint
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', metric.name, {
+                        event_category: 'Web Vitals',
+                        value: Math.round(metric.name === 'CLS' ? metric.value * 1000 : metric.value),
+                        event_label: metric.id,
+                        non_interaction: true,
+                    });
+                }
+            }
+
+            getCLS(sendToAnalytics);
+            getFID(sendToAnalytics);
+            getLCP(sendToAnalytics);
+        </script>
+        
+        <!-- Advanced SEO and Performance Script -->
+        <script>
+            // SEO Performance Optimization
+            (function() {
+                // Lazy load images when they come into viewport
+                const lazyImages = document.querySelectorAll('img[data-src]');
+                if ('IntersectionObserver' in window) {
+                    const imageObserver = new IntersectionObserver((entries, observer) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                const img = entry.target;
+                                img.src = img.dataset.src;
+                                img.removeAttribute('data-src');
+                                observer.unobserve(img);
+                            }
+                        });
+                    });
+                    lazyImages.forEach(img => imageObserver.observe(img));
+                }
+                
+                // Preload critical resources
+                const criticalResources = [
+                    '/static/css/critical.css',
+                    '/static/js/performance-optimizations.js'
+                ];
+                
+                criticalResources.forEach(resource => {
+                    if (resource.endsWith('.css')) {
+                        const link = document.createElement('link');
+                        link.rel = 'preload';
+                        link.as = 'style';
+                        link.href = resource;
+                        document.head.appendChild(link);
+                    } else if (resource.endsWith('.js')) {
+                        const link = document.createElement('link');
+                        link.rel = 'preload';
+                        link.as = 'script';
+                        link.href = resource;
+                        document.head.appendChild(link);
+                    }
+                });
+                
+                // Add loading indicators for better UX
+                const loadingElements = document.querySelectorAll('[data-loading]');
+                loadingElements.forEach(el => {
+                    el.innerHTML = '<div class="animate-pulse bg-gray-200 dark:bg-gray-700 rounded"></div>';
+                });
+                
+                // Track page view for SEO analytics
+                if (typeof gtag !== 'undefined') {
+                    gtag('config', 'GA_MEASUREMENT_ID', {
+                        page_title: document.title,
+                        page_location: window.location.href
+                    });
+                }
+                
+                // Service Worker for caching and offline functionality
+                if ('serviceWorker' in navigator && !window.location.hostname.includes('localhost')) {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(registration => console.log('SW registered'))
+                        .catch(error => console.log('SW registration failed'));
+                }
+                
+                // Schema.org breadcrumb tracking
+                const breadcrumbs = document.querySelectorAll('[itemtype="https://schema.org/BreadcrumbList"] [itemtype="https://schema.org/ListItem"]');
+                if (breadcrumbs.length > 0) {
+                    console.log(`Page has ${breadcrumbs.length} breadcrumb levels`);
+                }
+            })();
+        </script>
+        
+        <!-- Page View Tracking for SEO Analytics -->
+        <script>
+            // Track important SEO metrics
+            document.addEventListener('DOMContentLoaded', function() {
+                // Track page type for SEO analytics
+                const pageType = document.querySelector('meta[name="page-type"]')?.content || 'unknown';
+                const category = document.querySelector('meta[name="category"]')?.content || 'general';
+                
+                // Performance timing for SEO
+                if (window.performance && window.performance.timing) {
+                    const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
+                    if (loadTime > 0) {
+                        console.log(`Page load time: ${loadTime}ms`);
+                        // You can send this to your analytics service
+                    }
+                }
+                
+                // Track user engagement for SEO signals
+                let startTime = Date.now();
+                let maxScroll = 0;
+                
+                window.addEventListener('scroll', function() {
+                    const scrollPercent = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+                    if (scrollPercent > maxScroll) {
+                        maxScroll = scrollPercent;
+                    }
+                });
+                
+                // Send engagement data when user leaves
+                window.addEventListener('beforeunload', function() {
+                    const timeOnPage = Date.now() - startTime;
+                    // Send analytics data: timeOnPage, maxScroll, pageType, etc.
+                });
+            });
+        </script>
     </body>
 </html>

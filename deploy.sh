@@ -59,8 +59,8 @@ echo -e "${YELLOW}Status container:${NC}"
 docker compose -f docker-compose.prod.yml ps
 
 echo -e "${GREEN}=== Deployment selesai! ===${NC}"
-echo -e "${GREEN}Aplikasi sekarang berjalan di port 9000${NC}"
-echo -e "${YELLOW}Pastikan port 9000 terbuka di firewall server Anda.${NC}"
+echo -e "${GREEN}Aplikasi sekarang berjalan di port 9111${NC}"
+echo -e "${YELLOW}Pastikan port 9111 terbuka di firewall server Anda.${NC}"
 echo -e "${YELLOW}Anda dapat mengakses aplikasi di:${NC}"
 echo -e "${GREEN}https://kortekstream.online${NC}"
-echo -e "${GREEN}https://128.199.109.211:9000${NC}"
+echo -e "${GREEN}https://128.199.109.211:9111${NC}"

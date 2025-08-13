@@ -8,38 +8,46 @@
 
 {% block extra_css %}
     <style>
+        /* Optimized CSS with reduced transitions for better performance */
         .card-img-top {
             height: 250px;
             object-fit: cover;
+            /* Add image rendering optimization */
+            image-rendering: auto;
         }
         .badge {
-            @apply px-2 py-1 rounded-full text-xs font-semibold;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
         .light .badge-primary {
-            @apply bg-gold-100 text-gold-800;
+            background-color: #FFF2CC;
+            color: #975A16;
         }
         .dark .badge-primary {
-            @apply bg-korteks-darkgray text-korteks-red;
+            background-color: #2D3748;
+            color: #E50914;
         }
         .section-divider {
-            @apply h-px;
+            height: 1px;
         }
         .light .section-divider {
-            @apply bg-gradient-to-r from-gold-400 to-transparent;
+            background: linear-gradient(to right, #F59E0B, transparent);
         }
         .dark .section-divider {
-            @apply bg-gradient-to-r from-korteks-red to-transparent;
+            background: linear-gradient(to right, #E50914, transparent);
         }
         .category-btn {
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
         }
         .light .category-btn:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             background-color: #FFF2CC;
             border-color: #FFBF00;
         }
         .dark .category-btn:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             background-color: #2F2F2F;
             border-color: #E50914;
         }
@@ -52,6 +60,21 @@
             background-color: #E50914;
             color: white;
             border-color: #B81D24;
+        }
+        
+        /* Optimize layout rendering */
+        .modern-card {
+            contain: content;
+        }
+        
+        /* Prevent layout shifts */
+        .grid {
+            min-height: 100px;
+        }
+        
+        /* Optimize image loading */
+        img {
+            content-visibility: auto;
         }
     </style>
 {% endblock extra_css %}

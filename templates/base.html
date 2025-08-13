@@ -140,11 +140,16 @@
         <!-- Performance Optimizations -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-        <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"></noscript>
+        
+        <!-- Preload critical CSS files -->
+        <link rel="preload" href="{% static 'css/output.css' %}" as="style">
+        <link rel="preload" href="{% static 'css/modern-animations.css' %}" as="style">
+        
+        <!-- Preload fonts with reduced weight variants for faster loading -->
+        <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"></noscript>
 
-        <!-- Critical CSS (inlined for performance) -->
-        {% if performance.enable_critical_css %}
+        <!-- Critical CSS (always inlined for performance) -->
         <style>
             {% load static %}
             /* Critical CSS inlined for performance */
@@ -153,21 +158,40 @@
             body { font-family: 'Poppins', 'Inter', system-ui, -apple-system, sans-serif; line-height: 1.6; margin: 0; padding: 0; min-height: 100vh; transition: background-color 0.3s ease, color 0.3s ease; }
             nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background-color: rgba(255, 255, 255, 0.8); border-bottom: 1px solid rgba(229, 231, 235, 0.2); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
             .dark nav { background-color: rgba(17, 24, 39, 0.8); border-bottom-color: rgba(75, 85, 99, 0.2); }
+            
+            /* Additional critical styles to prevent FOUC (Flash of Unstyled Content) */
+            .modern-card { background-color: rgba(255, 255, 255, 0.8); border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; }
+            .dark .modern-card { background-color: rgba(31, 41, 55, 0.8); }
+            .container { width: 100%; margin-left: auto; margin-right: auto; }
+            .text-center { text-align: center; }
+            .font-bold { font-weight: 700; }
+            .text-gray-800 { color: #1f2937; }
+            .dark .text-gray-800 { color: #f9fafb; }
+            .dark .text-white { color: #ffffff; }
+            .mb-4 { margin-bottom: 1rem; }
+            .mb-8 { margin-bottom: 2rem; }
+            .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+            .px-4 { padding-left: 1rem; padding-right: 1rem; }
+            .mx-auto { margin-left: auto; margin-right: auto; }
+            .flex { display: flex; }
+            .items-center { align-items: center; }
+            .justify-center { justify-content: center; }
+            .space-x-6 > * + * { margin-left: 1.5rem; }
+            .rounded-2xl { border-radius: 1rem; }
+            .text-lg { font-size: 1.125rem; }
+            .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+            
+            /* Prevent animation flicker on load */
+            .stagger-item { opacity: 1; }
+            body:not(.loaded) .stagger-item { opacity: 0; }
+            body:not(.loaded) .animate-fade-in { opacity: 0; }
+            body:not(.loaded) .animate-slide-up { opacity: 0; transform: translateY(20px); }
         </style>
-        {% endif %}
         
-        <!-- Main CSS -->
-        <link rel="stylesheet" href="{% static 'css/output.css' %}" media="print" onload="this.media='all'; this.onload=null;">
-        <noscript><link rel="stylesheet" href="{% static 'css/output.css' %}"></noscript>
-        <script>
-            // Tailwind config dipindahkan ke tailwind.config.js
-
-
-
-        </script>
-
+        <!-- Main CSS - load directly for faster rendering -->
+        <link rel="stylesheet" href="{% static 'css/output.css' %}">
+        
         <!-- Modern CSS Framework -->
-        {% load static %}
         <link rel="stylesheet" href="{% static 'css/modern-animations.css' %}">
 
         <style>
@@ -594,15 +618,19 @@
                 });
             });
 
-            // Page load animation
-            window.addEventListener('load', function() {
-                document.body.classList.add('loaded');
-
-                // Animate elements with stagger
-                const animateElements = document.querySelectorAll('.stagger-item');
-                animateElements.forEach((el, index) => {
-                    el.style.animationDelay = `${index * 0.1}s`;
-                });
+            // Page load animation - optimized for faster rendering
+            document.addEventListener('DOMContentLoaded', function() {
+                // Add a small delay to ensure CSS is applied first
+                setTimeout(function() {
+                    document.body.classList.add('loaded');
+                    
+                    // Animate elements with stagger but with shorter delays
+                    const animateElements = document.querySelectorAll('.stagger-item');
+                    animateElements.forEach((el, index) => {
+                        // Reduce animation delay to make it faster
+                        el.style.animationDelay = `${index * 0.05}s`;
+                    });
+                }, 50); // Small delay to ensure CSS is loaded
             });
 
             // Smooth scroll behavior

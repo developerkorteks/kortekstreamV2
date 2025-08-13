@@ -81,22 +81,8 @@
         
         
         <!-- Error Handling -->
-        {% if datas.error %}
-            <div class="bg-white dark:bg-korteks-darkgray border-l-4 border-gold-500 dark:border-korteks-red p-6 rounded-lg shadow-md">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <svg class="h-6 w-6 text-gold-500 dark:text-korteks-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-lg font-medium text-gray-800 dark:text-white">Something went wrong</h3>
-                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                            We're experiencing some issues. Please try again later.
-                        </p>
-                    </div>
-                </div>
-            </div>
+        {% if error_occurred %}
+            {% include 'components/error_display.html' %}
         {% else %}
             <!-- Handle category=all with data_by_category structure -->
             {% if category == 'all' and datas.data_by_category %}

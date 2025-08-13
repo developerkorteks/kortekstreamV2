@@ -18,11 +18,7 @@ import os
 import time
 
 # Import API client with fallback
-try:
-    from .api_client import api_client, make_api_request, get_api_stats, api_health_check
-except ImportError:
-    # Fallback to simple API client
-    from .simple_api_client import simple_api_client as api_client, simple_make_api_request as make_api_request, simple_get_api_stats as get_api_stats, simple_api_health_check as api_health_check
+from .api_client import api_client, make_api_request, get_api_stats, api_health_check, APIResponse
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -419,34 +415,43 @@ def anime_detail(request):
             "category": category,
             "categories": categories
         })
+
+    error_details = None
     
-    # Create cache key based on identifier and category
-    cache_key = f"anime_detail_{identifier}_{category}"
-    data = cache.get(cache_key)
-    
-    if not data:
-        try:
-            # Prepare parameters for API request
-            params = {}
-            if anime_id:
-                params['id'] = anime_id
-            if slug:
-                params['slug'] = slug
-            if anime_slug:
-                params['anime_slug'] = anime_slug
-            if category:
-                params['category'] = category
-                
-            # Make API request
-            res = requests.get(BASE_URL + '/api/v1/anime-detail', params=params, timeout=5)
-            res.raise_for_status()
-            data = res.json()
+    try:
+        # Prepare parameters for API request
+        params = {}
+        if anime_id:
+            params['id'] = anime_id
+        if slug:
+            params['slug'] = slug
+        if anime_slug:
+            params['anime_slug'] = anime_slug
+        if category:
+            params['category'] = category
             
-            # Cache the result for 5 minutes
-            cache.set(cache_key, data, timeout=300)
-        except Exception as e:
-            data = {"error": str(e)}
-    
+        # Make API request using the robust client
+        response = make_api_request(
+            'api/v1/anime-detail',
+            params=params,
+            cache_timeout=getattr(settings, 'CACHE_TIMEOUT_MEDIUM', 300) # 5 minutes cache
+        )
+        
+        data = response.data
+
+        if response.source == 'error':
+            error_details = data.get('message', 'Service temporarily unavailable')
+            logger.error(f"API error in anime_detail for identifier {identifier}: {data.get('error')}")
+            data['error_message_for_user'] = error_details
+
+    except Exception as e:
+        error_details = f"Unexpected view error: {str(e)}"
+        logger.error(f"Unexpected view error in anime_detail for identifier {identifier}: {str(e)}")
+        data = {
+            "error": error_details,
+            "error_message_for_user": "An unexpected error occurred in the application."
+        }
+
     # Normalize the data structure for the template
     # Some APIs return data.data (nested), others return data directly
     normalized_data = data.copy()
@@ -478,7 +483,8 @@ def anime_detail(request):
         "anime_slug": identifier,
         "categories": categories,
         "active_page": "detail",  # For navigation active state
-        "seo_context": get_seo_context(request, 'anime_detail', anime_title=anime_title, category=category)
+        "seo_context": get_seo_context(request, 'anime_detail', anime_title=anime_title, category=category),
+        "error_occurred": response.source == 'error' if 'response' in locals() else True
     }
     
     return render(request, 'stream/detail.html', context)
@@ -491,24 +497,29 @@ def latest(request):
     # Get page from query parameter, default to 1
     page = request.GET.get('page', 1)
     
-    cache_key = f"latest_data_{category}_page_{page}"
-    data = cache.get(cache_key)
-    
-    if not data:
-        try:
-            res = requests.get(
-                BASE_URL + '/api/v1/anime-terbaru', 
-                params={'category': category, 'page': page}, 
-                timeout=10
-            )
-            res.raise_for_status()
-            data = res.json()
-            
-            # Cache the data for 60 seconds
-            cache.set(cache_key, data, timeout=60)
-        except Exception as e:
-            data = {"error": str(e)}
-    
+    error_details = None
+
+    try:
+        response = make_api_request(
+            'api/v1/anime-terbaru',
+            params={'category': category, 'page': page},
+            cache_timeout=getattr(settings, 'CACHE_TIMEOUT_SHORT', 60) # 1 minute cache
+        )
+        data = response.data
+
+        if response.source == 'error':
+            error_details = data.get('message', 'Service temporarily unavailable')
+            logger.error(f"API error in latest for category {category}: {data.get('error')}")
+            data['error_message_for_user'] = error_details
+
+    except Exception as e:
+        error_details = f"Unexpected view error: {str(e)}"
+        logger.error(f"Unexpected view error in latest for category {category}: {str(e)}")
+        data = {
+            "error": error_details,
+            "error_message_for_user": "An unexpected error occurred in the application."
+        }
+
     # Process the data to add encoded episode IDs
     if not data.get("error"):
         if category == 'all' and 'data_by_category' in data:
@@ -554,7 +565,8 @@ def latest(request):
         "page": int(page),
         "categories": categories,
         "active_page": "latest",  # For navigation active state
-        "seo_context": get_seo_context(request, 'latest', category=category)
+        "seo_context": get_seo_context(request, 'latest', category=category),
+        "error_occurred": response.source == 'error' if 'response' in locals() else True
     }
     
     return render(request, 'stream/latest.html', context)
@@ -570,26 +582,29 @@ def schedule(request):
     # Define days of the week (Indonesian names as used in API)
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     
-    # Create cache key based on whether we're fetching a specific day or all days
-    cache_key = f"schedule_data_{category}_{day if day else 'all_days'}"
-    data = cache.get(cache_key)
-    
-    if not data:
-        try:
-            # Use the general schedule endpoint
-            res = requests.get(
-                f"{BASE_URL}/api/v1/jadwal-rilis", 
-                params={'category': category}, 
-                timeout=10
-            )
-            res.raise_for_status()
-            data = res.json()
-            
-            # Cache the data
-            cache.set(cache_key, data, timeout=300)
-            
-        except Exception as e:
-            data = {"error": f"Failed to retrieve schedule data: {str(e)}"}
+    error_details = None
+
+    try:
+        # Use the general schedule endpoint
+        response = make_api_request(
+            f"api/v1/jadwal-rilis",
+            params={'category': category},
+            cache_timeout=getattr(settings, 'CACHE_TIMEOUT_MEDIUM', 300) # 5 minutes cache
+        )
+        data = response.data
+
+        if response.source == 'error':
+            error_details = data.get('message', 'Service temporarily unavailable')
+            logger.error(f"API error in schedule for category {category}: {data.get('error')}")
+            data['error_message_for_user'] = error_details
+
+    except Exception as e:
+        error_details = f"Unexpected view error: {str(e)}"
+        logger.error(f"Unexpected view error in schedule for category {category}: {str(e)}")
+        data = {
+            "error": error_details,
+            "error_message_for_user": "An unexpected error occurred in the application."
+        }
     
     # Handle _metadata field - Django templates don't allow attributes starting with underscore
     if '_metadata' in data:
@@ -608,7 +623,8 @@ def schedule(request):
         "selected_day": day,
         "days": days,
         "active_page": "schedule",  # For navigation active state
-        "seo_context": get_seo_context(request, 'schedule', category=category)
+        "seo_context": get_seo_context(request, 'schedule', category=category),
+        "error_occurred": response.source == 'error' if 'response' in locals() else True
     }
     
     return render(request, 'stream/schedule.html', context)
@@ -626,81 +642,42 @@ def search(request):
     default_category = categories[0] if categories else 'all'
     category = request.GET.get('category', default_category)
     
-    # Create a cache key based on search parameters
-    # URL encode the query to handle special characters
-    encoded_query = urllib.parse.quote(query)
-    cache_key = f"search_data_{encoded_query}_{category}_{page}"
-    data = cache.get(cache_key)
-    
-    # For debugging purposes, we'll add more detailed error information
+    data = None
     error_details = None
-    
+    response = None
+
     # Only make API request if there's a search query
-    if query and not data:
+    if query:
         try:
-            # Prepare API request
-            api_url = f"{BASE_URL}/api/v1/search"
-            logger.info(f"Searching from: {api_url} with q={query}, category={category}, page={page}")
-            
-            # Make the API request
-            res = requests.get(
-                api_url, 
+            # Make the API request using the robust client
+            response = make_api_request(
+                'api/v1/search',
                 params={
                     'q': query,
                     'category': category,
                     'page': page
-                }, 
-                timeout=10
+                },
+                cache_timeout=getattr(settings, 'CACHE_TIMEOUT_SHORT', 60) # 1 minute cache
             )
-            
-            # Check status code
-            res.raise_for_status()
-            
-            # Parse the JSON response
-            data = res.json()
-            
-            # Log the response for debugging
-            logger.info(f"API Response: {data.get('message', 'No message')}, Confidence: {data.get('confidence_score', 'N/A')}")
+            data = response.data
+
+            if response.source == 'error':
+                error_details = data.get('message', 'Service temporarily unavailable')
+                logger.error(f"API error in search for query '{query}': {data.get('error')}")
+                data['error_message_for_user'] = error_details
             
             # Validate confidence_score
-            if data.get("confidence_score", 0) <= 0.5:
+            elif data.get("confidence_score", 0) <= 0.5:
                 error_details = f"Low confidence score: {data.get('confidence_score', 0)}"
-                logger.warning(f"Low confidence score: {data.get('confidence_score', 0)}")
-                data = {
-                    "message": "Something went wrong",
-                    "confidence_score": data.get("confidence_score", 0),
-                    "error_details": error_details
-                }
-            else:
-                # Only cache successful responses with good confidence score
-                cache.set(cache_key, data, timeout=60)
-                
-        except requests.exceptions.RequestException as e:
-            # More specific error handling for network issues
-            error_details = f"API Connection Error: {str(e)}"
-            logger.error(f"API Connection Error: {str(e)}")
-            data = {
-                "error": str(e),
-                "message": "API Connection Error",
-                "error_details": error_details
-            }
-        except ValueError as e:
-            # Handle JSON parsing errors
-            error_details = f"Invalid JSON Response: {str(e)}"
-            logger.error(f"Invalid JSON Response: {str(e)}")
-            data = {
-                "error": str(e),
-                "message": "Invalid API Response Format",
-                "error_details": error_details
-            }
+                logger.warning(f"Low confidence score for '{query}': {data.get('confidence_score', 0)}")
+                data['error_message_for_user'] = "Data quality is low, please try again"
+
         except Exception as e:
-            # Catch-all for other errors
-            error_details = f"Unexpected Error: {str(e)}"
-            logger.error(f"Unexpected Error: {str(e)}")
+            error_details = f"Unexpected view error: {str(e)}"
+            logger.error(f"Unexpected view error in search for query '{query}': {str(e)}")
             data = {
-                "error": str(e),
-                "message": "Unexpected Error",
-                "error_details": error_details
+                "error": error_details,
+                "error_message_for_user": "An unexpected error occurred in the application."
             }
     
     # Prepare context for the template
@@ -713,7 +690,8 @@ def search(request):
         "error_details": error_details,
         "debug": settings.DEBUG,  # Pass DEBUG setting to template
         "active_page": "search",   # For navigation active state
-        "seo_context": get_seo_context(request, 'search', search_query=query, category=category)
+        "seo_context": get_seo_context(request, 'search', search_query=query, category=category),
+        "error_occurred": (response.source == 'error' if response else (True if query else False))
     }
     
     return render(request, 'stream/search_results.html', context)

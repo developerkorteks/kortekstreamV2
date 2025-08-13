@@ -118,69 +118,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             
             {# --- Error Handling Block --- #}
-            {% if datas.error or datas.message == "Something went wrong" or datas.message == "API Connection Error" or datas.message == "Invalid API Response Format" or datas.message == "Unexpected Error" %}
-                <div class="bg-white dark:bg-korteks-darkgray border-l-4 border-gold-500 dark:border-korteks-red p-6 rounded-lg shadow-md">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-gold-500 dark:text-korteks-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-lg font-medium text-gray-800 dark:text-white">Something went wrong</h3>
-                            
-                            {% if datas.message == "API Connection Error" %}
-                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                    We couldn't connect to our content server. This might be due to network issues or server maintenance.
-                                </p>
-                            {% elif datas.message == "Invalid API Response Format" %}
-                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                    We received an unexpected response from our content server. Our team has been notified.
-                                </p>
-                            {% elif datas.message == "Unexpected Error" %}
-                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                    An unexpected error occurred while loading content. Our team has been notified.
-                                </p>
-                            {% else %}
-                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                    We're experiencing some issues loading the {{ category }} content. Please try again later.
-                                </p>
-                            {% endif %}
-                            
-                            {% if error_details or datas.error_details %}
-                                <!-- Only show this in development mode, hidden in production -->
-                                {% if debug %}
-                                <div class="mt-4 p-3 bg-gold-50 dark:bg-korteks-gray rounded-md border border-gold-100 dark:border-korteks-darkgray">
-                                    <p class="text-xs font-mono text-gold-700 dark:text-korteks-red">
-                                        Error Details: {{ error_details|default:datas.error_details }}
-                                    </p>
-                                </div>
-                                {% endif %}
-                            {% endif %}
-                            
-                            {% if datas.confidence_score is not None %}
-                                <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                    Confidence Score: {{ datas.confidence_score }}
-                                </div>
-                            {% endif %}
-                            
-                            <div class="mt-4">
-                                <a href="/" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gold-600 dark:bg-korteks-red hover:bg-gold-700 dark:hover:bg-korteks-darkred focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 dark:focus:ring-korteks-red">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                    </svg>
-                                    Return to Home
-                                </a>
-                                <button onclick="window.location.reload()" class="ml-3 inline-flex items-center px-4 py-2 border border-gold-300 dark:border-korteks-gray text-sm font-medium rounded-md text-gold-700 dark:text-white bg-white dark:bg-korteks-darkgray hover:bg-gold-50 dark:hover:bg-korteks-gray focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 dark:focus:ring-korteks-red">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                    </svg>
-                                    Try Again
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            {% if error_occurred %}
+                {% include 'components/error_display.html' %}
             {# --- Data Display Block --- #}
             {% else %}
                 {# --- Logic for category=all --- #}

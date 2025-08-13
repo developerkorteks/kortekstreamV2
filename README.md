@@ -2,84 +2,117 @@
 
 Streaming platform untuk berbagai kategori konten.
 
-## Instruksi Deployment
+## Instruksi Deployment Docker
 
 ### Prasyarat
 
-- Docker dan Docker Compose terinstal di server VPS Anda
-- Domain (kortekstream.online) sudah diarahkan ke alamat IP server VPS Anda
-- Port 2443 dan 2020 sudah dibuka di firewall server VPS Anda
+- Docker dan Docker Compose terinstal di server Anda
+- Port 9000 sudah dibuka di firewall server Anda (atau port lain jika Anda mengubahnya)
 
-### Langkah-langkah Deployment (Siap Pakai)
+### Deployment Lokal
 
-1. Clone repository ke server VPS Anda:
+1. Clone repository:
    ```
    git clone <repository-url> /path/to/kortekstream
    cd /path/to/kortekstream
    ```
 
-2. Jalankan script inisialisasi:
+2. Jalankan script deployment lokal:
    ```
-   ./init-deployment.sh
+   chmod +x deploy-local.sh
+   ./deploy-local.sh
    ```
+   
    Script ini akan:
-   - Membuat direktori yang diperlukan
-   - Menjalankan container Docker
+   - Menghentikan container yang mungkin sedang berjalan
+   - Membangun dan menjalankan container
    - Menjalankan migrasi database
-   - Membuat superuser
    - Mengumpulkan file statis
 
-3. Akses situs Anda di:
-   - https://kortekstream.online:2443 (HTTPS)
-   - http://kortekstream.online:2020 (HTTP, akan diarahkan ke HTTPS)
+3. Akses aplikasi di browser:
+   ```
+   http://localhost:9000
+   ```
 
-### Menggunakan Zero Trust Tunneling
+### Deployment Produksi
 
-Jika Anda ingin menggunakan Zero Trust untuk tunneling (seperti Cloudflare Zero Trust atau solusi serupa):
+1. Salin file `.env.prod` ke `.env` dan sesuaikan konfigurasi:
+   ```
+   cp .env.prod .env
+   nano .env  # Edit sesuai kebutuhan
+   ```
+
+2. Jalankan script deployment produksi:
+   ```
+   chmod +x deploy-prod.sh
+   ./deploy-prod.sh
+   ```
+
+3. Akses aplikasi di browser:
+   ```
+   http://yourdomain.com:9000
+   ```
+
+### Konfigurasi Zero Trust
+
+Karena Anda menggunakan Zero Trust, Anda tidak memerlukan SSL di level aplikasi. Konfigurasi yang sudah dibuat:
+
+- Nginx berjalan di port 9000 (non-standar)
+- Redis berjalan di port 6380 (non-standar)
+- SSL dinonaktifkan di konfigurasi Nginx
+- Semua header keamanan tetap diaktifkan
+
+Untuk mengintegrasikan dengan Zero Trust:
 
 1. Konfigurasikan tunnel di dashboard Zero Trust Anda
-2. Arahkan tunnel ke port 2443 (HTTPS) dan 2020 (HTTP) di server Anda
+2. Arahkan tunnel ke port 9000 di server Anda
 3. Konfigurasikan DNS untuk mengarahkan domain Anda ke tunnel
 
-Dengan cara ini, Anda dapat mengakses situs Anda melalui domain tanpa port, sementara di belakang layar, Zero Trust menangani tunneling ke port yang benar.
+### Struktur Docker
 
-### Konfigurasi
+Deployment menggunakan beberapa container:
 
-Semua konfigurasi sudah disiapkan dan siap digunakan:
-
-- File `.env` sudah berisi semua konfigurasi yang diperlukan
-- Redis berjalan di port 7453
-- Aplikasi berjalan di port 9326
-- Database PostgreSQL sudah dikonfigurasi dengan kredensial yang aman
-- CSRF dan allowed hosts sudah dikonfigurasi dengan benar
+- **web**: Aplikasi Django dengan Gunicorn
+- **db**: Database PostgreSQL
+- **redis**: Cache Redis (port 6380)
+- **nginx**: Server web Nginx (port 9000)
 
 ### Perintah Berguna
 
 - Untuk melihat log:
   ```
-  docker-compose logs -f
+  # Log semua container
+  docker compose -f docker-compose.prod.yml logs -f
+  
+  # Log container tertentu
+  docker compose -f docker-compose.prod.yml logs -f web
   ```
 
 - Untuk menghentikan aplikasi:
   ```
-  docker-compose down
+  docker compose -f docker-compose.prod.yml down
   ```
 
 - Untuk memulai ulang aplikasi:
   ```
-  docker-compose up -d
+  docker compose -f docker-compose.prod.yml up -d
   ```
 
 - Untuk memperbarui aplikasi setelah perubahan kode:
   ```
   git pull
-  docker-compose build web
-  docker-compose up -d
+  docker compose -f docker-compose.prod.yml build web
+  docker compose -f docker-compose.prod.yml up -d
   ```
 
 - Untuk backup database:
   ```
-  docker-compose exec db pg_dump -U postgres kortekstream > backup.sql
+  docker compose -f docker-compose.prod.yml exec db pg_dump -U postgres kortekstream > backup.sql
+  ```
+
+- Untuk memeriksa status kesehatan aplikasi:
+  ```
+  curl http://localhost:9000/health/
   ```
 
 ## Fitur

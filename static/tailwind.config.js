@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["../**/templates/*.html", "../**/templates/**/*.html","../**/templates/**/**/*.html"],
+  content: ["../**/templates/*.html", "../**/templates/**/*.html", "../**/templates/**/**/*.html"],
   darkMode: 'class',
   theme: {
     extend: {
@@ -113,6 +113,23 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function({ addBase, theme }) {
+      addBase({
+        'html': { fontSize: '16px' },
+        'body': { 
+          fontFamily: 'Poppins, Inter, system-ui, sans-serif',
+          lineHeight: '1.6',
+          color: theme('colors.gray.900'),
+          backgroundColor: theme('colors.white'),
+          transition: 'background-color 0.3s ease, color 0.3s ease',
+        },
+        '.dark body': {
+          color: theme('colors.gray.100'),
+          backgroundColor: theme('colors.gray.900'),
+        },
+      })
+    },
+  ],
 }
 

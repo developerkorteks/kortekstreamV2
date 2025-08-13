@@ -40,6 +40,13 @@ try:
 except ImportError:
     SEO_VIEWS_AVAILABLE = False
 
+# Import health check views
+try:
+    from stream.views_health import health_check
+    HEALTH_CHECK_AVAILABLE = True
+except ImportError:
+    HEALTH_CHECK_AVAILABLE = False
+
 
 urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
@@ -51,6 +58,10 @@ urlpatterns = [
     # Main app URLs
     path('', include('stream.urls', namespace='stream')),
 ]
+
+# Add health check endpoint for Docker
+if HEALTH_CHECK_AVAILABLE:
+    urlpatterns.append(path('health/', health_check, name='health_check'))
 
 # Add favicon if view is available
 if FAVICON_VIEW_AVAILABLE:

@@ -1,145 +1,92 @@
-/**
- * KortekStream User Activity Manager
- * Handles Watch History and Watch List functionality using Local Storage.
- */
+// User activity tracking for KortekStream
 
-document.addEventListener('DOMContentLoaded', () => {
-    // This script is now loaded and can be used by other scripts.
-    console.log('User Activity Manager Loaded.');
-});
-
-const HISTORY_KEY = 'kortek_watch_history';
-const WATCHLIST_KEY = 'kortek_watch_list';
-const MAX_HISTORY_ITEMS = 100;
-
-// --- Generic Local Storage Functions ---
-
-/**
- * Safely retrieves and parses JSON data from Local Storage.
- * @param {string} key The key for the Local Storage item.
- * @returns {any} The parsed data or null if not found or invalid.
- */
-function getUserActivity(key) {
-    try {
-        const data = localStorage.getItem(key);
-        return data ? JSON.parse(data) : [];
-    } catch (error) {
-        console.error(`Error reading from Local Storage (${key}):`, error);
-        return [];
-    }
+// Initialize history tracking
+function initHistoryTracking() {
+  // Check if localStorage is available
+  if (typeof(Storage) === "undefined") {
+    console.warn("LocalStorage not available, history tracking disabled");
+    return;
+  }
+  
+  // Initialize history if not exists
+  if (!localStorage.getItem('viewHistory')) {
+    localStorage.setItem('viewHistory', JSON.stringify([]));
+  }
 }
 
-/**
- * Safely stringifies and saves data to Local Storage.
- * @param {string} key The key for the Local Storage item.
- * @param {any} data The data to be saved.
- */
-function setUserActivity(key, data) {
-    try {
-        localStorage.setItem(key, JSON.stringify(data));
-    } catch (error) {
-        console.error(`Error writing to Local Storage (${key}):`, error);
-    }
+// Add item to history
+function addToHistory(itemId, itemType, itemTitle, itemImage) {
+  if (typeof(Storage) === "undefined") return;
+  
+  try {
+    const history = JSON.parse(localStorage.getItem('viewHistory')) || [];
+    
+    // Remove if already exists (to move to top)
+    const filteredHistory = history.filter(item => !(item.id === itemId && item.type === itemType));
+    
+    // Add new item at beginning
+    filteredHistory.unshift({
+      id: itemId,
+      type: itemType,
+      title: itemTitle,
+      image: itemImage,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Keep only last 20 items
+    const trimmedHistory = filteredHistory.slice(0, 20);
+    
+    // Save back to storage
+    localStorage.setItem('viewHistory', JSON.stringify(trimmedHistory));
+    
+    // Dispatch event for other components
+    document.dispatchEvent(new CustomEvent('historyUpdated', {
+      detail: { history: trimmedHistory }
+    }));
+  } catch (e) {
+    console.error("Error updating history:", e);
+  }
 }
 
-// --- Watch History Functions ---
-
-/**
- * Adds an episode to the watch history.
- * Moves the episode to the top if it already exists.
- * @param {object} episodeData - The episode data to save.
- * Example: { id: 'unique-ep-id', title: 'Ep 1', animeTitle: 'Anime', coverUrl: '...', url: '...', category: 'anime', watchedAt: '...' }
- */
-function addToHistory(episodeData) {
-    if (!episodeData || !episodeData.id) {
-        console.error('Invalid episode data provided to addToHistory.');
-        return;
-    }
-
-    let history = getUserActivity(HISTORY_KEY);
-
-    // Remove existing entry to move it to the top
-    history = history.filter(item => item.id !== episodeData.id);
-
-    // Add new entry to the beginning
-    episodeData.watchedAt = new Date().toISOString();
-    history.unshift(episodeData);
-
-    // Enforce history limit
-    if (history.length > MAX_HISTORY_ITEMS) {
-        history = history.slice(0, MAX_HISTORY_ITEMS);
-    }
-
-    setUserActivity(HISTORY_KEY, history);
-    console.log('Added to history:', episodeData.title);
-}
-
-/**
- * Retrieves the entire watch history.
- * @returns {Array} An array of episode objects.
- */
+// Get viewing history
 function getHistory() {
-    return getUserActivity(HISTORY_KEY);
+  if (typeof(Storage) === "undefined") return [];
+  
+  try {
+    return JSON.parse(localStorage.getItem('viewHistory')) || [];
+  } catch (e) {
+    console.error("Error retrieving history:", e);
+    return [];
+  }
 }
 
-// --- Watch List Functions ---
-
-/**
- * Adds an anime to the watch list.
- * @param {object} animeData - The anime data to save.
- * Example: { id: 'unique-anime-slug', title: 'Anime Title', coverUrl: '...', url: '...', category: 'anime', addedAt: '...' }
- */
-function addToWatchlist(animeData) {
-    if (!animeData || !animeData.id) {
-        console.error('Invalid anime data provided to addToWatchlist.');
-        return;
-    }
-
-    let watchlist = getUserActivity(WATCHLIST_KEY);
-
-    // Check if it already exists
-    if (watchlist.some(item => item.id === animeData.id)) {
-        console.log('Already in watchlist:', animeData.title);
-        return; // Already in the list
-    }
-
-    animeData.addedAt = new Date().toISOString();
-    watchlist.unshift(animeData); // Add to the beginning
-    setUserActivity(WATCHLIST_KEY, watchlist);
-    console.log('Added to watchlist:', animeData.title);
+// Clear history
+function clearHistory() {
+  if (typeof(Storage) === "undefined") return;
+  
+  localStorage.setItem('viewHistory', JSON.stringify([]));
+  
+  // Dispatch event for other components
+  document.dispatchEvent(new CustomEvent('historyUpdated', {
+    detail: { history: [] }
+  }));
 }
 
-/**
- * Removes an anime from the watch list.
- * @param {string} animeId - The unique ID (slug) of the anime to remove.
- */
-function removeFromWatchlist(animeId) {
-    if (!animeId) return;
-    let watchlist = getUserActivity(WATCHLIST_KEY);
-    const initialLength = watchlist.length;
-    watchlist = watchlist.filter(item => item.id !== animeId);
-
-    if (watchlist.length < initialLength) {
-        setUserActivity(WATCHLIST_KEY, watchlist);
-        console.log('Removed from watchlist:', animeId);
-    } 
-}
-
-/**
- * Checks if an anime is in the watch list.
- * @param {string} animeId - The unique ID (slug) of the anime.
- * @returns {boolean}
- */
-function isInWatchlist(animeId) {
-    if (!animeId) return false;
-    const watchlist = getUserActivity(WATCHLIST_KEY);
-    return watchlist.some(item => item.id === animeId);
-}
-
-/**
- * Retrieves the entire watch list.
- * @returns {Array} An array of anime objects.
- */
-function getWatchlist() {
-    return getUserActivity(WATCHLIST_KEY);
-}
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  initHistoryTracking();
+  
+  // Add click tracking to content items
+  document.querySelectorAll('[data-track-id]').forEach(element => {
+    element.addEventListener('click', function() {
+      const id = this.getAttribute('data-track-id');
+      const type = this.getAttribute('data-track-type');
+      const title = this.getAttribute('data-track-title');
+      const image = this.getAttribute('data-track-image');
+      
+      if (id && type) {
+        addToHistory(id, type, title, image);
+      }
+    });
+  });
+});

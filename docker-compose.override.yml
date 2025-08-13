@@ -1,0 +1,19 @@
+services:
+  web:
+    volumes:
+      - ./:/app
+    environment:
+      - DEBUG=True
+    command: uvicorn mysite.asgi:application --host 0.0.0.0 --port 9326 --reload
+
+  db:
+    ports:
+      - "5433:5432"
+
+  redis:
+    ports:
+      - "6380:6380"
+
+  nginx:
+    ports:
+      - "9000:9000"

@@ -11,8 +11,8 @@
             {% endblock title %}
         </title>
         
-        <meta name="description" content="{% block description %}KortekStream - Platform streaming anime terbaik di Indonesia. Nonton anime subtitle Indonesia gratis dengan kualitas HD. Update episode terbaru setiap hari.{% endblock description %}" />
-        <meta name="keywords" content="{% block keywords %}anime, streaming, subtitle indonesia, anime gratis, nonton anime, anime HD, anime terbaru, anime ongoing{% endblock keywords %}" />
+        <meta name="description" content="{% block description %}KortekStream - Platform streaming anime terbaik di Indonesia. Nonton anime subtitle Indonesia gratis dengan kualitas HD. Update episode terbaru setiap hari, Tentu juga ada Doujin, Hentai, Drakor,Movies, Anime, etc..{% endblock description %}" />
+        <meta name="keywords" content="{% block keywords %}anime, streaming, subtitle indonesia, anime gratis, nonton anime, anime HD, anime terbaru, anime ongoing, gomunime, samehadaku, otakudesu, kortekstream, kortekstream online , samehadaku ol, samehdaku now , kurama nime, anime indo , anime gratis sub indo , anime tanpa iklan , download gratis anime , nonton hentai , nonton doujin , anime terbaru, samehadaku , samehadaku , anime, movie , lk21, drakor , donghua gratis bebas  iklan , download donghua, download doujin , download film tanpa iklan , film gratis , netflix{% endblock keywords %}" />
         <meta name="author" content="KortekStream" />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         
@@ -30,16 +30,16 @@
         <meta property="twitter:url" content="{% block twitter_url %}{{ request.build_absolute_uri }}{% endblock twitter_url %}" />
         <meta property="twitter:title" content="{% block twitter_title %}{{ title }} | KortekStream{% endblock twitter_title %}" />
         <meta property="twitter:description" content="{% block twitter_description %}KortekStream - Platform streaming anime terbaik di Indonesia{% endblock twitter_description %}" />
-        <meta property="twitter:image" content="{% block twitter_image %}{% load static %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/twitter-image.jpg' %}{% endblock twitter_image %}" />
+        <meta property="twitter:image" content="{% block twitter_image %}{% load static %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-image.jpg' %}{% endblock twitter_image %}" />
         
         <!-- Canonical URL -->
         <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock canonical_url %}" />
         
         <!-- Favicon -->
-        <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
-        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}" />
-        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}" />
-        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}" />
+        <link rel="icon" type="image/x-icon" href="{% static 'images/og-image.jpg' %}" />
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/og-image.jpg' %}" />
+        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/og-image.jpg' %}" />
+        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/og-image.jpg' %}" />
         <link rel="manifest" href="{% static 'site.webmanifest' %}" />
         
         <!-- Search Integration -->

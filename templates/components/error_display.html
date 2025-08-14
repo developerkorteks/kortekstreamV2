@@ -1,10 +1,166 @@
-<div class="flex flex-col items-center justify-center text-center py-16 px-4">
+<div class="flex flex-col items-center justify-center text-center py-16 px-4" id="error-display">
     <svg class="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
     <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Oops, Something Went Wrong</h2>
-    <p class="text-gray-600 dark:text-gray-400 mb-6">We couldn't load the content you were looking for. Please try again.</p>
-    <button 
-        onclick="location.reload()"
-        class="px-6 py-3 bg-korteks-red text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
-        Retry
-    </button>
+    <p class="text-gray-600 dark:text-gray-400 mb-6">We couldn't load the content you were looking for. Please try again or return to the homepage.</p>
+    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <button 
+            id="retry-button"
+            onclick="retryRequest()"
+            class="px-6 py-3 bg-korteks-red text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg id="retry-icon" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span id="retry-text">Retry</span>
+        </button>
+        <button 
+            onclick="window.location.href='/'"
+            class="px-6 py-3 bg-gray-600 dark:bg-gray-700 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+            Go Home
+        </button>
+    </div>
 </div>
+
+<!-- Retry Mechanism Script -->
+<script>
+let retryCount = 0;
+const maxRetries = 3;
+
+async function retryRequest() {
+    const retryButton = document.getElementById('retry-button');
+    const retryIcon = document.getElementById('retry-icon');
+    const retryText = document.getElementById('retry-text');
+    const errorDisplay = document.getElementById('error-display');
+    
+    if (retryCount >= maxRetries) {
+        retryText.textContent = 'Max retries reached';
+        retryButton.disabled = true;
+        return;
+    }
+    
+    // Show loading state
+    retryButton.disabled = true;
+    retryIcon.classList.add('animate-spin');
+    retryText.textContent = 'Retrying...';
+    retryCount++;
+    
+    try {
+        // Clear any cached data by adding cache-busting parameter
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('_retry', Date.now());
+        currentUrl.searchParams.set('_clear_cache', '1');
+        
+        // Make request to same URL with cache-busting
+        const response = await fetch(currentUrl.toString(), {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            }
+        });
+        
+        if (response.ok) {
+            // Get the HTML content
+            const html = await response.text();
+            
+            // Parse the response to check if it still has errors
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newErrorDisplay = doc.getElementById('error-display');
+            
+            if (!newErrorDisplay) {
+                // Success! No error display found, reload the page with new data
+                window.location.reload(true); // Force reload from server
+            } else {
+                // Still has errors, show retry failed message
+                throw new Error('API still returning errors');
+            }
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+    } catch (error) {
+        console.error('Retry failed:', error);
+        
+        // Reset button state
+        retryIcon.classList.remove('animate-spin');
+        
+        // Show detailed error information
+        showDetailedError(error);
+        
+        if (retryCount >= maxRetries) {
+            retryText.textContent = 'Max retries reached';
+            retryButton.disabled = true;
+            
+            // Show fallback message
+            const errorMsg = errorDisplay.querySelector('p');
+            errorMsg.textContent = 'Unable to retry after multiple attempts. Please try again later or contact support.';
+            errorMsg.classList.add('text-red-600', 'dark:text-red-400');
+        } else {
+            retryText.textContent = `Retry (${maxRetries - retryCount} left)`;
+            retryButton.disabled = false;
+            
+            // Show temporary failure message
+            const errorMsg = errorDisplay.querySelector('p');
+            const originalText = errorMsg.textContent;
+            errorMsg.textContent = `Retry ${retryCount} failed. ${maxRetries - retryCount} attempts remaining.`;
+            errorMsg.classList.add('text-orange-600', 'dark:text-orange-400');
+            
+            // Reset message after 3 seconds
+            setTimeout(() => {
+                errorMsg.textContent = originalText;
+                errorMsg.classList.remove('text-orange-600', 'dark:text-orange-400');
+            }, 3000);
+        }
+    }
+}
+
+// Show more detailed error information
+function showDetailedError(error) {
+    const errorDisplay = document.getElementById('error-display');
+    const errorMsg = errorDisplay.querySelector('p');
+    const originalText = errorMsg.textContent;
+    
+    // Add detailed error information
+    const detailDiv = document.createElement('div');
+    detailDiv.className = 'mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-600 dark:text-gray-400';
+    detailDiv.innerHTML = `
+        <div class="font-medium mb-1">Error Details:</div>
+        <div class="text-xs font-mono">${error.message || 'Unknown error occurred'}</div>
+        <div class="text-xs mt-2 text-gray-500">Time: ${new Date().toLocaleTimeString()}</div>
+    `;
+    
+    // Remove existing detail if any
+    const existingDetail = errorDisplay.querySelector('.error-detail');
+    if (existingDetail) {
+        existingDetail.remove();
+    }
+    
+    detailDiv.classList.add('error-detail');
+    errorDisplay.appendChild(detailDiv);
+}
+
+// Auto-retry once after 2 seconds on page load if it's a server error
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAutoRetry = urlParams.has('_retry');
+    
+    if (!isAutoRetry && retryCount === 0) {
+        // Show initial auto-retry message
+        const errorMsg = document.getElementById('error-display').querySelector('p');
+        const originalText = errorMsg.textContent;
+        errorMsg.textContent = 'Attempting automatic retry in 2 seconds...';
+        errorMsg.classList.add('text-blue-600', 'dark:text-blue-400');
+        
+        setTimeout(() => {
+            errorMsg.textContent = originalText;
+            errorMsg.classList.remove('text-blue-600', 'dark:text-blue-400');
+            retryRequest();
+        }, 2000);
+    }
+});
+</script>

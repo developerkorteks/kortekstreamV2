@@ -16,6 +16,7 @@ import json
 import re
 import os
 import time
+import hashlib
 
 # Import API client with fallback
 from .api_client import api_client, make_api_request, get_api_stats, api_health_check, APIResponse
@@ -479,6 +480,9 @@ def home(request, category):
     return render(request, 'stream/index.html', context)
 
 def anime_detail(request):
+    # Check if this is a retry request that should clear cache
+    is_retry_request = request.GET.get('_retry') or request.GET.get('_clear_cache')
+    
     # Get parameters from request
     anime_id = request.GET.get('id')
     slug = request.GET.get('slug')
@@ -513,11 +517,20 @@ def anime_detail(request):
         if category:
             params['category'] = category
             
+        # For retry requests, use shorter cache timeout or bypass cache
+        cache_timeout = getattr(settings, 'CACHE_TIMEOUT_MEDIUM', 300)  # 5 minutes cache
+        if is_retry_request:
+            cache_timeout = 60  # 1 minute cache for retries
+            # Clear existing cache for this specific request
+            api_cache_key = f"api_cache:anime-detail:{hashlib.md5(str(params).encode()).hexdigest()}"
+            cache.delete(api_cache_key)
+            logger.info(f"Retry request detected, clearing cache for anime: {identifier}")
+        
         # Make API request using the robust client
         response = make_api_request(
             'api/v1/anime-detail',
             params=params,
-            cache_timeout=getattr(settings, 'CACHE_TIMEOUT_MEDIUM', 300) # 5 minutes cache
+            cache_timeout=cache_timeout
         )
         
         data = response.data
@@ -788,10 +801,13 @@ def episode_detail(request, encoded_id=None):
     """
     start_time = time.time()
     
+    # Check if this is a retry request that should clear cache (define early)
+    is_retry_request = request.GET.get('_retry') or request.GET.get('_clear_cache')
+    
     # Get available categories - use fast cache for this common operation
     cache_key = "categories_list"
     categories = cache.get(cache_key)
-    if not categories:
+    if not categories or is_retry_request:
         categories = get_categories()
         cache.set(cache_key, categories, 3600)  # Cache for 1 hour
     
@@ -808,7 +824,7 @@ def episode_detail(request, encoded_id=None):
         # Use a cache for decoded IDs to avoid repeated decoding
         decode_cache_key = f"decoded_id:{encoded_id}"
         decoded_data = cache.get(decode_cache_key)
-        if not decoded_data:
+        if not decoded_data or is_retry_request:
             decoded_data = decode_episode_id(encoded_id)
             cache.set(decode_cache_key, decoded_data, 86400)  # Cache for 24 hours
             
@@ -853,6 +869,26 @@ def episode_detail(request, encoded_id=None):
         cache_timeout = getattr(settings, 'CACHE_TIMEOUT_LONG', 900)
         if not settings.DEBUG:
             cache_timeout = 1800  # 30 minutes in production
+        
+        # For retry requests, use shorter cache timeout or bypass cache
+        if is_retry_request:
+            cache_timeout = 60  # 1 minute cache for retries
+            # Clear existing cache for this specific request
+            api_cache_key = f"api_cache:episode-detail:{hashlib.md5(str(params).encode()).hexdigest()}"
+            cache.delete(api_cache_key)
+            
+            # Clear additional related caches
+            if encoded_id:
+                cache.delete(f"decoded_id:{encoded_id}")
+            
+            # Clear any cached encoded IDs for episodes
+            cache_patterns_to_clear = [
+                f"encoded_id:{category}:*",
+                f"seo_context:episode_detail:{category}:*"
+            ]
+            
+            logger.info(f"Retry request detected, clearing cache for episode: {identifier}")
+            logger.info(f"Cleared cache patterns: {cache_patterns_to_clear}")
         
         # Make API request using robust client
         response = make_api_request(
@@ -1000,7 +1036,7 @@ def episode_detail(request, encoded_id=None):
     # Get SEO context with caching
     seo_cache_key = f"seo_context:episode_detail:{category}:{episode_title}"
     seo_context = cache.get(seo_cache_key)
-    if not seo_context:
+    if not seo_context or is_retry_request:
         seo_context = get_seo_context(request, 'episode_detail', episode_title=episode_title, category=category)
         cache.set(seo_cache_key, seo_context, 3600)  # Cache for 1 hour
         
@@ -1013,7 +1049,8 @@ def episode_detail(request, encoded_id=None):
         "error_details": error_details,
         "debug": settings.DEBUG,
         "active_page": "episode_detail",
-        "seo_context": seo_context
+        "seo_context": seo_context,
+        "error_occurred": response.source == 'error' if 'response' in locals() else (normalized_data.get('error') or normalized_data.get('success') == False)
     }
     
     return render(request, 'stream/episode_detail.html', context)

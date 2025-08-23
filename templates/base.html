@@ -110,7 +110,12 @@
         <link rel="alternate" hreflang="en" href="{{ request.build_absolute_uri }}" />
         <link rel="alternate" hreflang="x-default" href="{{ request.build_absolute_uri }}" />
         <meta property="article:publisher" content="https://facebook.com/kortekstream" />
-        
+        <!-- Load dependencies with proper error handling -->
+         <!-- Problem: Async loading tanpa proper error handling -->
+        <link rel="preload" href="https://cdn.plyr.io/3.7.8/plyr.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
+        <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
         <!-- Twitter Enhanced -->
         <meta name="twitter:image:alt" content="{% block twitter_image_alt %}KortekStream - Streaming Anime Indonesia{% endblock twitter_image_alt %}" />
         
